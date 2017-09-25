@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 import logging
-
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +55,9 @@ def get_accuracy(softmax, labels):
     casted_labels = tf.squeeze(tf.cast(labels, tf.int64), 1)
     correct_pred = tf.equal(predicted, casted_labels)
     return tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+
+
+def save_model(monitored_sess, saver, folder, step):
+    path = os.path.join(folder, 'model_' + str(step) + '.ckpt')
+    sess = monitored_sess._sess._sess._sess._sess
+    saver.save(sess, path)
