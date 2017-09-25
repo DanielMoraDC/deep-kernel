@@ -27,69 +27,37 @@ class DeepKernelModel(RegressorMixin):
         folder = params.get('folder', 'training')
         summaries_steps = params.get('summaries_steps', 10)
         validation_interval = params.get('validation_interval', 100)
-        network_fn = params.get('network_fn', kernel_example_layout_fn)
-        batch_size = params.get('batch_size', 128)
-        memory_factor = params.get('memory_factor', 1)
-        n_threads = params.get('n_threads', 2)
 
         with tf.Graph().as_default() as graph:
 
             step = create_global_step()  # noqa
 
+            # TODO this could be moved inside build_workflow
             dataset = data_settings_fn(dataset_location=data_location)
-
-            # Read batches from dataset
             reader = DataReader(dataset)
-            features, labels = reader.read_batch(
-                batch_size=batch_size,
-                data_mode=DataMode.TRAINING,
-                memory_factor=memory_factor,
-                reader_threads=n_threads,
-                train_mode=True
+
+            # Get training operations
+            train_logits, train_loss, train_op, train_acc = build_workflow(
+                dataset, reader, DataMode.TRAINING, step, **params
             )
 
-            # Training data
-            with tf.variable_scope("network") as scope:
-                logits = network_fn(features,
-                                    columns=dataset.get_wide_columns(),
-                                    outputs=dataset.get_num_classes())
-                prediction = tf.nn.softmax(logits)
-
-                loss_op = self.get_loss_op(logits=logits, y=labels, **params)
-
-                optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
-                train_op = optimizer.minimize(loss_op, global_step=step)
-
-                # Evaluate model
-                accuracy = get_accuracy(prediction, labels)
-                tf.summary.scalar('accuracy', accuracy, collections=['training'])
-
-            os.makedirs(os.path.join(folder, 'train'))
-            train_writer = tf.summary.FileWriter(os.path.join(folder, 'train'), graph)
-
-            features_val, labels_val = reader.read_batch(
-                batch_size=batch_size,
-                data_mode=DataMode.VALIDATION,
-                memory_factor=memory_factor,
-                reader_threads=n_threads,
-                train_mode=True
+            # Get validation operations
+            val_logits, val_loss, _, val_acc = build_workflow(
+                dataset, reader, DataMode.VALIDATION, step, True, **params
             )
 
-            with tf.variable_scope(scope, reuse=True):
-                # Validation data
-                logits_val = network_fn(features_val,
-                                        columns=dataset.get_wide_columns(),
-                                        outputs=dataset.get_num_classes())
-                prediction_val = tf.nn.softmax(logits_val)
-                accuracy_val = get_accuracy(prediction_val, labels_val)
-                tf.summary.scalar('accuracy', accuracy_val, collections=['validation'])
-                loss_val_op = self.get_loss_op(logits=logits_val, y=labels_val, **params)
+            # Initialize writers
+            train_writer_path = os.path.join(folder, DataMode.TRAINING)
+            os.makedirs(train_writer_path)
+            train_writer = tf.summary.FileWriter(train_writer_path, graph)
 
-            os.makedirs(os.path.join(folder, 'test'))
-            val_writer = tf.summary.FileWriter(os.path.join(folder, 'test'), graph)
+            val_writer_path = os.path.join(folder, DataMode.VALIDATION)
+            os.makedirs(val_writer_path)
+            val_writer = tf.summary.FileWriter(val_writer_path, graph)
 
-            train_summary_op = tf.summary.merge_all('training')
-            val_summary_op = tf.summary.merge_all('validation')
+            # Gather summaries by dataset
+            train_summary_op = tf.summary.merge_all(DataMode.TRAINING)
+            val_summary_op = tf.summary.merge_all(DataMode.VALIDATION)
 
             with tf.train.MonitoredTrainingSession(
                     checkpoint_dir=folder,
@@ -108,57 +76,96 @@ class DeepKernelModel(RegressorMixin):
                         sess.run([train_op])
 
                         if i % summaries_steps == 0:
-                            sum_str, loss, acc, step_val = sess.run([train_summary_op, loss_op, accuracy, step])
-                            train_writer.add_summary(sum_str, step_val)
-                            print('[%d] Loss: %f, Accuracy: %f' % (i, loss, acc))
+                            sum_str, loss, acc, step_value = sess.run(
+                                [train_summary_op, train_loss, train_acc, step]
+                            )
+                            train_writer.add_summary(sum_str, step_value)
+                            print('[%d] Loss: %f, Accuracy: %f'
+                                  % (step_value, loss, acc))
 
                         if i % validation_interval == 0:
-                            sum_str, loss_val, acc_val, step_val = sess.run([val_summary_op, loss_val_op, accuracy_val, step])
-                            val_writer.add_summary(sum_str, step_val)
+                            sum_str, loss, acc, step_value = sess.run(
+                                [val_summary_op, val_loss, val_acc, step]
+                            )
+                            val_writer.add_summary(sum_str, step_value)
                             print('[%d] Validation loss: %f, Accuracy: %f'
-                                  % (i, loss_val, acc_val))
-
+                                  % (step_value, loss, acc))
 
                     coord.request_stop()
                     coord.join(threads)
-
                     break
-
-    # TODO: static method, could we moved outside
-    def get_loss_op(self, logits, y, **params):
-        num_classes = logits.get_shape().as_list()[-1]
-        l1_ratio = params.get('l1_ratio', None)
-        l2_ratio = params.get('l2_ratio', None)
-
-        l1_term = l1_norm(get_model_weights()) * l1_ratio \
-            if l1_ratio is not None else tf.constant(0.0)
-        # tf.summary.scalar('l1_term', l1_term)
-
-        l2_term = l2_norm(get_model_weights()) * l2_ratio \
-            if l2_ratio is not None else tf.constant(0.0)
-        # tf.summary.scalar('l2_term', l2_term)
-
-        loss_term = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits(
-                logits=logits, labels=tf.one_hot(y, depth=num_classes)
-            )
-        )
-
-        # tf.summary.scalar('loss_term', loss_term)
-
-        loss_op = loss_term + l1_term + l2_term
-        # tf.summary.scalar('total_loss', loss_op)
-
-        return loss_op
 
     def predict(self, X, y, **params):
         return None
+
+
+# TODO: static method, could we moved outside
+def get_loss_op(logits, y, sum_collection, **params):
+    num_classes = logits.get_shape().as_list()[-1]
+    l1_ratio = params.get('l1_ratio', None)
+    l2_ratio = params.get('l2_ratio', None)
+
+    l1_term = l1_norm(get_model_weights()) * l1_ratio \
+        if l1_ratio is not None else tf.constant(0.0)
+    tf.summary.scalar('l1_term', l1_term, [sum_collection])
+
+    l2_term = l2_norm(get_model_weights()) * l2_ratio \
+        if l2_ratio is not None else tf.constant(0.0)
+    tf.summary.scalar('l2_term', l2_term, [sum_collection])
+
+    loss_term = tf.reduce_mean(
+        tf.nn.softmax_cross_entropy_with_logits(
+            logits=logits, labels=tf.one_hot(y, depth=num_classes)
+        )
+    )
+
+    tf.summary.scalar('loss_term', loss_term, [sum_collection])
+
+    loss_op = loss_term + l1_term + l2_term
+    tf.summary.scalar('total_loss', loss_op, [sum_collection])
+
+    return loss_op
+
+
+def build_workflow(dataset, reader, data_mode, step, reuse=False, **params):
+    network_fn = params.get('network_fn', kernel_example_layout_fn)
+    batch_size = params.get('batch_size', 128)
+    memory_factor = params.get('memory_factor', 1)
+    n_threads = params.get('n_threads', 2)
+
+    features, labels = reader.read_batch(
+        batch_size=batch_size,
+        data_mode=DataMode.TRAINING,
+        memory_factor=memory_factor,
+        reader_threads=n_threads,
+        train_mode=True
+    )
+
+    scope_params = {'reuse': reuse}
+    with tf.variable_scope("network", **scope_params):
+        logits = network_fn(features,
+                            columns=dataset.get_wide_columns(),
+                            outputs=dataset.get_num_classes())
+        prediction = tf.nn.softmax(logits)
+
+        loss_op = get_loss_op(
+            logits=logits, y=labels, sum_collection=data_mode, **params
+        )
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
+        train_op = optimizer.minimize(loss_op, global_step=step)
+
+        # Evaluate model
+        accuracy_op = get_accuracy(prediction, labels)
+        tf.summary.scalar('accuracy', accuracy_op, [data_mode])
+
+    return logits, loss_op, train_op, accuracy_op
 
 
 if __name__ == '__main__':
 
     a = DeepKernelModel()
     a.fit(data_settings_fn=AusSettings,
-          folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel',
+          folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel',  # noqa
           l2_ratio=0.01,
           data_location=get_data_location(Datasets.AUS))
