@@ -26,7 +26,9 @@ class DeepKernelModel(RegressorMixin):
         folder = params.get('folder', 'training')
         summaries_steps = params.get('summaries_steps', 10)
         network_fn = params.get('network_fn', kernel_example_layout_fn)
-        batch_size = params.get('batch_size', 32)
+        batch_size = params.get('batch_size', 128)
+        memory_factor = params.get('memory_factor', 1)
+        n_threads = params.get('n_threads', 2)
 
         with tf.Graph().as_default():
 
@@ -39,23 +41,42 @@ class DeepKernelModel(RegressorMixin):
             features, labels = reader.read_batch(
                 batch_size=batch_size,
                 data_mode=DataMode.TRAINING,
-                memory_factor=1,  # TODO: as params
-                reader_threads=2,  # TODO: as params
+                memory_factor=memory_factor,
+                reader_threads=n_threads,
                 train_mode=True
             )
 
-            logits = network_fn(features,
-                                columns=dataset.get_wide_columns(),
-                                outputs=dataset.get_num_classes())
-            prediction = tf.nn.softmax(logits)
+            # Training data
+            with tf.variable_scope("network"):
+                logits = network_fn(features,
+                                    columns=dataset.get_wide_columns(),
+                                    outputs=dataset.get_num_classes())
+                prediction = tf.nn.softmax(logits)
 
-            loss_op = self.get_loss_op(logits=logits, y=labels, **params)
+                loss_op = self.get_loss_op(logits=logits, y=labels, **params)
 
-            optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
-            train_op = optimizer.minimize(loss_op)
+                optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
+                train_op = optimizer.minimize(loss_op)
 
-            # Evaluate model
-            accuracy = get_accuracy(prediction, labels)
+                # Evaluate model
+                accuracy = get_accuracy(prediction, labels)
+
+            features_val, labels_val = reader.read_batch(
+                batch_size=batch_size,
+                data_mode=DataMode.VALIDATION,
+                memory_factor=memory_factor,
+                reader_threads=n_threads,
+                train_mode=True
+            )
+
+            with tf.variable_scope("network", reuse=True) as scope:
+                # Validation data
+                logits_val = network_fn(features_val,
+                                        columns=dataset.get_wide_columns(),
+                                        outputs=dataset.get_num_classes())
+                prediction_val = tf.nn.softmax(logits_val)
+                accuracy_val = get_accuracy(prediction_val, labels_val)
+                loss_val_op = self.get_loss_op(logits=logits_val, y=labels_val, **params)
 
             summary_op = tf.summary.merge_all()
             summary_hook = tf.train.SummarySaverHook(
@@ -78,10 +99,15 @@ class DeepKernelModel(RegressorMixin):
 
                         sess.run([train_op])
 
-                        if i % 100 == 0:
+                        if i % 1000 == 0:
                             loss, acc = sess.run([loss_op, accuracy])
                             print('[%d] Loss: %f, Accuracy: %f'
                                   % (i, loss, acc))
+                        
+                        if i % 5000 == 0:
+                            loss_val, acc_val = sess.run([loss_val_op, accuracy_val])
+                            print('[%d] Validation loss: %f, Accuracy: %f'
+                                  % (i, loss_val, acc_val))
 
                     coord.request_stop()
                     coord.join(threads)

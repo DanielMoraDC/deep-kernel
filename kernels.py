@@ -2,6 +2,8 @@ import numpy as np
 import tensorflow as tf
 
 
+# TODO: validation does not use the same constant tensor, we need ot fix it
+
 class KernelFunction(object):
 
     """ Future abstract class. So far represents a Random Fourier kernel """
