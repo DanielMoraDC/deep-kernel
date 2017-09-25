@@ -1,8 +1,9 @@
 from sklearn.base import RegressorMixin
 import tensorflow as tf
+import os
 
 from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy
+    l2_norm, get_accuracy, get_global_step
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
@@ -25,12 +26,13 @@ class DeepKernelModel(RegressorMixin):
 
         folder = params.get('folder', 'training')
         summaries_steps = params.get('summaries_steps', 10)
+        validation_interval = params.get('validation_interval', 100)
         network_fn = params.get('network_fn', kernel_example_layout_fn)
         batch_size = params.get('batch_size', 128)
         memory_factor = params.get('memory_factor', 1)
         n_threads = params.get('n_threads', 2)
 
-        with tf.Graph().as_default():
+        with tf.Graph().as_default() as graph:
 
             step = create_global_step()  # noqa
 
@@ -47,7 +49,7 @@ class DeepKernelModel(RegressorMixin):
             )
 
             # Training data
-            with tf.variable_scope("network"):
+            with tf.variable_scope("network") as scope:
                 logits = network_fn(features,
                                     columns=dataset.get_wide_columns(),
                                     outputs=dataset.get_num_classes())
@@ -56,10 +58,14 @@ class DeepKernelModel(RegressorMixin):
                 loss_op = self.get_loss_op(logits=logits, y=labels, **params)
 
                 optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
-                train_op = optimizer.minimize(loss_op)
+                train_op = optimizer.minimize(loss_op, global_step=step)
 
                 # Evaluate model
                 accuracy = get_accuracy(prediction, labels)
+                tf.summary.scalar('accuracy', accuracy, collections=['training'])
+
+            os.makedirs(os.path.join(folder, 'train'))
+            train_writer = tf.summary.FileWriter(os.path.join(folder, 'train'), graph)
 
             features_val, labels_val = reader.read_batch(
                 batch_size=batch_size,
@@ -69,25 +75,27 @@ class DeepKernelModel(RegressorMixin):
                 train_mode=True
             )
 
-            with tf.variable_scope("network", reuse=True) as scope:
+            with tf.variable_scope(scope, reuse=True):
                 # Validation data
                 logits_val = network_fn(features_val,
                                         columns=dataset.get_wide_columns(),
                                         outputs=dataset.get_num_classes())
                 prediction_val = tf.nn.softmax(logits_val)
                 accuracy_val = get_accuracy(prediction_val, labels_val)
+                tf.summary.scalar('accuracy', accuracy_val, collections=['validation'])
                 loss_val_op = self.get_loss_op(logits=logits_val, y=labels_val, **params)
 
-            summary_op = tf.summary.merge_all()
-            summary_hook = tf.train.SummarySaverHook(
-                save_steps=summaries_steps,
-                output_dir=folder,
-                summary_op=summary_op
-            )
+            os.makedirs(os.path.join(folder, 'test'))
+            val_writer = tf.summary.FileWriter(os.path.join(folder, 'test'), graph)
+
+            train_summary_op = tf.summary.merge_all('training')
+            val_summary_op = tf.summary.merge_all('validation')
 
             with tf.train.MonitoredTrainingSession(
                     checkpoint_dir=folder,
-                    hooks=[summary_hook]) as sess:
+                    save_checkpoint_secs=None,
+                    save_summaries_steps=None,
+                    save_summaries_secs=None) as sess:
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -99,15 +107,17 @@ class DeepKernelModel(RegressorMixin):
 
                         sess.run([train_op])
 
-                        if i % 1000 == 0:
-                            loss, acc = sess.run([loss_op, accuracy])
-                            print('[%d] Loss: %f, Accuracy: %f'
-                                  % (i, loss, acc))
-                        
-                        if i % 5000 == 0:
-                            loss_val, acc_val = sess.run([loss_val_op, accuracy_val])
+                        if i % summaries_steps == 0:
+                            sum_str, loss, acc, step_val = sess.run([train_summary_op, loss_op, accuracy, step])
+                            train_writer.add_summary(sum_str, step_val)
+                            print('[%d] Loss: %f, Accuracy: %f' % (i, loss, acc))
+
+                        if i % validation_interval == 0:
+                            sum_str, loss_val, acc_val, step_val = sess.run([val_summary_op, loss_val_op, accuracy_val, step])
+                            val_writer.add_summary(sum_str, step_val)
                             print('[%d] Validation loss: %f, Accuracy: %f'
                                   % (i, loss_val, acc_val))
+
 
                     coord.request_stop()
                     coord.join(threads)
@@ -122,11 +132,11 @@ class DeepKernelModel(RegressorMixin):
 
         l1_term = l1_norm(get_model_weights()) * l1_ratio \
             if l1_ratio is not None else tf.constant(0.0)
-        tf.summary.scalar('l1_term', l1_term)
+        # tf.summary.scalar('l1_term', l1_term)
 
         l2_term = l2_norm(get_model_weights()) * l2_ratio \
             if l2_ratio is not None else tf.constant(0.0)
-        tf.summary.scalar('l2_term', l2_term)
+        # tf.summary.scalar('l2_term', l2_term)
 
         loss_term = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits(
@@ -134,10 +144,10 @@ class DeepKernelModel(RegressorMixin):
             )
         )
 
-        tf.summary.scalar('loss_term', loss_term)
+        # tf.summary.scalar('loss_term', loss_term)
 
         loss_op = loss_term + l1_term + l2_term
-        tf.summary.scalar('total_loss', loss_op)
+        # tf.summary.scalar('total_loss', loss_op)
 
         return loss_op
 
