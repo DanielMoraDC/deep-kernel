@@ -1,7 +1,7 @@
 from sklearn.base import RegressorMixin
 import tensorflow as tf
 
-from training import create_global_step
+from training import create_global_step, get_model_weights, l1_norm, l2_norm
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from tensorflow.examples.tutorials.mnist import input_data
@@ -30,11 +30,7 @@ class DeepKernelModel(RegressorMixin):
             logits = network_fn(x)
             prediction = tf.nn.softmax(logits)
 
-            loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
-                logits=logits, labels=y)
-            )
-
-            tf.summary.scalar('loss', loss_op)
+            loss_op = self.get_loss_op(logits=logits, y=y, **params)
 
             optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
             train_op = optimizer.minimize(loss_op)
@@ -68,6 +64,29 @@ class DeepKernelModel(RegressorMixin):
 
                     break
 
+    # TODO: static method, could we moved outside
+    def get_loss_op(self, logits, y, **params):
+        l1_ratio = params.get('l1_ratio', None)
+        l2_ratio = params.get('l2_ratio', None)
+
+        l1_term = l1_norm(get_model_weights()) * l1_ratio \
+            if l1_ratio is not None else tf.constant(0.0)
+        tf.summary.scalar('l1_term', l1_term)
+
+        l2_term = l2_norm(get_model_weights()) * l2_ratio \
+            if l2_ratio is not None else tf.constant(0.0)
+        tf.summary.scalar('l2_term', l2_term)
+
+        loss_term = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y)
+        )
+
+        tf.summary.scalar('loss_term', loss_term)
+
+        loss_op = loss_term + l1_term + l2_term
+        tf.summary.scalar('total_loss', loss_op)
+
+        return loss_op
 
     def predict(self, X, y, **params):
         return None
@@ -76,4 +95,5 @@ class DeepKernelModel(RegressorMixin):
 if __name__ == '__main__':
 
     a = DeepKernelModel()
-    a.fit(folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel')
+    a.fit(folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel',
+          l2_ratio=0.01)

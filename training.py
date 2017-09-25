@@ -1,5 +1,10 @@
 import tensorflow as tf
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 def get_global_step(graph=None):
     """ Loads the unique global step, if found """
@@ -20,3 +25,26 @@ def create_global_step():
                            initializer=tf.constant_initializer(0),
                            trainable=False,
                            collections=collections)
+
+
+def l1_norm(weights):
+    return tf.add_n([tf.reduce_sum(tf.abs(x)) for x in weights])
+
+
+def l2_norm(weights):
+    l2_loss = tf.add_n([tf.nn.l2_loss(x) for x in weights])
+    return tf.divide(l2_loss, 2.0)
+
+
+def get_model_weights():
+    """ Returns the list of models parameters """
+    weights = []
+    for var in tf.get_collection(tf.GraphKeys.WEIGHTS):
+        if 'bias' in var.name:
+            logger.info('Ignoring bias %s for regularization ' % (var.name))
+        elif 'weight' in var.name:
+            weights.append(var)
+            logger.info('Using weights %s for regularization ' % (var.name))
+        else:
+            logger.info('Ignoring unknown parameter type %s' % (var.name))
+    return weights
