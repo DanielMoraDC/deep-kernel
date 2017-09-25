@@ -12,8 +12,8 @@ def example_layout_fn(x, outputs, **params):
 def kernel_example_layout_fn(x, outputs, **params):
     inputs = _input_layer(x, **params)
     kernel = KernelFunction()
-    hidden = _fully_connected(inputs, 512)
-    hidden_kernel = kernel.apply_kernel(hidden, dims=512)
+    hidden = _fully_connected(inputs, 128)
+    hidden_kernel = kernel.apply_kernel(hidden, dims=128)
     return _fully_connected(hidden_kernel, outputs, activation_fn=None)
 
 
