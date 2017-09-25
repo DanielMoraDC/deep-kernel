@@ -48,3 +48,10 @@ def get_model_weights():
         else:
             logger.info('Ignoring unknown parameter type %s' % (var.name))
     return weights
+
+
+def get_accuracy(softmax, labels):
+    predicted = tf.argmax(softmax, 1)
+    casted_labels = tf.squeeze(tf.cast(labels, tf.int64), 1)
+    correct_pred = tf.equal(predicted, casted_labels)
+    return tf.reduce_mean(tf.cast(correct_pred, tf.float32))

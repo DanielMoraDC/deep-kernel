@@ -1,7 +1,8 @@
 from sklearn.base import RegressorMixin
 import tensorflow as tf
 
-from training import create_global_step, get_model_weights, l1_norm, l2_norm
+from training import create_global_step, get_model_weights, l1_norm, \
+    l2_norm, get_accuracy
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
@@ -54,10 +55,7 @@ class DeepKernelModel(RegressorMixin):
             train_op = optimizer.minimize(loss_op)
 
             # Evaluate model
-            max_predicted = tf.argmax(prediction, 1)
-
-            correct_pred = tf.equal(max_predicted, tf.squeeze(tf.cast(labels, tf.int64), 1))
-            accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+            accuracy = get_accuracy(prediction, labels)
 
             summary_op = tf.summary.merge_all()
             summary_hook = tf.train.SummarySaverHook(
@@ -106,7 +104,7 @@ class DeepKernelModel(RegressorMixin):
 
         loss_term = tf.reduce_mean(
             tf.nn.softmax_cross_entropy_with_logits(
-                logits=logits,labels=tf.one_hot(y, depth=num_classes)
+                logits=logits, labels=tf.one_hot(y, depth=num_classes)
             )
         )
 
