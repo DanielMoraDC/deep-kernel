@@ -6,17 +6,23 @@ class KernelFunction(object):
 
     """ Future abstract class. So far represents a Random Fourier kernel """
 
-    def __init__(self, use_random=False):
+    def __init__(self, use_random=True):
         self._use_random = use_random
-        self._random = None
+        self._matrix = None
 
-    def apply_kernel(self, x, dims, mean=0.0, std=0.1):
-        if self._random is None:
-            self._random = tf.random_normal(shape=[dims],
-                                            mean=mean,
-                                            stddev=std)
+    def apply_kernel(self, x, dims, mean=0.0, std=1.0):
+        if self._use_random:
+            # Computes a random tensor each time
+            random_tensor = tf.random_normal(
+                shape=[dims], mean=mean, stddev=std
+            )
+        else:
+            # Computes a random tensor once and keeps it
+            if self._matrix is None:
+                self._matrix = np.random.normal(mean, std, dims)
+            random_tensor = tf.constant(self._matrix, dtype=tf.float32)
 
-        cos = tf.cos(tf.multiply(self._random, x))
+        cos = tf.cos(tf.multiply(random_tensor, x))
         return tf.divide(cos, 1/np.sqrt(dims))
 
 
