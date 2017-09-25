@@ -4,8 +4,13 @@ import tensorflow as tf
 from training import create_global_step, get_model_weights, l1_norm, l2_norm
 from layout import example_layout_fn, kernel_example_layout_fn
 
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
+from protodata.data_ops import DataMode
+from protodata.reading_ops import DataReader
+from protodata.datasets.australian import AusSettings
+from protodata.utils import get_data_location
+from protodata.datasets import Datasets
+
+# TODO: generate data if it does not exist
 
 
 class DeepKernelModel(RegressorMixin):
@@ -14,29 +19,42 @@ class DeepKernelModel(RegressorMixin):
 
     def fit(self, X=None, y=None, **params):
 
+        data_settings_fn = params.get('data_settings_fn')
+        data_location = params.get('data_location')
+
         folder = params.get('folder', 'training')
         summaries_steps = params.get('summaries_steps', 10)
         network_fn = params.get('network_fn', kernel_example_layout_fn)
-        num_classes = params.get('num_classes', 10)
-        batch_size = params.get('batch_size', 32)
+        batch_size = params.get('batch_size', 64)
 
-        with tf.Graph().as_default() as graph:
+        with tf.Graph().as_default():
 
-            step = create_global_step()
+            step = create_global_step()  # noqa
 
-            x = tf.placeholder(shape=[None, 784], dtype=tf.float32)
-            y = tf.placeholder(shape=[None, num_classes], dtype=tf.float32)
+            dataset = data_settings_fn(dataset_location=data_location)
 
-            logits = network_fn(x)
+            # Read batches from dataset
+            reader = DataReader(dataset)
+            features, labels = reader.read_batch(
+                batch_size=batch_size,
+                data_mode=DataMode.TRAINING,
+                memory_factor=1,  # TODO: as params
+                reader_threads=2,  # TODO: as params
+                train_mode=True
+            )
+
+            logits = network_fn(features,
+                                columns=dataset.get_wide_columns(),
+                                outputs=dataset.get_num_classes())
             prediction = tf.nn.softmax(logits)
 
-            loss_op = self.get_loss_op(logits=logits, y=y, **params)
+            loss_op = self.get_loss_op(logits=logits, y=labels, **params)
 
             optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
             train_op = optimizer.minimize(loss_op)
 
             # Evaluate model
-            correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+            correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(labels, 1))
             accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
             summary_op = tf.summary.merge_all()
@@ -50,22 +68,29 @@ class DeepKernelModel(RegressorMixin):
                     checkpoint_dir=folder,
                     hooks=[summary_hook]) as sess:
 
+                # Define coordinator to handle all threads
+                coord = tf.train.Coordinator()
+                threads = tf.train.start_queue_runners(coord=coord, sess=sess)
+
                 while not sess.should_stop():
 
-                    for i in range(1000):
+                    for i in range(50000):
 
-                        batch_x, batch_y = mnist.train.next_batch(batch_size)
-                        sess.run([train_op], {x: batch_x, y: batch_y})
+                        sess.run([train_op])
 
-                        if i % 10 == 0:
-                            loss, acc = sess.run([loss_op, accuracy], {x: batch_x, y: batch_y})
-                            print('[%d] Loss: %f, Accuracy: %f' % (i, loss, acc))
+                        if i % 100 == 0:
+                            loss, acc = sess.run([loss_op, accuracy])
+                            print('[%d] Loss: %f, Accuracy: %f'
+                                  % (i, loss, acc))
 
+                    coord.request_stop()
+                    coord.join(threads)
 
                     break
 
     # TODO: static method, could we moved outside
     def get_loss_op(self, logits, y, **params):
+        num_classes = logits.get_shape().as_list()[-1]
         l1_ratio = params.get('l1_ratio', None)
         l2_ratio = params.get('l2_ratio', None)
 
@@ -78,7 +103,7 @@ class DeepKernelModel(RegressorMixin):
         tf.summary.scalar('l2_term', l2_term)
 
         loss_term = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y)
+            tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf.one_hot(y, depth=num_classes))
         )
 
         tf.summary.scalar('loss_term', loss_term)
@@ -95,5 +120,7 @@ class DeepKernelModel(RegressorMixin):
 if __name__ == '__main__':
 
     a = DeepKernelModel()
-    a.fit(folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel',
-          l2_ratio=0.01)
+    a.fit(data_settings_fn=AusSettings,
+          folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel',
+          l2_ratio=0.01,
+          data_location=get_data_location(Datasets.AUS))
