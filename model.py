@@ -25,7 +25,7 @@ class DeepKernelModel(RegressorMixin):
         folder = params.get('folder', 'training')
         summaries_steps = params.get('summaries_steps', 10)
         network_fn = params.get('network_fn', kernel_example_layout_fn)
-        batch_size = params.get('batch_size', 64)
+        batch_size = params.get('batch_size', 32)
 
         with tf.Graph().as_default():
 
@@ -54,7 +54,9 @@ class DeepKernelModel(RegressorMixin):
             train_op = optimizer.minimize(loss_op)
 
             # Evaluate model
-            correct_pred = tf.equal(tf.argmax(prediction, 1), tf.argmax(labels, 1))
+            max_predicted = tf.argmax(prediction, 1)
+
+            correct_pred = tf.equal(max_predicted, tf.squeeze(tf.cast(labels, tf.int64), 1))
             accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
             summary_op = tf.summary.merge_all()
@@ -103,7 +105,9 @@ class DeepKernelModel(RegressorMixin):
         tf.summary.scalar('l2_term', l2_term)
 
         loss_term = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=tf.one_hot(y, depth=num_classes))
+            tf.nn.softmax_cross_entropy_with_logits(
+                logits=logits,labels=tf.one_hot(y, depth=num_classes)
+            )
         )
 
         tf.summary.scalar('loss_term', loss_term)
