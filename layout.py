@@ -12,7 +12,8 @@ def example_layout_fn(x, outputs, **params):
 def kernel_example_layout_fn(x, outputs, **params):
     inputs = _input_layer(x, **params)
     kernel = KernelFunction()
-    hidden = _fully_connected(inputs, 128)
+    # TODO: test whether we should use relu or no activation
+    hidden = _fully_connected(inputs, 128, activation_fn=None)
     hidden_kernel = kernel.apply_kernel(hidden, dims=128)
     return _fully_connected(hidden_kernel, outputs, activation_fn=None)
 
