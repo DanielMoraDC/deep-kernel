@@ -1,17 +1,19 @@
 from sklearn.base import RegressorMixin
 import tensorflow as tf
 import os
+import logging
 
 from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy, get_global_step, save_model
+    l2_norm, get_accuracy, save_model
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
-from protodata.datasets.australian import AusSettings
+from protodata.datasets import AusSettings
 from protodata.utils import get_data_location
 from protodata.datasets import Datasets
 
+log = logging.getLogger(__name__)
 # TODO: generate data if it does not exist
 
 
@@ -21,12 +23,16 @@ class DeepKernelModel(RegressorMixin):
 
     def fit(self, X=None, y=None, **params):
 
+        # Mandatory parameters
         data_settings_fn = params.get('data_settings_fn')
         data_location = params.get('data_location')
+        train_flds = params.get('training_folds')
+        val_folds = params.get('validation_folds')
 
+        # Parameters with default values
         folder = params.get('folder', 'training')
-        summaries_steps = params.get('summaries_steps', 100)
-        validation_interval = params.get('validation_interval', 100)
+        summaries_steps = params.get('summaries_steps', 50)
+        validation_interval = params.get('validation_interval', 500)
         max_steps = params.get('max_steps', 50000)
         train_tolerance = params.get('train_tolerance', 1e-3)
 
@@ -40,18 +46,17 @@ class DeepKernelModel(RegressorMixin):
 
             step = create_global_step()  # noqa
 
-            # TODO this could be moved inside build_workflow
             dataset = data_settings_fn(dataset_location=data_location)
             reader = DataReader(dataset)
 
             # Get training operations
             train_logits, train_loss, train_op, train_acc = build_workflow(
-                dataset, reader, DataMode.TRAINING, step, **params
+                dataset, reader, DataMode.TRAINING, train_flds, step, **params
             )
 
             # Get validation operations
             val_logits, val_loss, _, val_acc = build_workflow(
-                dataset, reader, DataMode.VALIDATION, step, True, **params
+                dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params
             )
 
             # Initialize writers
@@ -85,23 +90,21 @@ class DeepKernelModel(RegressorMixin):
                         sess.run([train_op])
 
                         if i % summaries_steps == 0:
-                            sum_str, loss, acc, step_value = sess.run(
-                                [train_summary_op, train_loss, train_acc, step]
-                            )
+                            # Store training summaries
+                            sum_str, step_value = sess.run(
+                                [train_summary_op, step])
                             train_writer.add_summary(sum_str, step_value)
-                            print('[%d] Loss: %f, Accuracy: %f'
-                                  % (step_value, loss, acc))
-
-                            # Stop if training hasn't improved much
-                            if loss > prev_train_loss or \
-                                    (prev_train_loss - loss)/prev_train_loss < train_tolerance:
-                                print('Stuck in training due to small improving. Halting...')
-                                break
-
-                            prev_train_loss = loss
 
                         if i % validation_interval == 0:
-                            # TODO: Track training here and not above
+
+                            # Track training loss
+                            loss, acc, step_value = sess.run(
+                                [train_loss, train_acc, step]
+                            )
+                            print('[%d] Training Loss: %f, Accuracy: %f' 
+                                  % (step_value, loss, acc))
+
+                            # Track validation loss
                             sum_str, loss, acc, step_value = sess.run(
                                 [val_summary_op, val_loss, val_acc, step]
                             )
@@ -109,13 +112,21 @@ class DeepKernelModel(RegressorMixin):
                             print('[%d] Validation loss: %f, Accuracy: %f'
                                   % (step_value, loss, acc))
 
-                            # Track best model
+                            # Track best model at validation
                             if best_validation['loss'] > loss:
                                 print('[%d] New best found' % step_value)
                                 save_model(sess, saver, val_writer_path, step_value)
                                 best_validation = {
                                     'loss': loss, 'acc': acc, 'step': step_value
                                 }
+
+                            # Stop if training hasn't improved much
+                            improved_ratio = (prev_train_loss - loss)/prev_train_loss
+                            if loss > prev_train_loss or improved_ratio < train_tolerance:
+                                print('Stuck in training due to small or no improving. Halting...')
+                                break
+                            prev_train_loss = loss 
+
                     break
 
                 print('Best model found at {}'.format(best_validation))
@@ -155,18 +166,26 @@ def get_loss_op(logits, y, sum_collection, **params):
     return loss_op
 
 
-def build_workflow(dataset, reader, data_mode, step, reuse=False, **params):
+def build_workflow(dataset,
+                   reader,
+                   data_mode,
+                   folds,
+                   step,
+                   reuse=False,
+                   **params):
     network_fn = params.get('network_fn', kernel_example_layout_fn)
-    batch_size = params.get('batch_size', 128)
+    batch_size = params.get('batch_size', 32)
     memory_factor = params.get('memory_factor', 1)
     n_threads = params.get('n_threads', 2)
 
-    features, labels = reader.read_batch(
+    features, labels = reader.read_folded_batch(
         batch_size=batch_size,
         data_mode=DataMode.TRAINING,
+        folds=folds,
         memory_factor=memory_factor,
         reader_threads=n_threads,
-        train_mode=True
+        train_mode=True,
+        shuffle=True
     )
 
     scope_params = {'reuse': reuse}
@@ -195,5 +214,7 @@ if __name__ == '__main__':
     a = DeepKernelModel()
     a.fit(data_settings_fn=AusSettings,
           folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/kernel',  # noqa
+          training_folds=[0, 1, 2, 3, 4, 5, 6, 7, 8],
+          validation_folds=[9],
           l2_ratio=0.01,
-          data_location=get_data_location(Datasets.AUS))
+          data_location=get_data_location(Datasets.AUS, folded=True))
