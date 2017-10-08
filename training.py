@@ -67,3 +67,4 @@ def save_model(monitored_sess, saver, folder, step):
     path = os.path.join(folder, 'model_' + str(step) + '.ckpt')
     sess = monitored_sess._sess._sess._sess._sess
     saver.save(sess, path)
+    return path

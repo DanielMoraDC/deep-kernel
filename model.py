@@ -16,7 +16,7 @@ from protodata.datasets import Datasets
 logger = logging.getLogger(__name__)
 
 # Disable Tensorflow debug messages
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 class DeepKernelModel(RegressorMixin):
@@ -28,18 +28,108 @@ class DeepKernelModel(RegressorMixin):
 
     def fit(self, X=None, y=None, **params):
 
+        train_folds = params.get('training_folds', None)
+        val_folds = params.get('validation_folds', None)
+        max_steps = params.get('max_steps', None)
+
+        if train_folds is not None and val_folds is not None \
+                and max_steps is not None:
+            return self.fit_and_validate(**params)
+        elif max_steps is not None:
+            return self.fit_training(**params)
+        else:
+            raise ValueError(
+                'Either training and validation folds or ' +
+                'training folds and steps must be provided'
+            )
+
+    def fit_training(self, **params):
+
         # Mandatory parameters
+        steps = int(params.get('max_steps'))
         data_settings_fn = params.get('data_settings_fn')
         data_location = params.get('data_location')
+
+        # Parameters with default values
+        folder = params.get('folder')
+        summaries_steps = params.get('summaries_steps', 50)
+
+        with tf.Graph().as_default() as graph:
+
+            step = create_global_step()  # noqa
+
+            dataset = data_settings_fn(dataset_location=data_location)
+            reader = DataReader(dataset)
+
+            # Get training operations
+            train_flds = range(dataset.get_fold_num())
+            _, loss_op, train_op, acc_op = build_workflow(
+                dataset, reader, DataMode.TRAINING, train_flds, step, **params
+            )
+
+            # Initialize writers and summaries
+            writer_path = os.path.join(folder, DataMode.TRAINING)
+            os.makedirs(writer_path)
+            writer = tf.summary.FileWriter(writer_path, graph)
+            summary_op = tf.summary.merge_all(DataMode.TRAINING)
+            saver = tf.train.Saver()
+
+            with tf.train.MonitoredTrainingSession(
+                    save_checkpoint_secs=None,
+                    save_summaries_steps=None,
+                    save_summaries_secs=None) as sess:
+
+                # Define coordinator to handle all threads
+                coord = tf.train.Coordinator()
+                threads = tf.train.start_queue_runners(coord=coord, sess=sess)
+
+                while not sess.should_stop():
+
+                    for i in range(steps):
+
+                        sess.run([train_op])
+
+                        if i % summaries_steps == 0:
+                            # Store training summaries
+                            sum_str, step_value = sess.run(
+                                [summary_op, step]
+                            )
+                            writer.add_summary(sum_str, step_value)
+
+                            # Track training loss
+                            sum_str, loss, acc, step_value = sess.run(
+                                [summary_op, loss_op, acc_op, step]
+                            )
+
+                            self.log_info(
+                                '[%d] Training Loss: %f, Accuracy: %f'
+                                % (step_value, loss, acc)
+                            )
+
+                    break
+
+                self.log_info('Finished training at step %d' % steps)
+                model_path = save_model(sess, saver, writer_path, steps)
+
+                coord.request_stop()
+                coord.join(threads)
+
+        return model_path
+
+    def fit_and_validate(self, **params):
+
+        # Mandatory parameters
         train_flds = params.get('training_folds')
         val_folds = params.get('validation_folds')
+        max_steps = params.get('max_steps')
+        data_settings_fn = params.get('data_settings_fn')
+        data_location = params.get('data_location')
 
         # Parameters with default values
         folder = params.get('folder', None)
         should_save = folder is not None
         summaries_steps = params.get('summaries_steps', 50)
         validation_interval = params.get('validation_interval', 500)
-        max_steps = params.get('max_steps', 50000)
         train_tolerance = params.get('train_tolerance', 1e-3)
 
         # Tracking initialization
@@ -121,7 +211,7 @@ class DeepKernelModel(RegressorMixin):
 
                             if should_save:
                                 val_writer.add_summary(sum_str, step_value)
-                            
+
                             self.log_info(
                                 '[%d] Validation loss: %f, Accuracy: %f'
                                 % (step_value, val_loss, val_acc)

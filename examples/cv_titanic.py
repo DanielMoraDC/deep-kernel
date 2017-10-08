@@ -1,14 +1,13 @@
 from hyperopt import hp
 from protodata.datasets import Datasets, TitanicSettings
+from cross_validation import evaluate_model
 
-from cross_validation import cross_validate
-
-CV_TRIALS = 25
-N_FOLDS = 10
+CV_TRIALS = 1
+SIM_RUNS = 10
 
 
-def perform_cv(dataset, settings):
-    # Variable parameters
+if __name__ == '__main__':
+
     search_space = {
         'batch_size': hp.choice('batch_size', [32, 64, 128]),
         # l1 ratio not present in paper
@@ -26,15 +25,11 @@ def perform_cv(dataset, settings):
         'train_tolerance': 1e-3
     })
 
-    trials, best, params = cross_validate(dataset=dataset,
-                                          settings=settings,
-                                          n_folds=N_FOLDS,
-                                          n_trials=CV_TRIALS,
-                                          search_space=search_space)
-
-    stats = trials.best_trial['result']['averaged']
-    return stats, params
-
-
-if __name__ == '__main__':
-    perform_cv(Datasets.TITANIC, TitanicSettings)
+    evaluate_model(
+        Datasets.TITANIC,
+        TitanicSettings,
+        search_space,
+        '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/ev',
+        cv_trials=CV_TRIALS,
+        runs=SIM_RUNS
+    )
