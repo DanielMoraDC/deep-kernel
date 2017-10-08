@@ -39,7 +39,8 @@ class DeepKernelModel(RegressorMixin):
         # Tracking initialization
         prev_train_loss = float('inf')
         best_validation = {
-            'loss': float('inf'), 'acc': None, 'step': 0
+            'val_loss': float('inf'), 'val_acc': None, 'step': 0,
+            'train_loss': None, 'train_acc': None
         }
 
         with tf.Graph().as_default() as graph:
@@ -50,12 +51,12 @@ class DeepKernelModel(RegressorMixin):
             reader = DataReader(dataset)
 
             # Get training operations
-            train_logits, train_loss, train_op, train_acc = build_workflow(
+            _, train_loss_op, train_op, train_acc_op = build_workflow(
                 dataset, reader, DataMode.TRAINING, train_flds, step, **params
             )
 
             # Get validation operations
-            val_logits, val_loss, _, val_acc = build_workflow(
+            _, val_loss_op, _, val_acc_op = build_workflow(
                 dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params
             )
 
@@ -98,34 +99,38 @@ class DeepKernelModel(RegressorMixin):
                         if i % validation_interval == 0:
 
                             # Track training loss
-                            loss, acc, step_value = sess.run(
-                                [train_loss, train_acc, step]
+                            train_loss, train_acc, step_value = sess.run(
+                                [train_loss_op, train_acc_op, step]
                             )
-                            print('[%d] Training Loss: %f, Accuracy: %f' 
-                                  % (step_value, loss, acc))
+                            print('[%d] Training Loss: %f, Accuracy: %f'
+                                  % (step_value, train_loss, train_acc))
 
                             # Track validation loss
-                            sum_str, loss, acc, step_value = sess.run(
-                                [val_summary_op, val_loss, val_acc, step]
+                            sum_str, val_loss, val_acc = sess.run(
+                                [val_summary_op, val_loss_op, val_acc_op]
                             )
                             val_writer.add_summary(sum_str, step_value)
                             print('[%d] Validation loss: %f, Accuracy: %f'
-                                  % (step_value, loss, acc))
+                                  % (step_value, val_loss, val_acc))
 
                             # Track best model at validation
-                            if best_validation['loss'] > loss:
+                            if best_validation['val_loss'] > val_loss:
                                 print('[%d] New best found' % step_value)
                                 save_model(sess, saver, val_writer_path, step_value)
                                 best_validation = {
-                                    'loss': loss, 'acc': acc, 'step': step_value
+                                    'val_loss': val_loss,
+                                    'val_acc': val_acc,
+                                    'step': step_value,
+                                    'train_loss': train_loss,
+                                    'train_acc': train_acc
                                 }
 
                             # Stop if training hasn't improved much
-                            improved_ratio = (prev_train_loss - loss)/prev_train_loss
-                            if loss > prev_train_loss or improved_ratio < train_tolerance:
+                            improved_ratio = (prev_train_loss - train_loss)/prev_train_loss
+                            if train_loss > prev_train_loss or improved_ratio < train_tolerance:
                                 print('Stuck in training due to small or no improving. Halting...')
                                 break
-                            prev_train_loss = loss 
+                            prev_train_loss = train_loss
 
                     break
 
@@ -133,6 +138,8 @@ class DeepKernelModel(RegressorMixin):
 
                 coord.request_stop()
                 coord.join(threads)
+
+                return best_validation
 
     def predict(self, X, y, **params):
         return None
@@ -173,6 +180,7 @@ def build_workflow(dataset,
                    step,
                    reuse=False,
                    **params):
+    lr = params.get('lr', 1e-2)
     network_fn = params.get('network_fn', kernel_example_layout_fn)
     batch_size = params.get('batch_size', 32)
     memory_factor = params.get('memory_factor', 1)
@@ -199,7 +207,7 @@ def build_workflow(dataset,
             logits=logits, y=labels, sum_collection=data_mode, **params
         )
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
+        optimizer = tf.train.AdamOptimizer(learning_rate=lr)
         train_op = optimizer.minimize(loss_op, global_step=step)
 
         # Evaluate model
