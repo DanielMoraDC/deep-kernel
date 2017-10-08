@@ -4,7 +4,7 @@ import os
 import logging
 
 from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy, save_model
+    l2_norm, get_accuracy, save_model, get_writer
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
@@ -13,13 +13,18 @@ from protodata.datasets import AusSettings
 from protodata.utils import get_data_location
 from protodata.datasets import Datasets
 
-log = logging.getLogger(__name__)
-# TODO: generate data if it does not exist
+logger = logging.getLogger(__name__)
+
+# Disable Tensorflow debug messages
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 
 class DeepKernelModel(RegressorMixin):
 
     """ Class that combines fully connected and kernel functions """
+
+    def __init__(self, verbose=True):
+        self._verbose = verbose
 
     def fit(self, X=None, y=None, **params):
 
@@ -30,7 +35,8 @@ class DeepKernelModel(RegressorMixin):
         val_folds = params.get('validation_folds')
 
         # Parameters with default values
-        folder = params.get('folder', 'training')
+        folder = params.get('folder', None)
+        should_save = folder is not None
         summaries_steps = params.get('summaries_steps', 50)
         validation_interval = params.get('validation_interval', 500)
         max_steps = params.get('max_steps', 50000)
@@ -57,23 +63,23 @@ class DeepKernelModel(RegressorMixin):
 
             # Get validation operations
             _, val_loss_op, _, val_acc_op = build_workflow(
-                dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params
+                dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params  # noqa
             )
 
-            # Initialize writers
-            train_writer_path = os.path.join(folder, DataMode.TRAINING)
-            os.makedirs(train_writer_path)
-            train_writer = tf.summary.FileWriter(train_writer_path, graph)
+            if should_save:
+                # Initialize writers
+                train_writer = get_writer(graph, folder, DataMode.TRAINING)
 
-            val_writer_path = os.path.join(folder, DataMode.VALIDATION)
-            os.makedirs(val_writer_path)
-            val_writer = tf.summary.FileWriter(val_writer_path, graph)
+                val_writer_path = os.path.join(folder, DataMode.VALIDATION)
+                os.makedirs(val_writer_path)
+                val_writer = tf.summary.FileWriter(val_writer_path, graph)
 
             # Gather summaries by dataset
             train_summary_op = tf.summary.merge_all(DataMode.TRAINING)
             val_summary_op = tf.summary.merge_all(DataMode.VALIDATION)
 
-            saver = tf.train.Saver()
+            if should_save:
+                saver = tf.train.Saver()
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
@@ -90,10 +96,11 @@ class DeepKernelModel(RegressorMixin):
 
                         sess.run([train_op])
 
-                        if i % summaries_steps == 0:
+                        if should_save and i % summaries_steps == 0:
                             # Store training summaries
                             sum_str, step_value = sess.run(
-                                [train_summary_op, step])
+                                [train_summary_op, step]
+                            )
                             train_writer.add_summary(sum_str, step_value)
 
                         if i % validation_interval == 0:
@@ -102,21 +109,36 @@ class DeepKernelModel(RegressorMixin):
                             train_loss, train_acc, step_value = sess.run(
                                 [train_loss_op, train_acc_op, step]
                             )
-                            print('[%d] Training Loss: %f, Accuracy: %f'
-                                  % (step_value, train_loss, train_acc))
+                            self.log_info(
+                                '[%d] Training Loss: %f, Accuracy: %f'
+                                % (step_value, train_loss, train_acc)
+                            )
 
                             # Track validation loss
                             sum_str, val_loss, val_acc = sess.run(
                                 [val_summary_op, val_loss_op, val_acc_op]
                             )
-                            val_writer.add_summary(sum_str, step_value)
-                            print('[%d] Validation loss: %f, Accuracy: %f'
-                                  % (step_value, val_loss, val_acc))
+
+                            if should_save:
+                                val_writer.add_summary(sum_str, step_value)
+                            
+                            self.log_info(
+                                '[%d] Validation loss: %f, Accuracy: %f'
+                                % (step_value, val_loss, val_acc)
+                            )
 
                             # Track best model at validation
                             if best_validation['val_loss'] > val_loss:
-                                print('[%d] New best found' % step_value)
-                                save_model(sess, saver, val_writer_path, step_value)
+                                self.log_info(
+                                    '[%d] New best found' % step_value
+                                )
+
+                                if should_save:
+                                    save_model(sess,
+                                               saver,
+                                               val_writer_path,
+                                               step_value)
+
                                 best_validation = {
                                     'val_loss': val_loss,
                                     'val_acc': val_acc,
@@ -126,15 +148,20 @@ class DeepKernelModel(RegressorMixin):
                                 }
 
                             # Stop if training hasn't improved much
-                            improved_ratio = (prev_train_loss - train_loss)/prev_train_loss
-                            if train_loss > prev_train_loss or improved_ratio < train_tolerance:
-                                print('Stuck in training due to small or no improving. Halting...')
+                            improved_diff = (prev_train_loss - train_loss)
+                            improved_ratio = improved_diff / prev_train_loss
+                            if train_loss > prev_train_loss or \
+                                    improved_ratio < train_tolerance:
+                                self.log_info(
+                                    'Stuck in training due to small ' +
+                                    'or no improving. Halting...'
+                                )
                                 break
                             prev_train_loss = train_loss
 
                     break
 
-                print('Best model found at {}'.format(best_validation))
+                self.log_info('Best model found: {}'.format(best_validation))
 
                 coord.request_stop()
                 coord.join(threads)
@@ -144,8 +171,11 @@ class DeepKernelModel(RegressorMixin):
     def predict(self, X, y, **params):
         return None
 
+    def log_info(self, msg):
+        if self._verbose:
+            logger.info(msg)
 
-# TODO: static method, could we moved outside
+
 def get_loss_op(logits, y, sum_collection, **params):
     num_classes = logits.get_shape().as_list()[-1]
     l1_ratio = params.get('l1_ratio', None)

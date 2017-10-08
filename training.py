@@ -6,6 +6,12 @@ import os
 logger = logging.getLogger(__name__)
 
 
+def get_writer(graph, folder, data_mode):
+    writer_path = os.path.join(folder, data_mode)
+    os.makedirs(writer_path)
+    return tf.summary.FileWriter(writer_path, graph)
+
+
 def get_global_step(graph=None):
     """ Loads the unique global step, if found """
     graph = tf.get_default_graph() if graph is None else graph
