@@ -2,6 +2,7 @@ from sklearn.base import RegressorMixin
 import tensorflow as tf
 import os
 import logging
+import numpy as np
 
 from training import create_global_step, get_model_weights, l1_norm, \
     l2_norm, get_accuracy, save_model, get_writer
@@ -68,9 +69,7 @@ class DeepKernelModel(RegressorMixin):
             )
 
             # Initialize writers and summaries
-            writer_path = os.path.join(folder, DataMode.TRAINING)
-            os.makedirs(writer_path)
-            writer = tf.summary.FileWriter(writer_path, graph)
+            writer = tf.summary.FileWriter(folder, graph)
             summary_op = tf.summary.merge_all(DataMode.TRAINING)
             saver = tf.train.Saver()
 
@@ -109,7 +108,7 @@ class DeepKernelModel(RegressorMixin):
                     break
 
                 self.log_info('Finished training at step %d' % steps)
-                model_path = save_model(sess, saver, writer_path, steps)
+                model_path = save_model(sess, saver, folder, steps)
 
                 coord.request_stop()
                 coord.join(threads)
@@ -258,8 +257,62 @@ class DeepKernelModel(RegressorMixin):
 
                 return best_validation
 
-    def predict(self, X, y, **params):
-        return None
+    def predict(self, X=None, y=None, **params):
+
+        data_settings_fn = params.get('data_settings_fn')
+        data_location = params.get('data_location')
+        folder = params.get('folder')
+
+        with tf.Graph().as_default():
+
+            step = create_global_step()
+
+            dataset = data_settings_fn(dataset_location=data_location)
+            reader = DataReader(dataset)
+
+            # Get training operations
+            _, loss_op, _, acc_op = build_workflow(
+                dataset=dataset, reader=reader, tag=DataMode.TEST,
+                folds=None, step=step, is_training=False, **params
+            )
+
+            saver = tf.train.Saver()
+
+            with tf.train.MonitoredTrainingSession(
+                    save_checkpoint_secs=None,
+                    save_summaries_steps=None,
+                    save_summaries_secs=None) as sess:
+
+                ckpt = tf.train.get_checkpoint_state(folder)
+                if ckpt and ckpt.model_checkpoint_path:
+                    # Restores from checkpoint
+                    saver.restore(sess, ckpt.model_checkpoint_path)
+                else:
+                    raise ValueError('No model found in %s' % folder)
+
+                # Define coordinator to handle all threads
+                coord = tf.train.Coordinator()
+                threads = tf.train.start_queue_runners(coord=coord, sess=sess)
+
+                losses, accs, finish = [], [], False
+
+                while not finish:
+
+                    try:
+
+                        # Track loss and accuracy until queue exhausted
+                        loss, acc = sess.run([loss_op, acc_op])
+                        losses.append(loss)
+                        accs.append(acc)
+
+                    except tf.errors.OutOfRangeError:
+                        logger.info('Queue exhausted. Read all instances')
+                        finish = True
+
+                coord.request_stop()
+                coord.join(threads)
+
+        return {'loss': np.mean(losses), 'accuracy': np.mean(accs)}
 
     def log_info(self, msg):
         if self._verbose:
@@ -295,36 +348,39 @@ def get_loss_op(logits, y, sum_collection, **params):
 
 def build_workflow(dataset,
                    reader,
-                   data_mode,
+                   tag,
                    folds,
                    step,
                    reuse=False,
+                   is_training=True,
                    **params):
-    lr = params.get('lr', 1e-2)
+    lr = params.get('lr')
     network_fn = params.get('network_fn', kernel_example_layout_fn)
-    batch_size = params.get('batch_size', 32)
-    memory_factor = params.get('memory_factor', 1)
-    n_threads = params.get('n_threads', 2)
+    batch_size = params.get('batch_size')
+    memory_factor = params.get('memory_factor')
+    n_threads = params.get('n_threads')
 
+    data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
     features, labels = reader.read_folded_batch(
         batch_size=batch_size,
-        data_mode=DataMode.TRAINING,
+        data_mode=data_subset,
         folds=folds,
         memory_factor=memory_factor,
         reader_threads=n_threads,
-        train_mode=True,
+        train_mode=is_training,
         shuffle=True
     )
 
     scope_params = {'reuse': reuse}
     with tf.variable_scope("network", **scope_params):
+
         logits = network_fn(features,
                             columns=dataset.get_wide_columns(),
                             outputs=dataset.get_num_classes())
         prediction = tf.nn.softmax(logits)
 
         loss_op = get_loss_op(
-            logits=logits, y=labels, sum_collection=data_mode, **params
+            logits=logits, y=labels, sum_collection=tag, **params
         )
 
         optimizer = tf.train.AdamOptimizer(learning_rate=lr)
@@ -332,7 +388,7 @@ def build_workflow(dataset,
 
         # Evaluate model
         accuracy_op = get_accuracy(prediction, labels)
-        tf.summary.scalar('accuracy', accuracy_op, [data_mode])
+        tf.summary.scalar('accuracy', accuracy_op, [tag])
 
     return logits, loss_op, train_op, accuracy_op
 

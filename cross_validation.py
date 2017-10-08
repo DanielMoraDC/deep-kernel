@@ -74,6 +74,7 @@ def evaluate_model(dataset,
                    search_space,
                    output_folder,
                    cv_trials,
+                   test_batch_size=1,
                    runs=10):
 
     trials, params = cross_validate(dataset=dataset,
@@ -91,6 +92,7 @@ def evaluate_model(dataset,
 
     model = DeepKernelModel(verbose=False)
 
+    total_stats = []
     for i in range(runs):
         run_folder = os.path.join(output_folder, str(_get_millis_time()))
         logger.info('Running training [{}] in {}'.format(i, run_folder))
@@ -103,7 +105,20 @@ def evaluate_model(dataset,
         )
         logger.info('Output is in %s' % model_path)
 
-    # TODO: add evaluation of test
+        # Evaluate test for current simulation
+        test_params = params.copy()
+        del test_params['batch_size']
+        test_stats = model.predict(
+            data_settings_fn=settings,
+            folder=run_folder,
+            batch_size=test_batch_size,
+            data_location=get_data_location(dataset, folded=True),
+            **test_params
+        )
+
+        total_stats.append(test_stats)
+
+    return total_stats
 
 
 def _get_millis_time():

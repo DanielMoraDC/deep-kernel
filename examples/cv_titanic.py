@@ -1,8 +1,9 @@
 from hyperopt import hp
+import numpy as np
 from protodata.datasets import Datasets, TitanicSettings
 from cross_validation import evaluate_model
 
-CV_TRIALS = 1
+CV_TRIALS = 25
 SIM_RUNS = 10
 
 
@@ -25,7 +26,7 @@ if __name__ == '__main__':
         'train_tolerance': 1e-3
     })
 
-    evaluate_model(
+    all_stats = evaluate_model(
         Datasets.TITANIC,
         TitanicSettings,
         search_space,
@@ -33,3 +34,8 @@ if __name__ == '__main__':
         cv_trials=CV_TRIALS,
         runs=SIM_RUNS
     )
+
+    metrics = all_stats[0].keys()
+    for m in metrics:
+        values = [x[m] for x in all_stats]
+    print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
