@@ -122,9 +122,11 @@ class DeepKernelModel(RegressorMixin):
         summary_epochs = params.get('summary_epochs', 1)
         validation_epochs = params.get('validation_epochs', 5)
         train_tolerance = params.get('train_tolerance', 1e-3)
+        tolerance_fails = params.get('tolerance_fails', 3)
 
         # Tracking initialization
         prev_train_loss = float('inf')
+        fails_in_row = 0
         best_validation = {
             'val_loss': float('inf'), 'val_acc': 0.0, 'epoch': 0,
             'train_loss': float('inf'), 'train_acc': 0.0
@@ -227,16 +229,25 @@ class DeepKernelModel(RegressorMixin):
                                 'train_acc': mean_train_acc
                             }
 
-                        # Stop if training hasn't improved much
+                        # Stop if training hasn't improved in several times
                         improved_diff = (prev_train_loss - mean_train_loss)
                         improved_ratio = improved_diff / prev_train_loss
                         if mean_train_loss > prev_train_loss or \
                                 improved_ratio < train_tolerance:
+                            fails_in_row += 1
                             self.log_info(
-                                'Stuck in training due to small ' +
-                                'or no improving. Halting...'
+                                '[%d] %d fails in row' % (epoch, fails_in_row)
+                            )
+                        else:
+                            fails_in_row = 0
+
+                        if fails_in_row == tolerance_fails:
+                            self.log_info(
+                                '[%d] Stuck in training due to ' % epoch +
+                                'small or no improving. Halting...'
                             )
                             break
+
                         prev_train_loss = mean_train_loss
 
                 self.log_info('Best model found: {}'.format(best_validation))
@@ -392,16 +403,16 @@ if __name__ == '__main__':
 
     m = DeepKernelModel(verbose=True)
     m.fit(
-        data_settings_fn=datasets.MagicSettings,
+        data_settings_fn=datasets.BalanceSettings,
         training_folds=range(9),
         validation_folds=[9],
         max_epochs=100000,
-        data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),
-        l2_ratio=0.01,
-        validation_epochs=5,
-        lr=0.01,
+        data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),
+        l2_ratio=0,
+        validation_epochs=1,
+        lr=0.001,
         memory_factor=2,
-        hidden_units=1024,
+        hidden_units=64,
         n_threads=4,
-        batch_size=32,
+        batch_size=16,
     )
