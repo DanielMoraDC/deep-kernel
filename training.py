@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 
 import logging
 import os
@@ -68,3 +69,15 @@ def save_model(monitored_sess, saver, folder, step):
     sess = monitored_sess._sess._sess._sess._sess
     saver.save(sess, path)
     return path
+
+
+def eval_epoch(sess, loss_op, acc_op, steps):
+    losses, accs = [], []
+    for _ in range(steps):
+        loss, acc = sess.run([loss_op, acc_op])
+        losses.append(loss)
+        accs.append(acc)
+
+    mean_loss = np.mean(losses)
+    mean_acc = np.mean(accs)
+    return mean_loss, mean_acc

@@ -5,7 +5,7 @@ import logging
 import numpy as np
 
 from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy, save_model, get_writer
+    l2_norm, get_accuracy, save_model, get_writer, eval_epoch
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
@@ -126,8 +126,8 @@ class DeepKernelModel(RegressorMixin):
         # Tracking initialization
         prev_train_loss = float('inf')
         best_validation = {
-            'val_loss': float('inf'), 'val_acc': None, 'epoch': 0,
-            'train_loss': None, 'train_acc': None
+            'val_loss': float('inf'), 'val_acc': 0.0, 'epoch': 0,
+            'train_loss': float('inf'), 'train_acc': 0.0
         }
 
         with tf.Graph().as_default() as graph:
@@ -138,12 +138,12 @@ class DeepKernelModel(RegressorMixin):
             reader = DataReader(dataset)
 
             # Get training operations
-            _, train_loss_op, train_op, train_acc_op, steps_per_epoch = build_workflow(  # noqa
+            _, train_loss_op, train_op, train_acc_op, train_steps_epoch = build_workflow(  # noqa
                 dataset, reader, DataMode.TRAINING, train_flds, step, **params
             )
 
             # Get validation operations
-            _, val_loss_op, _, val_acc_op, steps_per_epoch = build_workflow(
+            _, val_loss_op, _, val_acc_op, val_steps_epoch = build_workflow(
                 dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params  # noqa
             )
 
@@ -159,6 +159,9 @@ class DeepKernelModel(RegressorMixin):
             train_summary_op = tf.summary.merge_all(DataMode.TRAINING)
             val_summary_op = tf.summary.merge_all(DataMode.VALIDATION)
 
+            # Track of metrics
+            train_losses, train_accs = [], []
+
             if should_save:
                 saver = tf.train.Saver()
 
@@ -173,69 +176,68 @@ class DeepKernelModel(RegressorMixin):
 
                 for epoch in range(max_epochs):
 
-                    for _ in range(steps_per_epoch):
-                        sess.run([train_op])
+                    for _ in range(train_steps_epoch):
+                        _, loss, acc = sess.run(
+                            [train_op, train_loss_op, train_acc_op]
+                        )
+                        train_losses.append(loss)
+                        train_accs.append(acc)
 
                     if should_save and epoch % summary_epochs == 0:
-                        # Store training summaries
+                        # Store training summaries for current
                         sum_str = sess.run([train_summary_op])
+                        sum_str_val = sess.run([val_summary_op])
                         train_writer.add_summary(sum_str, epoch)
+                        val_writer.add_summary(sum_str_val, epoch)
 
                     if epoch % validation_epochs == 0:
 
-                        # Track training loss
-                        train_loss, train_acc = sess.run(
-                            [train_loss_op, train_acc_op]
-                        )
+                        # Track training loss and restart values
+                        mean_train_loss = np.mean(train_losses)
+                        mean_train_acc = np.mean(train_accs)
                         self.log_info(
                             '[%d] Training Loss: %f, Accuracy: %f'
-                            % (epoch, train_loss, train_acc)
+                            % (epoch, mean_train_loss, mean_train_acc)
                         )
+                        train_losses, train_accs = [], []
 
                         # Track validation loss
-                        sum_str, val_loss, val_acc = sess.run(
-                            [val_summary_op, val_loss_op, val_acc_op]
+                        mean_val_loss, mean_val_acc = eval_epoch(
+                            sess, val_loss_op, val_acc_op, val_steps_epoch
                         )
-
-                        if should_save:
-                            val_writer.add_summary(sum_str, epoch)
-
                         self.log_info(
                             '[%d] Validation loss: %f, Accuracy: %f'
-                            % (epoch, val_loss, val_acc)
+                            % (epoch, mean_val_loss, mean_val_acc)
                         )
 
                         # Track best model at validation
-                        if best_validation['val_loss'] > val_loss:
-                            self.log_info(
-                                '[%d] New best found' % epoch
-                            )
+                        if best_validation['val_acc'] < mean_val_acc:
+                            self.log_info('[%d] New best found' % epoch)
 
                             if should_save:
-                                save_model(sess,
-                                           saver,
-                                           val_writer_path,
-                                           epoch)
+                                save_model(
+                                    sess, saver, val_writer_path, epoch
+                                )
 
                             best_validation = {
-                                'val_loss': val_loss,
-                                'val_acc': val_acc,
+                                'val_loss': mean_val_loss,
+                                'val_acc': mean_val_acc,
                                 'epoch': epoch,
-                                'train_loss': train_loss,
-                                'train_acc': train_acc
+                                'train_loss': mean_train_loss,
+                                'train_acc': mean_train_acc
                             }
 
                         # Stop if training hasn't improved much
-                        improved_diff = (prev_train_loss - train_loss)
+                        improved_diff = (prev_train_loss - mean_train_loss)
                         improved_ratio = improved_diff / prev_train_loss
-                        if train_loss > prev_train_loss or \
+                        if mean_train_loss > prev_train_loss or \
                                 improved_ratio < train_tolerance:
                             self.log_info(
                                 'Stuck in training due to small ' +
                                 'or no improving. Halting...'
                             )
                             break
-                        prev_train_loss = train_loss
+                        prev_train_loss = mean_train_loss
 
                 self.log_info('Best model found: {}'.format(best_validation))
 
@@ -347,7 +349,7 @@ def build_workflow(dataset,
     memory_factor = params.get('memory_factor')
     n_threads = params.get('n_threads')
 
-    steps_per_epoch = int(dataset.get_training_num() / batch_size)
+    steps_per_epoch = int(dataset.get_fold_size() * len(folds) / batch_size)
 
     data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
     features, labels = reader.read_folded_batch(
@@ -399,6 +401,7 @@ if __name__ == '__main__':
         validation_epochs=5,
         lr=0.01,
         memory_factor=2,
+        hidden_units=1024,
         n_threads=4,
         batch_size=32,
     )
