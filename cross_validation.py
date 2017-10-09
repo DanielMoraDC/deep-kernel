@@ -18,7 +18,7 @@ def evaluate(dataset, settings, **params):
     results = []
 
     for val_fold in folds_set:
-        model = DeepKernelModel(verbose=True)
+        model = DeepKernelModel(verbose=False)
         best_model = model.fit(
             data_settings_fn=settings,
             training_folds=[x for x in folds_set if x != val_fold],
@@ -89,7 +89,7 @@ def evaluate_model(dataset,
 
     logger.info('Using model {} for training'.format(params))
 
-    model = DeepKernelModel(verbose=True)
+    model = DeepKernelModel(verbose=False)
     total_stats = []
 
     total_stats = []
@@ -98,6 +98,8 @@ def evaluate_model(dataset,
         # Train model for current simulation
         run_folder = os.path.join(output_folder, str(_get_millis_time()))
         logger.info('Running training [{}] in {}'.format(i, run_folder))
+
+        before = time.time()
         model.fit(
             data_settings_fn=settings,
             folder=run_folder,
@@ -105,6 +107,7 @@ def evaluate_model(dataset,
             data_location=get_data_location(dataset, folded=True),
             **params
         )
+        diff = time.time() - before
 
         # Evaluate test for current simulation
         test_params = params.copy()
@@ -117,6 +120,7 @@ def evaluate_model(dataset,
             **test_params
         )
 
+        test_stats.update({'time(s)': diff})
         total_stats.append(test_stats)
 
     return total_stats
