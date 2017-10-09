@@ -8,7 +8,7 @@ class KernelFunction(object):
 
     """ Future abstract class. So far represents a Random Fourier kernel """
 
-    def __init__(self, use_random=True):
+    def __init__(self, use_random=False):
         self._use_random = use_random
         self._matrix = None
 
