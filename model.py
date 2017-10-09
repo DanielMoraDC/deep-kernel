@@ -303,7 +303,7 @@ class DeepKernelModel(RegressorMixin):
 
     def log_info(self, msg):
         if self._verbose:
-            logger.info(msg)
+            logger.warn(msg)
 
 
 def get_loss_op(logits, y, sum_collection, **params):
@@ -380,3 +380,25 @@ def build_workflow(dataset,
         tf.summary.scalar('accuracy', accuracy_op, [tag])
 
     return logits, loss_op, train_op, accuracy_op, steps_per_epoch
+
+
+from protodata import datasets
+from protodata.utils import get_data_location
+
+
+if __name__ == '__main__':
+
+    m = DeepKernelModel(verbose=True)
+    m.fit(
+        data_settings_fn=datasets.MagicSettings,
+        training_folds=range(9),
+        validation_folds=[9],
+        max_epochs=100000,
+        data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),
+        l2_ratio=0.01,
+        validation_epochs=5,
+        lr=0.01,
+        memory_factor=2,
+        n_threads=4,
+        batch_size=32,
+    )
