@@ -2,9 +2,51 @@ import tensorflow as tf
 import numpy as np
 
 import logging
+import collections
 import os
 
+
 logger = logging.getLogger(__name__)
+
+
+RunContext = collections.namedtuple(
+    'RunContext',
+    ['logits_op', 'train_op', 'loss_op', 'acc_op', 'steps_per_epoch']
+)
+
+
+def run_training_epoch(sess, context):
+    epoch_loss, epoch_accs = [], []
+    for i in range(context.steps_per_epoch):
+        _, loss, acc = sess.run(
+            [context.train_op, context.loss_op, context.acc_op]
+        )
+        epoch_loss.append(loss)
+        epoch_accs.append(acc)
+
+    return np.mean(epoch_loss), np.mean(epoch_accs)
+
+
+def eval_epoch(sess, context):
+    losses, accs = [], []
+    for _ in range(context.steps_per_epoch):
+        loss, acc = sess.run([context.loss_op, context.acc_op])
+        losses.append(loss)
+        accs.append(acc)
+
+    return np.mean(losses), np.mean(accs)
+
+
+def progress(strip):
+    """
+    As detailed in:
+        Early stopping - but when?. Lutz Prechelt (1997)
+
+    Progress is the measure of how much training error during a strip
+    is larger than the minimum training error during the strip.
+    """
+    k = len(strip)
+    return 1000 * ((np.sum(strip)/(np.min(strip)*k)) - 1)
 
 
 def get_writer(graph, folder, data_mode):
@@ -69,15 +111,3 @@ def save_model(monitored_sess, saver, folder, step):
     sess = monitored_sess._sess._sess._sess._sess
     saver.save(sess, path)
     return path
-
-
-def eval_epoch(sess, loss_op, acc_op, steps):
-    losses, accs = [], []
-    for _ in range(steps):
-        loss, acc = sess.run([loss_op, acc_op])
-        losses.append(loss)
-        accs.append(acc)
-
-    mean_loss = np.mean(losses)
-    mean_acc = np.mean(accs)
-    return mean_loss, mean_acc

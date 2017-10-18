@@ -5,7 +5,8 @@ import logging
 import numpy as np
 
 from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy, save_model, get_writer, eval_epoch
+    l2_norm, get_accuracy, save_model, get_writer, eval_epoch, \
+    progress, RunContext, run_training_epoch
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
@@ -61,7 +62,7 @@ class DeepKernelModel(RegressorMixin):
 
             # Get training operations
             train_flds = range(dataset.get_fold_num())
-            _, loss_op, train_op, acc_op, steps_per_epoch = build_workflow(
+            train_context = build_run_context(
                 dataset, reader, DataMode.TRAINING, train_flds, step, **params
             )
 
@@ -81,22 +82,18 @@ class DeepKernelModel(RegressorMixin):
 
                 for epoch in range(max_epochs):
 
-                    for _ in range(steps_per_epoch):
-                        sess.run([train_op])
+                    loss_mean, acc_mean = run_training_epoch(
+                        sess, train_context
+                    )
 
                     if epoch % summary_epochs == 0:
                         # Store training summaries
                         sum_str = sess.run(summary_op)
                         writer.add_summary(sum_str, epoch)
 
-                        # Track training loss
-                        sum_str, loss, acc = sess.run(
-                            [summary_op, loss_op, acc_op]
-                        )
-
                         self.log_info(
                             '[%d] Training Loss: %f, Accuracy: %f'
-                            % (epoch, loss, acc)
+                            % (epoch, loss_mean, acc_mean)
                         )
 
                 self.log_info('Finished training at step %d' % max_epochs)
@@ -120,18 +117,14 @@ class DeepKernelModel(RegressorMixin):
         folder = params.get('folder', None)
         should_save = folder is not None
         summary_epochs = params.get('summary_epochs', 1)
-        validation_epochs = params.get('validation_epochs', 5)
-        train_tolerance = params.get('train_tolerance', 1e-3)
-        tolerance_fails = params.get('tolerance_fails', 3)
+        strip_length = params.get('strip_length', 5)
+        progress_thresh = params.get('progress_thresh', 0.1)
+        max_successive_strips = params.get('max_successive_strips', 3)
 
-        # Tracking initialization
-        prev_train_loss = float('inf')
-        fails_in_row = 0
-        best_validation = {
-            'val_loss': float('inf'), 'val_acc': 0.0, 'epoch': 0,
-            'train_loss': float('inf'), 'train_acc': 0.0
-        }
-
+        best_model = {'val_acc': float('-inf')}
+        prev_val_err = float('inf')
+        successive_fails = 0
+        
         with tf.Graph().as_default() as graph:
 
             step = create_global_step()
@@ -140,12 +133,12 @@ class DeepKernelModel(RegressorMixin):
             reader = DataReader(dataset)
 
             # Get training operations
-            _, train_loss_op, train_op, train_acc_op, train_steps_epoch = build_workflow(  # noqa
+            train_context = build_run_context(
                 dataset, reader, DataMode.TRAINING, train_flds, step, **params
             )
 
             # Get validation operations
-            _, val_loss_op, _, val_acc_op, val_steps_epoch = build_workflow(
+            val_context = build_run_context(
                 dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params  # noqa
             )
 
@@ -162,7 +155,7 @@ class DeepKernelModel(RegressorMixin):
             val_summary_op = tf.summary.merge_all(DataMode.VALIDATION)
 
             # Track of metrics
-            train_losses, train_accs = [], []
+            train_losses, train_errors = [], []
 
             if should_save:
                 saver = tf.train.Saver()
@@ -178,34 +171,30 @@ class DeepKernelModel(RegressorMixin):
 
                 for epoch in range(max_epochs):
 
-                    for _ in range(train_steps_epoch):
-                        _, loss, acc = sess.run(
-                            [train_op, train_loss_op, train_acc_op]
-                        )
-                        train_losses.append(loss)
-                        train_accs.append(acc)
+                    epoch_loss, epoch_acc = run_training_epoch(
+                        sess, train_context
+                    )
+                    train_losses.append(epoch_loss)
+                    train_errors.append(1-epoch_acc)
 
                     if should_save and epoch % summary_epochs == 0:
                         # Store training summaries for current
-                        sum_str = sess.run([train_summary_op])
-                        sum_str_val = sess.run([val_summary_op])
+                        sum_str = sess.run(train_summary_op)
+                        sum_str_val = sess.run(val_summary_op)
                         train_writer.add_summary(sum_str, epoch)
                         val_writer.add_summary(sum_str_val, epoch)
 
-                    if epoch % validation_epochs == 0:
+                    if epoch % strip_length == 0 and epoch != 0:
 
                         # Track training loss and restart values
-                        mean_train_loss = np.mean(train_losses)
-                        mean_train_acc = np.mean(train_accs)
                         self.log_info(
                             '[%d] Training Loss: %f, Accuracy: %f'
-                            % (epoch, mean_train_loss, mean_train_acc)
+                            % (epoch, epoch_loss, epoch_acc)
                         )
-                        train_losses, train_accs = [], []
 
                         # Track validation loss
                         mean_val_loss, mean_val_acc = eval_epoch(
-                            sess, val_loss_op, val_acc_op, val_steps_epoch
+                            sess, val_context
                         )
                         self.log_info(
                             '[%d] Validation loss: %f, Accuracy: %f'
@@ -213,49 +202,60 @@ class DeepKernelModel(RegressorMixin):
                         )
 
                         # Track best model at validation
-                        if best_validation['val_acc'] < mean_val_acc:
+                        if best_model['val_acc'] < mean_val_acc:
                             self.log_info('[%d] New best found' % epoch)
 
                             if should_save:
                                 save_model(
-                                    sess, saver, val_writer_path, epoch
+                                    sess, saver, folder, epoch
                                 )
 
-                            best_validation = {
+                            best_model = {
                                 'val_loss': mean_val_loss,
                                 'val_acc': mean_val_acc,
                                 'epoch': epoch,
-                                'train_loss': mean_train_loss,
-                                'train_acc': mean_train_acc
+                                'train_loss': epoch_loss,
+                                'train_acc': epoch_acc,
                             }
 
-                        # Stop if training hasn't improved in several times
-                        improved_diff = (prev_train_loss - mean_train_loss)
-                        improved_ratio = improved_diff / prev_train_loss
-                        if mean_train_loss > prev_train_loss or \
-                                improved_ratio < train_tolerance:
-                            fails_in_row += 1
-                            self.log_info(
-                                '[%d] %d fails in row' % (epoch, fails_in_row)
-                            )
-                        else:
-                            fails_in_row = 0
-
-                        if fails_in_row == tolerance_fails:
+                        # Stop using progress criteria
+                        train_progress = progress(train_errors)
+                        if train_progress < progress_thresh:
                             self.log_info(
                                 '[%d] Stuck in training due to ' % epoch +
-                                'small or no improving. Halting...'
+                                'lack of progress (%f < %f). Halting...'
+                                % (train_progress, progress_thresh)
                             )
                             break
 
-                        prev_train_loss = mean_train_loss
+                        # Stop using UP criteria
+                        if prev_val_err < (1 - mean_val_acc):
+                            successive_fails += 1
+                            self.log_info(
+                                '[%d] Validation error increases. ' % epoch +
+                                'Successive fails: %d' % successive_fails
+                            )
+                        else:
+                            successive_fails = 0
 
-                self.log_info('Best model found: {}'.format(best_validation))
+                        if successive_fails == max_successive_strips:
+                            self.log_info(
+                                '[%d] Validation error increased ' % epoch +
+                                'for %d successive ' % max_successive_strips +
+                                'times. Halting ...'
+                            )
+                            break
+
+                        # Restart strip information
+                        prev_val_err = 1 - mean_val_acc
+                        train_losses, train_errors = [], []
+
+                self.log_info('Best model found: {}'.format(best_model))
 
                 coord.request_stop()
                 coord.join(threads)
 
-                return best_validation
+                return best_model
 
     def predict(self, X=None, y=None, **params):
 
@@ -271,7 +271,7 @@ class DeepKernelModel(RegressorMixin):
             reader = DataReader(dataset)
 
             # Get training operations
-            _, loss_op, _, acc_op, _ = build_workflow(
+            test_context = build_run_context(
                 dataset=dataset, reader=reader, tag=DataMode.TEST,
                 folds=None, step=step, is_training=False, **params
             )
@@ -301,7 +301,9 @@ class DeepKernelModel(RegressorMixin):
                     try:
 
                         # Track loss and accuracy until queue exhausted
-                        loss, acc = sess.run([loss_op, acc_op])
+                        loss, acc = sess.run(
+                            [test_context.loss_op, test_context.acc_op]
+                        )
                         losses.append(loss)
                         accs.append(acc)
 
@@ -316,7 +318,7 @@ class DeepKernelModel(RegressorMixin):
 
     def log_info(self, msg):
         if self._verbose:
-            logger.warn(msg)
+            logger.info(msg)
 
 
 def get_loss_op(logits, y, sum_collection, **params):
@@ -346,21 +348,25 @@ def get_loss_op(logits, y, sum_collection, **params):
     return loss_op
 
 
-def build_workflow(dataset,
-                   reader,
-                   tag,
-                   folds,
-                   step,
-                   reuse=False,
-                   is_training=True,
-                   **params):
-    lr = params.get('lr')
+def build_run_context(dataset,
+                      reader,
+                      tag,
+                      folds,
+                      step,
+                      reuse=False,
+                      is_training=True,
+                      **params):
+    lr = params.get('lr', 0.01)
     network_fn = params.get('network_fn', kernel_example_layout_fn)
     batch_size = params.get('batch_size')
     memory_factor = params.get('memory_factor')
     n_threads = params.get('n_threads')
 
-    steps_per_epoch = int(dataset.get_fold_size() * len(folds) / batch_size)
+    if folds is not None:
+        fold_size = dataset.get_fold_size()
+        steps_per_epoch = int(fold_size * len(folds) / batch_size)
+    else:
+        steps_per_epoch = None
 
     data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
     features, labels = reader.read_folded_batch(
@@ -379,7 +385,6 @@ def build_workflow(dataset,
         logits = network_fn(features,
                             columns=dataset.get_wide_columns(),
                             outputs=dataset.get_num_classes())
-        prediction = tf.nn.softmax(logits)
 
         loss_op = get_loss_op(
             logits=logits, y=labels, sum_collection=tag, **params
@@ -389,30 +394,61 @@ def build_workflow(dataset,
         train_op = optimizer.minimize(loss_op, global_step=step)
 
         # Evaluate model
-        accuracy_op = get_accuracy(prediction, labels)
+        accuracy_op = get_accuracy(tf.nn.softmax(logits), labels)
         tf.summary.scalar('accuracy', accuracy_op, [tag])
 
-    return logits, loss_op, train_op, accuracy_op, steps_per_epoch
+    return RunContext(
+        logits_op=logits,
+        train_op=train_op,
+        loss_op=loss_op,
+        acc_op=accuracy_op,
+        steps_per_epoch=steps_per_epoch
+    )
 
 
 from protodata import datasets
 from protodata.utils import get_data_location
-
+import sys
 
 if __name__ == '__main__':
 
-    m = DeepKernelModel(verbose=True)
-    m.fit(
-        data_settings_fn=datasets.BalanceSettings,
-        training_folds=range(9),
-        validation_folds=[9],
-        max_epochs=100000,
-        data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),
-        l2_ratio=0,
-        validation_epochs=1,
-        lr=0.001,
-        memory_factor=2,
-        hidden_units=64,
-        n_threads=4,
-        batch_size=16,
-    )
+    fit = bool(int(sys.argv[1]))
+
+    print(sys.argv)
+    print(type(sys.argv[1]))
+
+    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/test'
+
+    if fit:
+
+        m = DeepKernelModel(verbose=True)
+        m.fit(
+            data_settings_fn=datasets.AusSettings,
+            training_folds=range(7),
+            validation_folds=[9, 8],
+            max_epochs=100000,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            l2_ratio=1e-3,
+            lr=0.01,
+            memory_factor=2,
+            hidden_units=64,
+            n_threads=4,
+            strip_length=2,
+            batch_size=16,
+            folder=folder
+        )
+
+    else:
+
+        m = DeepKernelModel(verbose=True)
+
+        res = m.predict(
+            data_settings_fn=datasets.AusSettings,
+            folder=folder,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            memory_factor=2,
+            n_threads=4,
+            batch_size=16,
+        )
+
+        print('Got results {} for prediction'.format(res))

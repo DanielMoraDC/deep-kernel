@@ -85,9 +85,10 @@ def evaluate_model(dataset,
 
     # Remove not used parameters
     del params['max_epochs']
-    del params['validation_epochs']
+    del params['strip_length']
 
-    logger.info('Using model {} for training'.format(params))
+    logger.info('Using model {} for training with results {}'
+                .format(params, stats))
 
     model = DeepKernelModel(verbose=False)
     total_stats = []
@@ -121,6 +122,8 @@ def evaluate_model(dataset,
         )
 
         test_stats.update({'time(s)': diff})
+        logger.info('Training [{}] got results {}'.format(i, test_stats))
+
         total_stats.append(test_stats)
 
     return total_stats

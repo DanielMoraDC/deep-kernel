@@ -7,7 +7,7 @@ def example_layout_fn(x, outputs, **params):
     hidden_units = params.get('hidden_units', 128)
     inputs = _input_layer(x, **params)
     hidden = _fully_connected(inputs, hidden_units)
-    return _fully_connected(hidden, outputs)
+    return _fully_connected(hidden, outputs, activation_fn=None)
 
 
 def kernel_example_layout_fn(x, outputs, **params):
