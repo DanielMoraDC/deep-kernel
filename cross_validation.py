@@ -17,6 +17,8 @@ def evaluate(dataset, settings, **params):
     folds_set = range(n_folds)
     results = []
 
+    logger.info('Starting evaluation ...')
+
     for val_fold in folds_set:
         model = DeepKernelModel(verbose=False)
         best_model = model.fit(
@@ -25,6 +27,10 @@ def evaluate(dataset, settings, **params):
             validation_folds=[val_fold],
             data_location=get_data_location(dataset, folded=True),
             **params
+        )
+
+        logger.info(
+            'Using validation fold {}: {}'.format(val_fold, best_model)
         )
 
         results.append(best_model)
