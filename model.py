@@ -124,7 +124,7 @@ class DeepKernelModel(RegressorMixin):
         best_model = {'val_acc': float('-inf')}
         prev_val_err = float('inf')
         successive_fails = 0
-        
+
         with tf.Graph().as_default() as graph:
 
             step = create_global_step()
@@ -383,7 +383,8 @@ def build_run_context(dataset,
 
         logits = network_fn(features,
                             columns=dataset.get_wide_columns(),
-                            outputs=dataset.get_num_classes())
+                            outputs=dataset.get_num_classes(),
+                            **params)
 
         loss_op = get_loss_op(
             logits=logits,
@@ -414,6 +415,7 @@ def build_run_context(dataset,
 from protodata import datasets
 from protodata.utils import get_data_location
 import sys
+import shutil
 
 if __name__ == '__main__':
 
@@ -423,18 +425,23 @@ if __name__ == '__main__':
 
     if fit:
 
+        if os.path.isdir(folder):
+            shutil.rmtree(folder)            
+
         m = DeepKernelModel(verbose=True)
         m.fit(
-            data_settings_fn=datasets.AusSettings,
-            training_folds=range(8),
+            data_settings_fn=datasets.BalanceSettings,
+            training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),  # noqa
             l2_ratio=0.0,
             lr=0.01,
             memory_factor=2,
-            hidden_units=128,
+            hidden_units=256,
             n_threads=4,
+            kernel_size=64,
+            kernel_std=0.50,
             strip_length=3,
             batch_size=16,
             folder=folder
@@ -445,9 +452,9 @@ if __name__ == '__main__':
         m = DeepKernelModel(verbose=True)
 
         res = m.predict(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.BalanceSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),  # noqa
             memory_factor=2,
             n_threads=4,
             batch_size=16,
