@@ -5,8 +5,8 @@ import logging
 import numpy as np
 
 from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy, save_model, get_writer, eval_epoch, \
-    progress, RunContext, run_training_epoch
+    l2_norm, get_accuracy_op, save_model, get_writer, eval_epoch, \
+    progress, RunContext, run_training_epoch, get_loss_fn
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
@@ -318,11 +318,10 @@ class DeepKernelModel(RegressorMixin):
 
     def log_info(self, msg):
         if self._verbose:
-            logger.info(msg)
+            logger.warn(msg)
 
 
-def get_loss_op(logits, y, sum_collection, **params):
-    num_classes = logits.get_shape().as_list()[-1]
+def get_loss_op(logits, y, sum_collection, n_classes, **params):
     l1_ratio = params.get('l1_ratio', None)
     l2_ratio = params.get('l2_ratio', None)
 
@@ -335,8 +334,8 @@ def get_loss_op(logits, y, sum_collection, **params):
     tf.summary.scalar('l2_term', l2_term, [sum_collection])
 
     loss_term = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
-            logits=logits, labels=tf.one_hot(y, depth=num_classes)
+        get_loss_fn(
+            logits, y, n_classes
         )
     )
 
@@ -387,14 +386,20 @@ def build_run_context(dataset,
                             outputs=dataset.get_num_classes())
 
         loss_op = get_loss_op(
-            logits=logits, y=labels, sum_collection=tag, **params
+            logits=logits,
+            y=labels,
+            sum_collection=tag,
+            n_classes=dataset.get_num_classes(),
+            **params
         )
 
         optimizer = tf.train.AdamOptimizer(learning_rate=lr)
         train_op = optimizer.minimize(loss_op, global_step=step)
 
         # Evaluate model
-        accuracy_op = get_accuracy(tf.nn.softmax(logits), labels)
+        accuracy_op = get_accuracy_op(
+            logits, labels, dataset.get_num_classes()
+        )
         tf.summary.scalar('accuracy', accuracy_op, [tag])
 
     return RunContext(
@@ -414,26 +419,23 @@ if __name__ == '__main__':
 
     fit = bool(int(sys.argv[1]))
 
-    print(sys.argv)
-    print(type(sys.argv[1]))
-
-    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/test'
+    folder = 'output'
 
     if fit:
 
         m = DeepKernelModel(verbose=True)
         m.fit(
             data_settings_fn=datasets.AusSettings,
-            training_folds=range(7),
-            validation_folds=[9, 8],
+            training_folds=range(8),
+            validation_folds=[9],
             max_epochs=100000,
             data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            l2_ratio=1e-3,
+            l2_ratio=0.0,
             lr=0.01,
             memory_factor=2,
-            hidden_units=64,
+            hidden_units=128,
             n_threads=4,
-            strip_length=2,
+            strip_length=3,
             batch_size=16,
             folder=folder
         )

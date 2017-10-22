@@ -4,20 +4,32 @@ from kernels import KernelFunction
 
 
 def example_layout_fn(x, outputs, **params):
+    output_units = _map_classes_to_output(outputs)
     hidden_units = params.get('hidden_units', 128)
     inputs = _input_layer(x, **params)
     hidden = _fully_connected(inputs, hidden_units)
-    return _fully_connected(hidden, outputs, activation_fn=None)
+    return _fully_connected(hidden, output_units, activation_fn=None)
 
 
 def kernel_example_layout_fn(x, outputs, **params):
+    output_units = _map_classes_to_output(outputs)
     hidden_units = params.get('hidden_units', 128)
     inputs = _input_layer(x, **params)
     kernel = KernelFunction()
     # TODO: test whether we should use relu or no activation
     hidden = _fully_connected(inputs, hidden_units, activation_fn=None)
     hidden_kernel = kernel.apply_kernel(hidden, dims=hidden_units)
-    return _fully_connected(hidden_kernel, outputs, activation_fn=None)
+    return _fully_connected(hidden_kernel, output_units, activation_fn=None)
+
+
+def _map_classes_to_output(outputs):
+    if outputs == 2:
+        # Logistic regression
+        return 1
+    elif outputs > 2:
+        return outputs
+    else:
+        raise ValueError('Number of outputs must be at least 2')
 
 
 def _fully_connected(x, outputs, activation_fn=tf.nn.relu):

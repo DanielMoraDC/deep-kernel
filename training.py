@@ -76,6 +76,20 @@ def create_global_step():
                            collections=collections)
 
 
+def get_loss_fn(logits, labels, n_classes):
+    if n_classes == 2:
+        return tf.nn.sigmoid_cross_entropy_with_logits(
+            labels=tf.cast(labels, tf.float32), logits=logits
+        )
+    elif n_classes > 2:
+        return tf.nn.softmax_cross_entropy_with_logits(
+            labels=tf.one_hot(labels, depth=n_classes),
+            logits=logits
+        )
+    else:
+        raise ValueError('Number of outputs must be at least 2')
+
+
 def l1_norm(weights):
     return tf.add_n([tf.reduce_sum(tf.abs(x)) for x in weights])
 
@@ -99,11 +113,26 @@ def get_model_weights():
     return weights
 
 
-def get_accuracy(softmax, labels):
-    predicted = tf.argmax(softmax, 1)
+def get_accuracy_op(logits, labels, n_classes):
+    if n_classes == 2:
+        # Labels should be either 0 or 1
+        predicted = tf.squeeze(
+            _binary_activation(tf.nn.sigmoid(logits)),
+            1
+        )
+    else:
+        predicted = tf.argmax(tf.nn.softmax(logits), 1)
+
     casted_labels = tf.squeeze(tf.cast(labels, tf.int64), 1)
     correct_pred = tf.equal(predicted, casted_labels)
     return tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+
+
+def _binary_activation(x):
+    negative_idx = tf.less(x, tf.ones(tf.shape(x)) * 0.5)
+    zero_tensor = tf.zeros(tf.shape(x))
+    one_tensor = tf.ones(tf.shape(x))
+    return tf.cast(tf.where(negative_idx, zero_tensor, one_tensor), tf.int64)
 
 
 def save_model(monitored_sess, saver, folder, step):
