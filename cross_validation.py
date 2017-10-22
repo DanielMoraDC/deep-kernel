@@ -11,8 +11,10 @@ logger = get_logger(__name__)
 
 
 def evaluate(dataset, settings, **params):
-    """ Returns the average metric over the folds for the
-    given execution parameters """
+    """
+    Returns the average metric over the folds for the
+    given execution parameters
+    """
     n_folds = settings(get_data_location(dataset, folded=True)).get_fold_num()
     folds_set = range(n_folds)
     results = []
@@ -98,7 +100,6 @@ def evaluate_model(dataset,
                 .format(params, stats))
 
     model = DeepKernelModel(verbose=False)
-    total_stats = []
 
     total_stats = []
     for i in range(runs):
