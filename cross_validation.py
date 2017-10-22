@@ -71,6 +71,7 @@ def average_results(results):
     """ Returns the average of the metrics for all the folds """
     return {
         k: np.mean([x[k] for x in results])
+        if k != 'epoch' else np.median([x[k] for x in results])
         for k in results[0].keys()
     }
 
