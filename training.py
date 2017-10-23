@@ -46,7 +46,9 @@ def progress(strip):
     is larger than the minimum training error during the strip.
     """
     k = len(strip)
-    return 1000 * ((np.sum(strip)/(np.min(strip)*k)) - 1)
+    num = np.sum(strip)
+    den = np.min(strip)*k
+    return 1000 * ((num/den) - 1) if den != 0.0 else 0.0
 
 
 def get_writer(graph, folder, data_mode):
