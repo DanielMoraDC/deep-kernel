@@ -5,6 +5,8 @@ import logging
 import collections
 import os
 
+from kernels import KERNEL_ASSIGN_OPS
+
 
 logger = logging.getLogger(__name__)
 
@@ -142,3 +144,7 @@ def save_model(monitored_sess, saver, folder, step):
     sess = monitored_sess._sess._sess._sess._sess
     saver.save(sess, path)
     return path
+
+
+def init_kernel_ops(sess):
+    sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))

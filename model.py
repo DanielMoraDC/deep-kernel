@@ -6,13 +6,16 @@ import numpy as np
 
 from training import create_global_step, get_model_weights, l1_norm, \
     l2_norm, get_accuracy_op, save_model, get_writer, eval_epoch, \
-    progress, RunContext, run_training_epoch, get_loss_fn
+    progress, RunContext, run_training_epoch, get_loss_fn, \
+    init_kernel_ops
 from layout import example_layout_fn, kernel_example_layout_fn
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
 
 logger = logging.getLogger(__name__)
+
+# TODO: switch Monitored Session by custom
 
 # Disable Tensorflow debug messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -75,6 +78,8 @@ class DeepKernelModel(RegressorMixin):
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
+
+                init_kernel_ops(sess)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -164,6 +169,8 @@ class DeepKernelModel(RegressorMixin):
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
+
+                init_kernel_ops(sess)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -420,8 +427,8 @@ import shutil
 if __name__ == '__main__':
 
     fit = bool(int(sys.argv[1]))
-
-    folder = 'output'
+    
+    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/model'
 
     if fit:
 
@@ -438,10 +445,11 @@ if __name__ == '__main__':
             l2_ratio=0.0,
             lr=0.01,
             memory_factor=2,
-            hidden_units=256,
+            hidden_units=128,
             n_threads=4,
-            kernel_size=64,
-            kernel_std=0.50,
+            kernel_size=128,
+            kernel_mean=0.0,
+            kernel_std=1.0,
             strip_length=3,
             batch_size=16,
             folder=folder
@@ -457,6 +465,11 @@ if __name__ == '__main__':
             data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),  # noqa
             memory_factor=2,
             n_threads=4,
+            hidden_units=128,
+            kernel_size=128,
+            kernel_mean=0.0,
+            kernel_std=1.0,
+            strip_length=3,
             batch_size=16,
         )
 
