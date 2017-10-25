@@ -44,7 +44,7 @@ def _exists_variable(name):
     """
     Returns whether variable exists in the current scope
     """
-    all_vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=name)
+    all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
     for var in all_vars:
         if var == name:
             return True
