@@ -99,8 +99,7 @@ def l1_norm(weights):
 
 
 def l2_norm(weights):
-    l2_loss = tf.add_n([tf.nn.l2_loss(x) for x in weights])
-    return tf.divide(l2_loss, 2.0)
+    return tf.add_n([tf.nn.l2_loss(x) for x in weights])
 
 
 def get_model_weights():
