@@ -2,18 +2,18 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from cross_validation import evaluate_model
+from model_validation import evaluate_model_cv
 
-CV_TRIALS = 2
+CV_TRIALS = 50
 SIM_RUNS = 10
 
 
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [16]),
+        'batch_size': hp.choice('batch_size', [16, 32]),
         # l1 ratio not present in paper
-        'l2_ratio': hp.choice('l2_ratio', [0, 1e-1, 1e-2, 1e-3]),
+        'l2_ratio': hp.choice('l2_ratio', [0, 1e-1, 1e-2, 1e-3, 1e-4]),
         'lr': hp.choice('lr', [1e-1, 1e-2, 1e-3]),
         'kernel_size': hp.choice('kernel_size', [32, 64, 128]),
         'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
@@ -26,9 +26,10 @@ if __name__ == '__main__':
         'strip_length': 5,
         'memory_factor': 1,
         'max_epochs': 1000,
+        'kernel_mean': 0.0
     })
 
-    all_stats = evaluate_model(
+    all_stats = evaluate_model_cv(
         datasets.Datasets.AUS,
         datasets.AusSettings,
         search_space,

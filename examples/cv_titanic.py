@@ -2,9 +2,9 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from cross_validation import evaluate_model
+from model_validation import evaluate_model_cv
 
-CV_TRIALS = 10
+CV_TRIALS = 25
 SIM_RUNS = 10
 
 
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         'progress_thresh': 0.1
     })
 
-    all_stats = evaluate_model(
+    all_stats = evaluatevaluate_model_cve_model(
         datasets.Datasets.TITANIC,
         datasets.TitanicSettings,
         search_space,
