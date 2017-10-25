@@ -29,7 +29,7 @@ if __name__ == '__main__':
         'progress_thresh': 0.1
     })
 
-    all_stats = evaluatevaluate_model_cve_model(
+    all_stats = evaluate_model_cv(
         datasets.Datasets.TITANIC,
         datasets.TitanicSettings,
         search_space,
