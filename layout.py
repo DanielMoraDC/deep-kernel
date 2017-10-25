@@ -31,13 +31,13 @@ def kernel_example_layout_fn(x, outputs, **params):
     inputs = _input_layer(x, name='input', **params)
 
     # TODO: test whether we should use relu or no activation
-    '''hidden = _fully_connected(
-        inputs, hidden_units, name='hidden', activation_fn=None
-    )'''
-    
     hidden = _fully_connected(
-        inputs, hidden_units, name='hidden'
+        inputs, hidden_units, name='hidden', activation_fn=None
     )
+
+    '''hidden = _fully_connected(
+        inputs, hidden_units, name='hidden'
+    )'''
 
     hidden_kernel = kernel.apply_kernel(hidden)
 
