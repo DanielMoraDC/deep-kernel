@@ -34,7 +34,7 @@ def kernel_example_layout_fn(x, outputs, **params):
     '''hidden = _fully_connected(
         inputs, hidden_units, name='hidden', activation_fn=None
     )'''
-
+    
     hidden = _fully_connected(
         inputs, hidden_units, name='hidden'
     )
