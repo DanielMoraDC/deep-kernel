@@ -21,7 +21,7 @@ def _evaluate_cv(dataset, settings, **params):
     folds_set = range(n_folds)
     results = []
 
-    logger.info('Starting evaluation ...')
+    logger.info('Starting evaluation on {} ...'.format(params))
 
     for val_fold in folds_set:
         model = DeepKernelModel(verbose=False)
@@ -74,7 +74,7 @@ def evaluate_model_cv(dataset,
         max_evals=cv_trials,
         trials=trials
     )
-    
+
     params = space_eval(search_space, best)
     stats = trials.best_trial['result']['averaged']
 
@@ -95,9 +95,9 @@ def _evaluate(dataset, settings, max_epochs, **params):
     n_folds = settings(get_data_location(dataset, folded=True)).get_fold_num()
     validation_fold = np.random.randint(n_folds)
 
-    logger.info('Starting evaluation ...')
+    logger.info('Starting evaluation on {} ...'.format(params))
 
-    model = DeepKernelModel(verbose=False)
+    model = DeepKernelModel(verbose=True)
     best_model = model.fit(
         data_settings_fn=settings,
         max_epochs=max_epochs,
@@ -108,7 +108,9 @@ def _evaluate(dataset, settings, max_epochs, **params):
     )
 
     logger.info(
-        'Early stopping finished with best model: {}'.format(best_model)
+        'Early stopping on: {} \n'.format(params) +
+        'Got results: {} \n'.format(best_model) +
+        '----------------------------------------'
     )
 
     return {
