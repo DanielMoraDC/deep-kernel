@@ -3,20 +3,22 @@ import tensorflow as tf
 from kernels import RandomFourierFeatures
 
 
-def example_layout_fn(x, outputs, **params):
+def example_layout_fn(x, outputs, tag, **params):
     output_units = _map_classes_to_output(outputs)
     hidden_units = params.get('hidden_units', 128)
 
     inputs = _input_layer(x, name='input', **params)
+    tf.summary.histogram("base/input", inputs, [tag])
 
     hidden = _fully_connected(inputs, hidden_units, name='hidden')
+    tf.summary.histogram("base/fc_layer", hidden, [tag])
 
     return _fully_connected(
         hidden, output_units, 'output', activation_fn=None
     )
 
 
-def kernel_example_layout_fn(x, outputs, **params):
+def kernel_example_layout_fn(x, outputs, tag, **params):
     output_units = _map_classes_to_output(outputs)
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
@@ -29,12 +31,15 @@ def kernel_example_layout_fn(x, outputs, **params):
     )
 
     inputs = _input_layer(x, name='input', **params)
+    tf.summary.histogram("kernel/input", inputs, [tag])
 
     hidden = _fully_connected(
         inputs, hidden_units, name='hidden', activation_fn=None
     )
+    tf.summary.histogram("kernel/fc_layer", hidden, [tag])
 
     hidden_kernel = kernel.apply_kernel(hidden)
+    tf.summary.histogram("kernel/kernel_layer", hidden_kernel, [tag])
 
     return _fully_connected(
         hidden_kernel, output_units, name='output', activation_fn=None

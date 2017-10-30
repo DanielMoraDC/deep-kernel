@@ -391,6 +391,7 @@ def build_run_context(dataset,
         logits = network_fn(features,
                             columns=dataset.get_wide_columns(),
                             outputs=dataset.get_num_classes(),
+                            tag=tag,
                             **params)
 
         loss_op = get_loss_op(
@@ -435,23 +436,45 @@ if __name__ == '__main__':
         if os.path.isdir(folder):
             shutil.rmtree(folder)            
 
+        '''
         m = DeepKernelModel(verbose=True)
         m.fit(
-            data_settings_fn=datasets.BalanceSettings,
+            data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),  # noqa
-            l2_ratio=0.0,
-            lr=0.01,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            l2_ratio=1e-2,
+            lr=1e-4,
             memory_factor=2,
-            hidden_units=128,
+            hidden_units=64,
             n_threads=4,
             kernel_size=128,
             kernel_mean=0.0,
-            kernel_std=1.0,
-            strip_length=3,
-            batch_size=16,
+            kernel_std=0.01,
+            strip_length=5,
+            batch_size=32,
+            folder=folder
+        )
+        '''
+
+        m = DeepKernelModel(verbose=True)
+        m.fit(
+            data_settings_fn=datasets.AusSettings,
+            training_folds=range(9),
+            validation_folds=[9],
+            max_epochs=100000,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            l2_ratio=1e-2,
+            lr=1e-4,
+            memory_factor=2,
+            hidden_units=32,
+            n_threads=4,
+            kernel_size=128,
+            kernel_mean=0.0,
+            kernel_std=0.01,
+            strip_length=5,
+            batch_size=32,
             folder=folder
         )
 
@@ -460,17 +483,16 @@ if __name__ == '__main__':
         m = DeepKernelModel(verbose=True)
 
         res = m.predict(
-            data_settings_fn=datasets.BalanceSettings,
+            data_settings_fn=datasets.AusSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.BALANCE, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             memory_factor=2,
             n_threads=4,
-            hidden_units=128,
+            hidden_units=32,
             kernel_size=128,
             kernel_mean=0.0,
-            kernel_std=1.0,
-            strip_length=3,
-            batch_size=16,
+            kernel_std=0.1,
+            batch_size=32,
         )
 
         print('Got results {} for prediction'.format(res))
