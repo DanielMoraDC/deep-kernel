@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from kernels import KernelFunction
+from kernels import RandomFourierFeatures
 
 
 def example_layout_fn(x, outputs, **params):
@@ -21,7 +21,7 @@ def kernel_example_layout_fn(x, outputs, **params):
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
     kernel_std = params.get('kernel_std', 32)
-    kernel = KernelFunction(
+    kernel = RandomFourierFeatures(
         name='kernel_layer',
         input_dims=hidden_units,
         std=kernel_std,
@@ -30,14 +30,9 @@ def kernel_example_layout_fn(x, outputs, **params):
 
     inputs = _input_layer(x, name='input', **params)
 
-    # TODO: test whether we should use relu or no activation
     hidden = _fully_connected(
         inputs, hidden_units, name='hidden', activation_fn=None
     )
-
-    '''hidden = _fully_connected(
-        inputs, hidden_units, name='hidden'
-    )'''
 
     hidden_kernel = kernel.apply_kernel(hidden)
 
