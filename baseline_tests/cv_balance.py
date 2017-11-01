@@ -14,10 +14,10 @@ if __name__ == '__main__':
         'batch_size': hp.choice('batch_size', [16]),
         # l1 ratio not present in paper
         'l2_ratio': hp.choice('l2_ratio', [0, 1e-1, 1e-2, 1e-3]),
-        'lr': hp.choice('lr', [1e-1, 1e-2, 1e-3]),
+        'lr': hp.choice('lr', [1e-2, 1e-3, 1e-4]),
         'kernel_size': hp.choice('kernel_size', [32, 64, 128]),
         'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [128, 256])
+        'hidden_units': hp.choice('hidden_units', [64, 128, 256])
     }
 
     # Fixed parameters
@@ -33,7 +33,8 @@ if __name__ == '__main__':
         datasets.Datasets.BALANCE,
         datasets.BalanceSettings,
         search_space,
-        '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/ev_balance',
+        'output_balance',
+        #'/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/ev_balance',
         cv_trials=CV_TRIALS,
         runs=SIM_RUNS
     )
