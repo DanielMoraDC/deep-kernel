@@ -4,7 +4,7 @@ import numpy as np
 from protodata import datasets
 from model_validation import evaluate_model
 
-CV_TRIALS = 25
+CV_TRIALS = 20
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
