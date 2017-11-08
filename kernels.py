@@ -52,7 +52,7 @@ class RandomFourierFeatures(KernelFunction):
             tf.add_to_collection(KERNEL_ASSIGN_OPS, assign_op)
 
         cos = tf.cos(tf.matmul(x, matrix))
-        return tf.divide(cos, np.sqrt(self._input_dims))
+        return tf.divide(cos, np.sqrt(self._kernel_size))
 
 
 def _exists_variable(name):
