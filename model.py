@@ -1,14 +1,11 @@
-from sklearn.base import RegressorMixin
 import tensorflow as tf
 import os
 import logging
 import numpy as np
 
-from training import create_global_step, get_model_weights, l1_norm, \
-    l2_norm, get_accuracy_op, save_model, get_writer, eval_epoch, \
-    progress, RunContext, run_training_epoch, get_loss_fn, \
-    init_kernel_ops
-from layout import example_layout_fn, kernel_example_layout_fn
+from training import create_global_step, save_model, get_writer, \
+    eval_epoch, progress, run_training_epoch, init_kernel_ops, \
+    variables_from_layers, build_run_context
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -21,29 +18,12 @@ logger = logging.getLogger(__name__)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-class DeepKernelModel(RegressorMixin):
+class DeepKernelModel():
 
     """ Class that combines fully connected and kernel functions """
 
     def __init__(self, verbose=True):
         self._verbose = verbose
-
-    def fit(self, X=None, y=None, **params):
-
-        train_folds = params.get('training_folds', None)
-        val_folds = params.get('validation_folds', None)
-        max_epochs = params.get('max_epochs', None)
-
-        if train_folds is not None and val_folds is not None \
-                and max_epochs is not None:
-            return self.fit_and_validate(**params)
-        elif max_epochs is not None:
-            return self.fit_training(**params)
-        else:
-            raise ValueError(
-                'Either training and validation folds or ' +
-                'number of epochs steps must be provided'
-            )
 
     def fit_training(self, **params):
 
@@ -79,7 +59,7 @@ class DeepKernelModel(RegressorMixin):
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                init_kernel_ops(sess)
+                self._perform_assigns(sess, **params)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -126,7 +106,7 @@ class DeepKernelModel(RegressorMixin):
         progress_thresh = params.get('progress_thresh', 0.1)
         max_successive_strips = params.get('max_successive_strips', 3)
 
-        best_model = {'val_error': float('-inf')}
+        best_model = {'val_error': float('inf')}
         prev_val_err = float('inf')
         successive_fails = 0
 
@@ -164,12 +144,23 @@ class DeepKernelModel(RegressorMixin):
             if should_save:
                 saver = tf.train.Saver()
 
+            if 'prev_layer_folder' in params:
+                num_layers = params['num_layers']
+                vars_to_restore = variables_from_layers(range(1, num_layers), False)
+                self.log_info(
+                    'Will try to restore variables: {}'.format(vars_to_restore)
+                )
+                restore_saver = tf.train.Saver(var_list=vars_to_restore)
+                restore_info = restore_saver, params['prev_layer_folder']
+            else:
+                restore_info = None
+
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                init_kernel_ops(sess)
+                self._perform_assigns(sess, restore_info, **params)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -208,7 +199,7 @@ class DeepKernelModel(RegressorMixin):
                         )
 
                         # Track best model at validation
-                        if best_model['val_error'] < (1 - mean_val_acc):
+                        if best_model['val_error'] > (1 - mean_val_acc):
                             self.log_info('[%d] New best found' % epoch)
 
                             if should_save:
@@ -263,6 +254,29 @@ class DeepKernelModel(RegressorMixin):
 
                 return best_model
 
+    def _perform_assigns(self, sess, restore_info, **params):
+        """
+        Assigns variables from folder checkpoints and perform pending ops
+        """
+        self.log_info('Initializing kernels...')
+        init_kernel_ops(sess)
+
+        if restore_info is None:
+            self.log_info(
+                'No restore info provided. No assign ops will be performed'
+            )
+        else:
+            restore_saver, prev_layer_folder = restore_info
+            ckpt = tf.train.get_checkpoint_state(prev_layer_folder)
+            if ckpt and ckpt.model_checkpoint_path:
+                self.log_info('Performing restoring op from previous layer')
+                restore_saver.restore(sess, ckpt.model_checkpoint_path)
+            else:
+                raise RuntimeError(
+                    'Restore saver provided but no valid checkpoint ' +
+                    'found in folder %s' % prev_layer_folder
+                )
+
     def predict(self, X=None, y=None, **params):
 
         data_settings_fn = params.get('data_settings_fn')
@@ -305,7 +319,6 @@ class DeepKernelModel(RegressorMixin):
                 while not finish:
 
                     try:
-
                         # Track loss and accuracy until queue exhausted
                         loss, acc = sess.run(
                             [test_context.loss_op, test_context.acc_op]
@@ -325,113 +338,6 @@ class DeepKernelModel(RegressorMixin):
     def log_info(self, msg):
         if self._verbose:
             logger.warn(msg)
-
-
-def get_loss_op(logits, y, sum_collection, n_classes, **params):
-    l1_ratio = params.get('l1_ratio', None)
-    l2_ratio = params.get('l2_ratio', None)
-
-    l1_term = l1_norm(get_model_weights()) * l1_ratio \
-        if l1_ratio is not None else tf.constant(0.0)
-    tf.summary.scalar('l1_term', l1_term, [sum_collection])
-
-    l2_term = l2_norm(get_model_weights()) * l2_ratio \
-        if l2_ratio is not None else tf.constant(0.0)
-    tf.summary.scalar('l2_term', l2_term, [sum_collection])
-
-    loss_term = tf.reduce_mean(
-        get_loss_fn(
-            logits, y, n_classes
-        )
-    )
-
-    tf.summary.scalar('loss_term', loss_term, [sum_collection])
-
-    loss_op = loss_term + l1_term + l2_term
-    tf.summary.scalar('total_loss', loss_op, [sum_collection])
-
-    return loss_op
-
-
-def build_run_context(dataset,
-                      reader,
-                      tag,
-                      folds,
-                      step,
-                      reuse=False,
-                      is_training=True,
-                      **params):
-    lr = params.get('lr', 0.01)
-    lr_decay = params.get('lr_decay', 0.5)
-    lr_decay_epocs = params.get('lr_decay_epochs', 500)
-    network_fn = params.get('network_fn', kernel_example_layout_fn)
-    batch_size = params.get('batch_size')
-    memory_factor = params.get('memory_factor')
-    n_threads = params.get('n_threads')
-
-    if folds is not None:
-        fold_size = dataset.get_fold_size()
-        steps_per_epoch = int(fold_size * len(folds) / batch_size)
-        lr_decay_steps = lr_decay_epocs * steps_per_epoch
-    else:
-        steps_per_epoch = None
-        lr_decay_steps = 10000  # Default value, not used
-
-    data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
-    features, labels = reader.read_folded_batch(
-        batch_size=batch_size,
-        data_mode=data_subset,
-        folds=folds,
-        memory_factor=memory_factor,
-        reader_threads=n_threads,
-        train_mode=is_training,
-        shuffle=True
-    )
-
-    scope_params = {'reuse': reuse}
-    with tf.variable_scope("network", **scope_params):
-
-        logits = network_fn(features,
-                            columns=dataset.get_wide_columns(),
-                            outputs=dataset.get_num_classes(),
-                            tag=tag,
-                            is_training=is_training,
-                            **params)
-
-        loss_op = get_loss_op(
-            logits=logits,
-            y=labels,
-            sum_collection=tag,
-            n_classes=dataset.get_num_classes(),
-            **params
-        )
-
-        # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
-        decayed_lr = tf.train.inverse_time_decay(
-            lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
-        )
-        tf.summary.scalar('lr', decayed_lr, [tag])
-
-        optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
-
-        # This is needed for the batch norm moving averages
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            train_op = optimizer.minimize(loss_op, global_step=step)
-
-        # Evaluate model
-        accuracy_op = get_accuracy_op(
-            logits, labels, dataset.get_num_classes()
-        )
-        tf.summary.scalar('accuracy', accuracy_op, [tag])
-
-    return RunContext(
-        logits_op=logits,
-        train_op=train_op,
-        loss_op=loss_op,
-        acc_op=accuracy_op,
-        steps_per_epoch=steps_per_epoch
-    )
 
 
 from protodata import datasets
@@ -473,7 +379,7 @@ if __name__ == '__main__':
         '''
 
         m = DeepKernelModel(verbose=True)
-        m.fit(
+        m.layerwise_fit(
             data_settings_fn=datasets.MagicSettings,
             training_folds=range(9),
             validation_folds=[9],

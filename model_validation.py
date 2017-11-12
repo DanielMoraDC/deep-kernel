@@ -6,10 +6,82 @@ import tempfile
 import shutil
 
 from model import DeepKernelModel
-from protodata.utils import get_data_location, get_logger
+from training import progress
+
+from protodata.utils import get_data_location, get_logger, create_dir
 
 
 logger = get_logger(__name__)
+
+
+def layer_wise_validate(dataset,
+                        settings,
+                        folder,
+                        max_layers=5,
+                        progress_thresh=0.1,
+                        max_epochs=10000,
+                        **params):
+
+    n_folds = settings(get_data_location(dataset, folded=True)).get_fold_num()
+
+    all_stats, stop, prev_val_error = [], False, float('inf')
+    for i in range(1, max_layers+1):
+
+        logger.info('\n Using %d layers...' % i)
+
+        subfolder = os.path.join(folder, 'layer_%d' % i)
+        create_dir(subfolder)
+
+        current_params = params.copy()
+
+        # For layers bigger than one we look for weights in the previous one
+        if i > 1:
+            current_params['prev_layer_folder'] = os.path.join(
+                folder, 'layer_' + str(i-1)
+            )
+
+        model = DeepKernelModel()
+        stats = model.fit_and_validate(
+            data_settings_fn=settings,
+            training_folds=range(n_folds-1),
+            max_epochs=max_epochs,
+            validation_folds=[n_folds-1],
+            data_location=get_data_location(dataset, folded=True),
+            layerwise_training=True,
+            num_layers=i,
+            folder=subfolder,
+            **current_params
+        )
+
+        logger.info(
+            '\nNetwork with {} layers results {} \n'.format(i, stats)
+        )
+
+        all_stats.append(stats)
+
+        train_progress = progress([x['train_error'] for x in all_stats])
+        if len(all_stats) > 1 and train_progress < progress_thresh:
+            logger.info(
+                '[Layer %d] Progress %f is lower than threshold %f'
+                % (i, train_progress, progress_thresh)
+            )
+            stop = True
+
+        if stats['val_error'] > prev_val_error:
+            logger.info(
+                '[Layer %d] Error did not decrease. Halting...' % i
+            )
+            stop = True
+
+        if stop is True:
+            best = {'layer': i-1, 'stats': all_stats[i-1]}
+            break
+        else:
+            prev_val_error = stats['val_error']
+            best = {'layer': i, 'stats': stats}
+
+    logger.info('Best configuration found for {}'.format(best))
+    return best
 
 
 def _evaluate_cv(dataset, settings, **params):
@@ -25,7 +97,7 @@ def _evaluate_cv(dataset, settings, **params):
 
     for val_fold in folds_set:
         model = DeepKernelModel(verbose=False)
-        best_model = model.fit(
+        best_model = model.fit_and_validate(
             data_settings_fn=settings,
             training_folds=[x for x in folds_set if x != val_fold],
             validation_folds=[val_fold],
@@ -98,7 +170,7 @@ def _evaluate(dataset, settings, max_epochs, **params):
     logger.info('Starting evaluation on {} ...'.format(params))
 
     model = DeepKernelModel(verbose=True)
-    best_model = model.fit(
+    best_model = model.fit_and_validate(
         data_settings_fn=settings,
         max_epochs=max_epochs,
         training_folds=[x for x in range(n_folds) if x != validation_fold],
@@ -230,3 +302,55 @@ def _average_results(results):
 
 def _get_millis_time():
     return int(round(time.time() * 1000))
+
+
+from protodata import datasets
+from protodata.utils import get_data_location
+import sys
+import shutil
+
+if __name__ == '__main__':
+
+    fit = bool(int(sys.argv[1]))
+
+    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/layerwise_model'
+
+    if fit:
+
+        if os.path.isdir(folder):
+            shutil.rmtree(folder)
+
+        layer_wise_validate(
+            datasets.Datasets.AUS,
+            datasets.AusSettings,
+            folder=folder,
+            l2_ratio=1e-1,
+            lr=1e-3,
+            memory_factor=2,
+            hidden_units=128,
+            n_threads=4,
+            kernel_size=64,
+            kernel_mean=0.0,
+            kernel_std=0.1,
+            strip_length=5,
+            batch_size=16
+        )
+
+    else:
+
+        m = DeepKernelModel(verbose=True)
+
+        res = m.predict(
+            data_settings_fn=datasets.MagicSettings,
+            #folder=folder,
+            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
+            memory_factor=2,
+            n_threads=4,
+            hidden_units=128,
+            kernel_size=64,
+            kernel_mean=0.0,
+            kernel_std=0.1,
+            batch_size=16,
+        )
+
+        print('Got results {} for prediction'.format(res))

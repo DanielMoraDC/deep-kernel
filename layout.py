@@ -1,57 +1,105 @@
 import tensorflow as tf
+import logging
 
 from kernels import RandomFourierFeatures
 
 
-def example_layout_fn(x, outputs, tag, is_training, **params):
-    output_units = _map_classes_to_output(outputs)
+logger = logging.getLogger(__name__)
+
+INPUT_LAYER = 'input'
+OUTPUT_LAYER = 'output'
+LAYER_NAME = '{layer_id}_{layer_type}'
+
+
+def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
+
+    logger.info(
+        'Building FC network with %s data(training=%s) with %d layers'
+        % (tag, str(is_training), num_layers)
+    )
+
+    inputs = _input_layer(x, name=INPUT_LAYER, **params)
+    tf.summary.histogram("input", inputs, [tag])
+
+    x = inputs
+    for i in range(1, num_layers+1):
+        x = fc_block(x, str(i), tag, is_training, **params)
+
+    return _fully_connected(
+        x,
+        _map_classes_to_output(outputs),
+        OUTPUT_LAYER,
+        tag,
+        is_training,
+        batch_norm=True,
+        activation_fn=None
+    )
+
+
+def fc_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     batch_norm = params.get('batch_norm', True)
-
-    inputs = _input_layer(x, name='input', **params)
-    tf.summary.histogram("base/input", inputs, [tag])
-
-    hidden = _fully_connected(
-        inputs,
+    return _fully_connected(
+        x,
         hidden_units,
-        'hidden',
+        idx,
         tag,
         is_training,
         batch_norm=batch_norm
     )
 
+
+def kernel_example_layout_fn(x,
+                             outputs,
+                             tag,
+                             is_training,
+                             num_layers=1,
+                             **params):
+
+    logger.info(
+        'Building kernel network with %s data(training=%s) with %d layers'
+        % (tag, str(is_training), num_layers)
+    )
+
+    inputs = _input_layer(x, name=INPUT_LAYER, **params)
+    tf.summary.histogram("input", inputs, [tag])
+
+    x = inputs
+    for i in range(1, num_layers+1):
+        layer_name = LAYER_NAME.format(
+            net_id='kernel', layer_id=str(i), layer_type='nk'
+        )
+        x = kernel_block(x, layer_name, tag, is_training, **params)
+
     return _fully_connected(
-        hidden,
-        output_units,
-        'output',
+        x,
+        _map_classes_to_output(outputs),
+        OUTPUT_LAYER,
         tag,
-        is_training,
+        is_training=is_training,
         batch_norm=False,
         activation_fn=None
     )
 
 
-def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
-    output_units = _map_classes_to_output(outputs)
+def kernel_block(x, idx, tag, is_training, **params):
+
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
     kernel_std = params.get('kernel_std', 32)
     batch_norm = params.get('batch_norm', True)
 
     kernel = RandomFourierFeatures(
-        name='kernel_layer',
+        name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=hidden_units,
         std=kernel_std,
         kernel_size=kernel_size,
     )
 
-    inputs = _input_layer(x, name='input', **params)
-    tf.summary.histogram("kernel/input", inputs, [tag])
-
     hidden = _fully_connected(
-        inputs,
+        x,
         hidden_units,
-        'hidden',
+        idx,
         tag,
         batch_norm=batch_norm,
         is_training=is_training,
@@ -59,7 +107,7 @@ def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
     )
 
     hidden_kernel = kernel.apply_kernel(hidden, tag)
-    tf.summary.histogram("kernel/kernel_layer", hidden_kernel, [tag])
+    tf.summary.histogram("kernel_layer_" + idx, hidden_kernel, [tag])
 
     if batch_norm:
         # Batch norm creates 2 moving averages (non-trainable)
@@ -67,21 +115,15 @@ def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
         # The update operations need to be controlled in the optimization:
         # https://www.tensorflow.org/api_docs/python/tf/contrib/layers/batch_norm  # noqa
         hidden_kernel = tf.contrib.layers.batch_norm(
-            hidden_kernel, is_training=is_training,
+            hidden_kernel,
+            is_training=is_training,
+            scope=LAYER_NAME.format(layer_id=idx, layer_type='kernel_bn')
         )
         tf.summary.histogram(
-            "kernel/kernel_layer_normed", hidden_kernel, [tag]
+            "kernel_layer_normed", hidden_kernel, [tag]
         )
 
-    return _fully_connected(
-        hidden_kernel,
-        output_units,
-        'output',
-        tag,
-        is_training=is_training,
-        batch_norm=False,
-        activation_fn=None
-    )
+    return hidden_kernel
 
 
 def _map_classes_to_output(outputs):
@@ -96,11 +138,13 @@ def _map_classes_to_output(outputs):
 
 def _fully_connected(x,
                      outputs,
-                     name,
+                     idx,
                      tag,
                      is_training,
                      batch_norm,
                      activation_fn=tf.nn.relu):
+
+    name = LAYER_NAME.format(layer_id=idx, layer_type='fc')
     if batch_norm is True:
         fc_identity = tf.contrib.layers.fully_connected(
             x,
@@ -113,7 +157,9 @@ def _fully_connected(x,
         tf.summary.histogram(name, fc_identity, [tag])
 
         batch_norm = tf.contrib.layers.batch_norm(
-            fc_identity, is_training=is_training
+            fc_identity,
+            is_training=is_training,
+            scope=LAYER_NAME.format(layer_id=idx, layer_type='fc_bn')
         )
         tf.summary.histogram(name + '_batch_norm', batch_norm, [tag])
 
@@ -138,3 +184,7 @@ def _input_layer(x, name, **params):
         params['columns'],
         name
     )
+
+
+def get_layer_id(name):
+    return float(name.split('_')[0])
