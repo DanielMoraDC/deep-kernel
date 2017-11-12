@@ -106,6 +106,7 @@ def _fully_connected(x,
             x,
             outputs,
             activation_fn=activation_fn,
+            weights_initializer=tf.variance_scaling_initializer,
             variables_collections=[tf.GraphKeys.WEIGHTS],
             scope=name
         )
@@ -123,6 +124,7 @@ def _fully_connected(x,
             x,
             outputs,
             activation_fn=activation_fn,
+            weights_initializer=tf.variance_scaling_initializer,
             variables_collections=[tf.GraphKeys.WEIGHTS],
             scope=name
         )
