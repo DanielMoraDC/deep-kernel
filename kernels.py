@@ -16,7 +16,7 @@ class KernelFunction(object):
         self._input_dims = input_dims
         self._kernel_size = kernel_size
 
-    def apply_kernel(self, x):
+    def apply_kernel(self, x, tag):
         """
         Applies a kernel function on the given vector
         """
@@ -31,7 +31,7 @@ class RandomFourierFeatures(KernelFunction):
         self._mean = mean
         self._std = std
 
-    def apply_kernel(self, x):
+    def apply_kernel(self, x, tag):
 
         if _exists_variable(self._name):
             # Get existing variable
@@ -39,7 +39,9 @@ class RandomFourierFeatures(KernelFunction):
         else:
             # Create variable
             matrix = tf.get_variable(
-                self._name, [self._input_dims, self._kernel_size]
+                self._name,
+                [self._input_dims, self._kernel_size],
+                trainable=False  # Important: this is constant!
             )
 
             matrix_value = np.random.normal(
@@ -51,7 +53,23 @@ class RandomFourierFeatures(KernelFunction):
             assign_op = matrix.assign(matrix_value)
             tf.add_to_collection(KERNEL_ASSIGN_OPS, assign_op)
 
-        cos = tf.cos(tf.matmul(x, matrix))
+        # Check: see matrix does not change with time
+        tf.summary.histogram(self._name + '_matrix', matrix, [tag])
+        
+        # Check: input to be centered around 0
+        matrix_mul = tf.matmul(x, matrix)
+        tf.summary.histogram(self._name + '_matrix_mul', matrix_mul, [tag])
+        
+        # Check: input to be centered around pi/2
+        matrix_mul_centeterd = matrix_mul + tf.constant(np.pi/2.0) 
+        tf.summary.histogram(
+            self._name + '_matrix_mul_centered', matrix_mul_centeterd, [tag]
+        )
+        
+        # We assume input is centered around 0. Since cos of 0 is 1,
+        # output would be shifted to the right limit of the axes.
+        # Adding pi/2 we center the output of the cosinus around 0
+        cos = tf.cos(matrix_mul_centeterd)
         return tf.divide(cos, np.sqrt(self._kernel_size))
 
 
