@@ -126,7 +126,7 @@ class DeepKernelModel(RegressorMixin):
         progress_thresh = params.get('progress_thresh', 0.1)
         max_successive_strips = params.get('max_successive_strips', 3)
 
-        best_model = {'val_acc': float('-inf')}
+        best_model = {'val_error': float('-inf')}
         prev_val_err = float('inf')
         successive_fails = 0
 
@@ -159,7 +159,6 @@ class DeepKernelModel(RegressorMixin):
             train_summary_op = tf.summary.merge_all(DataMode.TRAINING)
             val_summary_op = tf.summary.merge_all(DataMode.VALIDATION)
 
-            # Track of metrics
             train_losses, train_errors = [], []
 
             if should_save:
@@ -195,8 +194,8 @@ class DeepKernelModel(RegressorMixin):
 
                         # Track training loss and restart values
                         self.log_info(
-                            '[%d] Training Loss: %f, Accuracy: %f'
-                            % (epoch, epoch_loss, epoch_acc)
+                            '[%d] Training Loss: %f, Error: %f'
+                            % (epoch, epoch_loss, 1 - epoch_acc)
                         )
 
                         # Track validation loss
@@ -204,12 +203,12 @@ class DeepKernelModel(RegressorMixin):
                             sess, val_context
                         )
                         self.log_info(
-                            '[%d] Validation loss: %f, Accuracy: %f'
-                            % (epoch, mean_val_loss, mean_val_acc)
+                            '[%d] Validation loss: %f, Error: %f'
+                            % (epoch, mean_val_loss, 1 - mean_val_acc)
                         )
 
                         # Track best model at validation
-                        if best_model['val_acc'] < mean_val_acc:
+                        if best_model['val_error'] < (1 - mean_val_acc):
                             self.log_info('[%d] New best found' % epoch)
 
                             if should_save:
@@ -219,10 +218,10 @@ class DeepKernelModel(RegressorMixin):
 
                             best_model = {
                                 'val_loss': mean_val_loss,
-                                'val_acc': mean_val_acc,
+                                'val_error': 1 - mean_val_acc,
                                 'epoch': epoch,
                                 'train_loss': epoch_loss,
-                                'train_acc': epoch_acc,
+                                'train_error': 1 - epoch_acc,
                             }
 
                         # Stop using progress criteria
@@ -321,7 +320,7 @@ class DeepKernelModel(RegressorMixin):
                 coord.request_stop()
                 coord.join(threads)
 
-        return {'loss': np.mean(losses), 'accuracy': np.mean(accs)}
+        return {'loss': np.mean(losses), 'error': 1 - np.mean(accs)}
 
     def log_info(self, msg):
         if self._verbose:
