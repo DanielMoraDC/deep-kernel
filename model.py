@@ -363,6 +363,8 @@ def build_run_context(dataset,
                       is_training=True,
                       **params):
     lr = params.get('lr', 0.01)
+    lr_decay = params.get('lr_decay', 0.5)
+    lr_decay_epocs = params.get('lr_decay_epochs', 500)
     network_fn = params.get('network_fn', kernel_example_layout_fn)
     batch_size = params.get('batch_size')
     memory_factor = params.get('memory_factor')
@@ -371,8 +373,10 @@ def build_run_context(dataset,
     if folds is not None:
         fold_size = dataset.get_fold_size()
         steps_per_epoch = int(fold_size * len(folds) / batch_size)
+        lr_decay_steps = lr_decay_epocs * steps_per_epoch
     else:
         steps_per_epoch = None
+        lr_decay_steps = 10000  # Default value, not used
 
     data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
     features, labels = reader.read_folded_batch(
@@ -402,7 +406,13 @@ def build_run_context(dataset,
             **params
         )
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+        # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
+        decayed_lr = tf.train.inverse_time_decay(
+            lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
+        )
+        tf.summary.scalar('lr', decayed_lr, [tag])
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
         train_op = optimizer.minimize(loss_op, global_step=step)
 
         # Evaluate model
@@ -460,21 +470,21 @@ if __name__ == '__main__':
 
         m = DeepKernelModel(verbose=True)
         m.fit(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.MagicSettings,
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            l2_ratio=1e-2,
-            lr=1e-4,
+            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
+            l2_ratio=1e-1,
+            lr=1e-3,
             memory_factor=2,
-            hidden_units=32,
+            hidden_units=128,
             n_threads=4,
-            kernel_size=128,
+            kernel_size=64,
             kernel_mean=0.0,
-            kernel_std=0.01,
+            kernel_std=0.1,
             strip_length=5,
-            batch_size=32,
+            batch_size=16,
             folder=folder
         )
 
@@ -483,16 +493,16 @@ if __name__ == '__main__':
         m = DeepKernelModel(verbose=True)
 
         res = m.predict(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.MagicSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
             memory_factor=2,
             n_threads=4,
-            hidden_units=32,
-            kernel_size=128,
+            hidden_units=128,
+            kernel_size=64,
             kernel_mean=0.0,
             kernel_std=0.1,
-            batch_size=32,
+            batch_size=16,
         )
 
         print('Got results {} for prediction'.format(res))
