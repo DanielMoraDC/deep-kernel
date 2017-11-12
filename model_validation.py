@@ -48,7 +48,7 @@ def _evaluate_cv(dataset, settings, **params):
     )
 
     return {
-        'loss': -avg_results['val_acc'],
+        'loss': avg_results['val_error'],
         'averaged': avg_results,
         'parameters': params,
         'all': results,
@@ -114,7 +114,7 @@ def _evaluate(dataset, settings, max_epochs, **params):
     )
 
     return {
-        'loss': -best_model['val_acc'],
+        'loss': best_model['val_error'],
         'stats': best_model,
         'parameters': params,
         'status': STATUS_OK
