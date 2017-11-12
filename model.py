@@ -208,7 +208,7 @@ class DeepKernelModel(RegressorMixin):
                         )
 
                         # Track best model at validation
-                        if best_model['val_error'] < (1 - mean_val_acc):
+                        if best_model['val_error'] > (1 - mean_val_acc):
                             self.log_info('[%d] New best found' % epoch)
 
                             if should_save:
