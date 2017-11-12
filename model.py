@@ -396,6 +396,7 @@ def build_run_context(dataset,
                             columns=dataset.get_wide_columns(),
                             outputs=dataset.get_num_classes(),
                             tag=tag,
+                            is_training=is_training,
                             **params)
 
         loss_op = get_loss_op(
@@ -413,7 +414,11 @@ def build_run_context(dataset,
         tf.summary.scalar('lr', decayed_lr, [tag])
 
         optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
-        train_op = optimizer.minimize(loss_op, global_step=step)
+
+        # This is needed for the batch norm moving averages
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            train_op = optimizer.minimize(loss_op, global_step=step)
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
