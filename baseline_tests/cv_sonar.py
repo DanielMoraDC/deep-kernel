@@ -22,6 +22,8 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
+        'lr_decay': 0.5,
+        'lr_decay_epocs': 250,
         'n_threads': 4,
         'strip_length': 5,
         'memory_factor': 2,
