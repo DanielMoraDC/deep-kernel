@@ -126,7 +126,7 @@ class DeepKernelModel(RegressorMixin):
         progress_thresh = params.get('progress_thresh', 0.1)
         max_successive_strips = params.get('max_successive_strips', 3)
 
-        best_model = {'val_error': float('-inf')}
+        best_model = {'val_error': float('inf')}
         prev_val_err = float('inf')
         successive_fails = 0
 
@@ -474,13 +474,15 @@ if __name__ == '__main__':
 
         m = DeepKernelModel(verbose=True)
         m.fit(
-            data_settings_fn=datasets.MagicSettings,
+            data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
-            l2_ratio=1e-1,
-            lr=1e-3,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            l2_ratio=1e-4,
+            lr=1e-4,
+            lr_decay=0.5,
+            lr_decay_epocs=128,
             memory_factor=2,
             hidden_units=128,
             n_threads=4,
@@ -497,9 +499,9 @@ if __name__ == '__main__':
         m = DeepKernelModel(verbose=True)
 
         res = m.predict(
-            data_settings_fn=datasets.MagicSettings,
+            data_settings_fn=datasets.AusSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             memory_factor=2,
             n_threads=4,
             hidden_units=128,
