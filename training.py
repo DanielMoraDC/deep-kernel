@@ -6,7 +6,9 @@ import collections
 import os
 
 from kernels import KERNEL_ASSIGN_OPS
+from layout import get_layer_id, kernel_example_layout_fn
 
+from protodata.data_ops import DataMode
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +149,143 @@ def save_model(monitored_sess, saver, folder, step):
 
 def init_kernel_ops(sess):
     sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))
+
+
+def get_loss_op(logits, y, sum_collection, n_classes, **params):
+    l1_ratio = params.get('l1_ratio', None)
+    l2_ratio = params.get('l2_ratio', None)
+
+    l1_term = l1_norm(get_model_weights()) * l1_ratio \
+        if l1_ratio is not None else tf.constant(0.0)
+    tf.summary.scalar('l1_term', l1_term, [sum_collection])
+
+    l2_term = l2_norm(get_model_weights()) * l2_ratio \
+        if l2_ratio is not None else tf.constant(0.0)
+    tf.summary.scalar('l2_term', l2_term, [sum_collection])
+
+    loss_term = tf.reduce_mean(
+        get_loss_fn(
+            logits, y, n_classes
+        )
+    )
+
+    tf.summary.scalar('loss_term', loss_term, [sum_collection])
+
+    loss_op = loss_term + l1_term + l2_term
+    tf.summary.scalar('total_loss', loss_op, [sum_collection])
+
+    return loss_op
+
+
+def build_run_context(dataset,
+                      reader,
+                      tag,
+                      folds,
+                      step,
+                      reuse=False,
+                      is_training=True,
+                      **params):
+    lr = params.get('lr', 0.01)
+    lr_decay = params.get('lr_decay', 0.5)
+    lr_decay_epocs = params.get('lr_decay_epochs', 500)
+    network_fn = params.get('network_fn', kernel_example_layout_fn)
+    batch_size = params.get('batch_size')
+    memory_factor = params.get('memory_factor')
+    n_threads = params.get('n_threads')
+
+    if folds is not None:
+        fold_size = dataset.get_fold_size()
+        steps_per_epoch = int(fold_size * len(folds) / batch_size)
+        lr_decay_steps = lr_decay_epocs * steps_per_epoch
+    else:
+        steps_per_epoch = None
+        lr_decay_steps = 10000  # Default value, not used
+
+    data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
+    features, labels = reader.read_folded_batch(
+        batch_size=batch_size,
+        data_mode=data_subset,
+        folds=folds,
+        memory_factor=memory_factor,
+        reader_threads=n_threads,
+        train_mode=is_training,
+        shuffle=True
+    )
+
+    scope_params = {'reuse': reuse}
+    with tf.variable_scope("network", **scope_params):
+
+        logits = network_fn(features,
+                            columns=dataset.get_wide_columns(),
+                            outputs=dataset.get_num_classes(),
+                            tag=tag,
+                            is_training=is_training,
+                            **params)
+
+        loss_op = get_loss_op(
+            logits=logits,
+            y=labels,
+            sum_collection=tag,
+            n_classes=dataset.get_num_classes(),
+            **params
+        )
+
+        # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
+        decayed_lr = tf.train.inverse_time_decay(
+            lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
+        )
+        tf.summary.scalar('lr', decayed_lr, [tag])
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
+
+        # Fix all but last layer and output if requested
+        train_vars = variables_from_layers([params['num_layers']], True) \
+            if 'prev_layer_folder' in params \
+            else tf.trainable_variables()
+
+        logger.info('Optimizing over {}'.format(train_vars))
+
+        # This is needed for the batch norm moving averages
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            train_op = optimizer.minimize(
+                loss_op, var_list=train_vars, global_step=step
+            )
+
+        # Evaluate model
+        accuracy_op = get_accuracy_op(
+            logits, labels, dataset.get_num_classes()
+        )
+        tf.summary.scalar('accuracy', accuracy_op, [tag])
+
+    return RunContext(
+        logits_op=logits,
+        train_op=train_op,
+        loss_op=loss_op,
+        acc_op=accuracy_op,
+        steps_per_epoch=steps_per_epoch
+    )
+
+
+def variables_from_layers(layer_list, include_output=True):
+    selected = []
+    train_vars = tf.trainable_variables()
+    for var in train_vars:
+        try:
+            layer_name = var.name.split('/')[1]
+            layer_id = get_layer_id(layer_name)
+            if int(layer_id) in layer_list:
+                selected.append(var)
+        except Exception:
+            # If we are here we assume we have an output variable
+            if include_output:
+                selected.append(var)
+    return selected
+
+
+def get_restore_info(num_layers, prev_layer_folder):
+    vars_to_restore = variables_from_layers(
+        range(1, num_layers), include_output=False
+    )
+    restore_saver = tf.train.Saver(var_list=vars_to_restore)
+    return restore_saver, prev_layer_folder, vars_to_restore

@@ -74,7 +74,7 @@ def layer_wise_validate(dataset,
             stop = True
 
         if stop is True:
-            best = {'layer': i-1, 'stats': all_stats[i-1]}
+            best = {'layer': i-2, 'stats': all_stats[i-2]}
             break
         else:
             prev_val_error = stats['val_error']
@@ -324,8 +324,10 @@ if __name__ == '__main__':
             datasets.Datasets.AUS,
             datasets.AusSettings,
             folder=folder,
-            l2_ratio=1e-1,
-            lr=1e-3,
+            l2_ratio=1e-4,
+            lr=1e-4,
+            lr_decay=0.5,
+            lr_decay_epocs=128,
             memory_factor=2,
             hidden_units=128,
             n_threads=4,
@@ -333,7 +335,7 @@ if __name__ == '__main__':
             kernel_mean=0.0,
             kernel_std=0.1,
             strip_length=5,
-            batch_size=16
+            batch_size=16,
         )
 
     else:

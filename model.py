@@ -5,7 +5,7 @@ import numpy as np
 
 from training import create_global_step, save_model, get_writer, \
     eval_epoch, progress, run_training_epoch, init_kernel_ops, \
-    variables_from_layers, build_run_context
+    build_run_context, get_restore_info
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -145,13 +145,9 @@ class DeepKernelModel():
                 saver = tf.train.Saver()
 
             if 'prev_layer_folder' in params:
-                num_layers = params['num_layers']
-                vars_to_restore = variables_from_layers(range(1, num_layers), False)
-                self.log_info(
-                    'Will try to restore variables: {}'.format(vars_to_restore)
+                restore_info = get_restore_info(
+                    params['num_layers'], params['prev_layer_folder']
                 )
-                restore_saver = tf.train.Saver(var_list=vars_to_restore)
-                restore_info = restore_saver, params['prev_layer_folder']
             else:
                 restore_info = None
 
@@ -266,10 +262,10 @@ class DeepKernelModel():
                 'No restore info provided. No assign ops will be performed'
             )
         else:
-            restore_saver, prev_layer_folder = restore_info
+            restore_saver, prev_layer_folder, variables = restore_info
             ckpt = tf.train.get_checkpoint_state(prev_layer_folder)
             if ckpt and ckpt.model_checkpoint_path:
-                self.log_info('Performing restoring op from previous layer')
+                self.log_info('Restoring variables {}'.format(variables))
                 restore_saver.restore(sess, ckpt.model_checkpoint_path)
             else:
                 raise RuntimeError(
@@ -379,14 +375,16 @@ if __name__ == '__main__':
         '''
 
         m = DeepKernelModel(verbose=True)
-        m.layerwise_fit(
-            data_settings_fn=datasets.MagicSettings,
+        m.fit(
+            data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
-            l2_ratio=1e-1,
-            lr=1e-3,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            l2_ratio=1e-4,
+            lr=1e-4,
+            lr_decay=0.5,
+            lr_decay_epocs=128,
             memory_factor=2,
             hidden_units=128,
             n_threads=4,
@@ -403,9 +401,9 @@ if __name__ == '__main__':
         m = DeepKernelModel(verbose=True)
 
         res = m.predict(
-            data_settings_fn=datasets.MagicSettings,
+            data_settings_fn=datasets.AusSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             memory_factor=2,
             n_threads=4,
             hidden_units=128,
