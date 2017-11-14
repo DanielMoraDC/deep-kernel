@@ -444,71 +444,46 @@ if __name__ == '__main__':
     fit = bool(int(sys.argv[1]))
     
     folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/model'
+    
+    params = {
+        'l2_ratio': 1e-4,
+        'lr': 1e-3,
+        'lr_decay': 0.5,
+        'lr_decay_epocs': 400,
+        'memory_factor': 2,
+        'hidden_units': 64,
+        'n_threads': 4,
+        'kernel_size': 64,
+        'kernel_mean': 0.0,
+        'kernel_std': 0.2,
+        'strip_length': 5,
+        'batch_size': 16
+    }
 
+    m = DeepKernelModel(verbose=True)
+    
     if fit:
 
         if os.path.isdir(folder):
             shutil.rmtree(folder)            
 
-        '''
-        m = DeepKernelModel(verbose=True)
         m.fit(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.SonarSettings,
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            l2_ratio=1e-2,
-            lr=1e-4,
-            memory_factor=2,
-            hidden_units=64,
-            n_threads=4,
-            kernel_size=128,
-            kernel_mean=0.0,
-            kernel_std=0.01,
-            strip_length=5,
-            batch_size=32,
-            folder=folder
-        )
-        '''
-
-        m = DeepKernelModel(verbose=True)
-        m.fit(
-            data_settings_fn=datasets.AusSettings,
-            training_folds=range(9),
-            validation_folds=[9],
-            max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            l2_ratio=1e-4,
-            lr=1e-4,
-            lr_decay=0.5,
-            lr_decay_epocs=128,
-            memory_factor=2,
-            hidden_units=128,
-            n_threads=4,
-            kernel_size=64,
-            kernel_mean=0.0,
-            kernel_std=0.1,
-            strip_length=5,
-            batch_size=16,
-            folder=folder
+            data_location=get_data_location(datasets.Datasets.SONAR, folded=True),  # noqa
+            folder=folder,
+            **params
         )
 
     else:
 
-        m = DeepKernelModel(verbose=True)
-
         res = m.predict(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.SonarSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            memory_factor=2,
-            n_threads=4,
-            hidden_units=128,
-            kernel_size=64,
-            kernel_mean=0.0,
-            kernel_std=0.1,
-            batch_size=16,
+            data_location=get_data_location(datasets.Datasets.SONAR, folded=True),  # noqa
+            **params
         )
 
         print('Got results {} for prediction'.format(res))
