@@ -36,7 +36,7 @@ def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
     kernel_std = params.get('kernel_std', 32)
-    batch_norm = params.get('batch_norm', True)
+    batch_norm = params.get('batch_norm', False)
 
     kernel = RandomFourierFeatures(
         name='kernel_layer',
@@ -46,7 +46,7 @@ def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
     )
 
     inputs = _input_layer(x, name='input', **params)
-    tf.summary.histogram("kernel/input", inputs, [tag])
+    tf.summary.histogram("input", inputs, [tag])
 
     hidden = _fully_connected(
         inputs,
@@ -59,7 +59,7 @@ def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
     )
 
     hidden_kernel = kernel.apply_kernel(hidden, tag)
-    tf.summary.histogram("kernel/kernel_layer", hidden_kernel, [tag])
+    tf.summary.histogram("kernel_layer", hidden_kernel, [tag])
 
     if batch_norm:
         # Batch norm creates 2 moving averages (non-trainable)
@@ -70,7 +70,7 @@ def kernel_example_layout_fn(x, outputs, tag, is_training, **params):
             hidden_kernel, is_training=is_training,
         )
         tf.summary.histogram(
-            "kernel/kernel_layer_normed", hidden_kernel, [tag]
+            "kernel_layer_normed", hidden_kernel, [tag]
         )
 
     return _fully_connected(
