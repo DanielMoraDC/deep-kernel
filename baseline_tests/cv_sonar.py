@@ -6,6 +6,7 @@ from model_validation import evaluate_model_cv
 
 CV_TRIALS = 25
 SIM_RUNS = 10
+MAX_EPOCHS = 10000
 
 
 if __name__ == '__main__':
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         'n_threads': 4,
         'strip_length': 5,
         'memory_factor': 2,
-        'max_epochs': 1000,
+        'max_epochs': MAX_EPOCHS,
         'kernel_mean': 0.0
     })
 
