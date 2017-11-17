@@ -8,6 +8,7 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
+
 if __name__ == '__main__':
 
     search_space = {
