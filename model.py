@@ -392,13 +392,13 @@ if __name__ == '__main__':
     }
 
     m = DeepKernelModel(verbose=True)
-    
+
     if fit:
 
         if os.path.isdir(folder):
             shutil.rmtree(folder)            
 
-        m.fit(
+        m.fit_and_validate(
             data_settings_fn=datasets.Monk2Settings,
             training_folds=range(9),
             validation_folds=[9],
