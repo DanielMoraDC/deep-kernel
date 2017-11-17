@@ -278,8 +278,9 @@ class DeepKernelModel():
         data_settings_fn = params.get('data_settings_fn')
         data_location = params.get('data_location')
         folder = params.get('folder')
+        store_summaries = params.get('summaries', True)
 
-        with tf.Graph().as_default():
+        with tf.Graph().as_default() as graph:
 
             step = create_global_step()
 
@@ -291,6 +292,10 @@ class DeepKernelModel():
                 dataset=dataset, reader=reader, tag=DataMode.TEST,
                 folds=None, step=step, is_training=False, **params
             )
+
+            if store_summaries:
+                writer = get_writer(graph, folder, DataMode.TEST)
+            summary_op = tf.summary.merge_all(DataMode.TEST)
 
             saver = tf.train.Saver()
 
@@ -316,11 +321,18 @@ class DeepKernelModel():
 
                     try:
                         # Track loss and accuracy until queue exhausted
-                        loss, acc = sess.run(
-                            [test_context.loss_op, test_context.acc_op]
+                        loss, acc, summary = sess.run(
+                            [
+                                test_context.loss_op,
+                                test_context.acc_op,
+                                summary_op
+                            ]
                         )
                         losses.append(loss)
                         accs.append(acc)
+
+                        if store_summaries:
+                            writer.add_summary(summary)
 
                     except tf.errors.OutOfRangeError:
                         logger.info('Queue exhausted. Read all instances')
@@ -346,71 +358,63 @@ if __name__ == '__main__':
     fit = bool(int(sys.argv[1]))
     
     folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/model'
+    
+    '''
+    params = {
+        'l2_ratio': 1e-3,
+        'lr': 1e-3,
+        'lr_decay': 0.5,
+        'lr_decay_epocs': 400,
+        'memory_factor': 2,
+        'hidden_units': 64,
+        'n_threads': 4,
+        'kernel_size': 64,
+        'kernel_mean': 0.0,
+        'kernel_std': 0.1,
+        'strip_length': 2,
+        'batch_size': 16
+    }
+    '''
 
+    params = {
+        'l2_ratio': 1e-3,
+        'lr': 1e-2,
+        'lr_decay': 0.5,
+        'lr_decay_epocs': 400,
+        'memory_factor': 2,
+        'hidden_units': 128,
+        'n_threads': 4,
+        'kernel_size': 128,
+        'kernel_mean': 0.0,
+        'kernel_std': 0.1,
+        'strip_length': 2,
+        'batch_size': 16
+    }
+
+    m = DeepKernelModel(verbose=True)
+    
     if fit:
 
         if os.path.isdir(folder):
             shutil.rmtree(folder)            
 
-        '''
-        m = DeepKernelModel(verbose=True)
         m.fit(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.Monk2Settings,
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            l2_ratio=1e-2,
-            lr=1e-4,
-            memory_factor=2,
-            hidden_units=64,
-            n_threads=4,
-            kernel_size=128,
-            kernel_mean=0.0,
-            kernel_std=0.01,
-            strip_length=5,
-            batch_size=32,
-            folder=folder
-        )
-        '''
-
-        m = DeepKernelModel(verbose=True)
-        m.fit(
-            data_settings_fn=datasets.AusSettings,
-            training_folds=range(9),
-            validation_folds=[9],
-            max_epochs=100000,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            l2_ratio=1e-4,
-            lr=1e-4,
-            lr_decay=0.5,
-            lr_decay_epocs=128,
-            memory_factor=2,
-            hidden_units=128,
-            n_threads=4,
-            kernel_size=64,
-            kernel_mean=0.0,
-            kernel_std=0.1,
-            strip_length=5,
-            batch_size=16,
-            folder=folder
+            data_location=get_data_location(datasets.Datasets.MONK2, folded=True),  # noqa
+            folder=folder,
+            **params
         )
 
     else:
 
-        m = DeepKernelModel(verbose=True)
-
         res = m.predict(
-            data_settings_fn=datasets.AusSettings,
+            data_settings_fn=datasets.Monk2Settings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
-            memory_factor=2,
-            n_threads=4,
-            hidden_units=128,
-            kernel_size=64,
-            kernel_mean=0.0,
-            kernel_std=0.1,
-            batch_size=16,
+            data_location=get_data_location(datasets.Datasets.MONK2, folded=True),  # noqa
+            **params
         )
 
         print('Got results {} for prediction'.format(res))

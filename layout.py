@@ -87,7 +87,7 @@ def kernel_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
     kernel_std = params.get('kernel_std', 32)
-    batch_norm = params.get('batch_norm', True)
+    batch_norm = params.get('batch_norm', False)
 
     kernel = RandomFourierFeatures(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
@@ -149,7 +149,7 @@ def _fully_connected(x,
         fc_identity = tf.contrib.layers.fully_connected(
             x,
             outputs,
-            activation_fn=activation_fn,
+            activation_fn=None,
             weights_initializer=tf.variance_scaling_initializer,
             variables_collections=[tf.GraphKeys.WEIGHTS],
             scope=name

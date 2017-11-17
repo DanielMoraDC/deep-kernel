@@ -4,9 +4,9 @@ import numpy as np
 from protodata import datasets
 from model_validation import evaluate_model_cv
 
-CV_TRIALS = 20
+CV_TRIALS = 25
 SIM_RUNS = 10
-
+MAX_EPOCHS = 10000
 
 if __name__ == '__main__':
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         'n_threads': 4,
         'memory_factor': 1,
         'strip_length': 5,
-        'max_epochs': 1000,
+        'max_epochs': MAX_EPOCHS,
         'progress_thresh': 0.1
     })
 
