@@ -149,7 +149,7 @@ def _fully_connected(x,
         fc_identity = tf.contrib.layers.fully_connected(
             x,
             outputs,
-            activation_fn=None,
+            activation_fn=tf.identity,
             weights_initializer=tf.variance_scaling_initializer,
             variables_collections=[tf.GraphKeys.WEIGHTS],
             scope=name
