@@ -13,11 +13,11 @@ if __name__ == '__main__':
     search_space = {
         'batch_size': hp.choice('batch_size', [16]),
         # l1 ratio not present in paper
-        'l2_ratio': hp.choice('l2_ratio', [1e-1, 1e-2, 1e-3, 1e-4]),
-        'lr': hp.choice('lr', [1e-2, 1e-3, 1e-4]),
+        'l2_ratio': hp.choice('l2_ratio', [1e-3, 1e-4, 1e-5]),
+        'lr': hp.choice('lr', [1e-1, 1e-2, 1e-3]),
         'kernel_size': hp.choice('kernel_size', [32, 64, 128]),
         'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [64, 128, 256])
+        'hidden_units': hp.choice('hidden_units', [32, 64, 128])
     }
 
     # Fixed parameters
