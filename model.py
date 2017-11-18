@@ -25,7 +25,7 @@ class DeepKernelModel():
     def __init__(self, verbose=True):
         self._verbose = verbose
 
-    def fit_training(self, **params):
+    def fit(self, **params):
 
         # Mandatory parameters
         max_epochs = int(params.get('max_epochs'))
@@ -250,7 +250,7 @@ class DeepKernelModel():
 
                 return best_model
 
-    def _perform_assigns(self, sess, restore_info, **params):
+    def _perform_assigns(self, sess, restore_info=None, **params):
         """
         Assigns variables from folder checkpoints and perform pending ops
         """
