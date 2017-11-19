@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from model_validation import evaluate_model
+from model_validation import SingleEvaluation
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -27,21 +27,25 @@ if __name__ == '__main__':
         'lr_decay_epocs': 250,
         'n_threads': 4,
         'memory_factor': 2,
+        'max_epochs': MAX_EPOCHS,
         'strip_length': 5,
         'progress_thresh': 0.1
     })
 
-    all_stats = evaluate_model(
+    model_ev = SingleEvaluation(
         dataset=datasets.Datasets.MAGIC,
-        settings=datasets.MagicSettings,
-        search_space=search_space,
-        max_epochs=MAX_EPOCHS,
-        output_folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/magic',
-        cv_trials=CV_TRIALS,
-        runs=SIM_RUNS
+        settings_fn=datasets.MagicSettings,
+        folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/mag',
     )
 
-    metrics = all_stats[0].keys()
+    stats = model_ev.evaluate(
+        search_space=search_space,
+        cv_trials=CV_TRIALS,
+        n_runs=SIM_RUNS,
+        test_batch_size=1
+    )
+
+    metrics = stats[0].keys()
     for m in metrics:
-        values = [x[m] for x in all_stats]
+        values = [x[m] for x in stats]
         print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))

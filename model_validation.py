@@ -237,12 +237,26 @@ class SingleEvaluation(ModelEvaluation):
     """
 
     def _evaluate(self, **params):
+        # Get validation fold randomly and use the rest as training folds
+        data_location = get_data_location(self._dataset, folded=True)
+        n_folds = self._settings_fn(data_location).get_fold_num()
+        validation_fold = np.random.randint(n_folds)
+
         model = DeepKernelModel(verbose=False)
-        return model.fit_and_validate(
+        best = model.fit_and_validate(
+            training_folds=[x for x in range(n_folds) if x != validation_fold],
+            validation_folds=[validation_fold],
             data_settings_fn=self._settings_fn,
             data_location=get_data_location(self._dataset, folded=True),
             **params
         )
+
+        return {
+            'loss': best['val_error'],
+            'averaged': best,
+            'parameters': params,
+            'status': STATUS_OK
+        }
 
 
 class SingleLayerWiseEvaluation(ModelEvaluation):
@@ -253,7 +267,14 @@ class SingleLayerWiseEvaluation(ModelEvaluation):
     """
 
     def _evaluate(self, max_layers, layer_progress_thresh, **params):
+        data_location = get_data_location(dataset, folded=True)
+        n_folds = self._settings_fn(data_location).get_fold_num()
+        validation_fold = np.random.randint(n_folds)
+
+        model = DeepKernelModel(verbose=False)
         return layerwise_evaluation(
+            training_folds=[x for x in range(n_folds) if x != validation_fold],
+            validation_folds=[validation_fold],
             dataset=self._dataset,
             settings_fn=self._settings_fn,
             folder=self._folder,
