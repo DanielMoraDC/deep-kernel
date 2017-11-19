@@ -151,8 +151,6 @@ class CVEvaluationBase(ModelEvaluation):
                 **params,  # noqa
             )
 
-            print(best_model)
-
             logger.info(
                 'Using validation fold {}: {}'.format(val_fold, best_model)
             )
@@ -164,7 +162,7 @@ class CVEvaluationBase(ModelEvaluation):
         logger.info(
             'Cross validating on: {} \n'.format(params) +
             'Got results: {} \n'.format(avg_results) +
-            '----------------------------------------'
+            '---------------------------------------- \n'
         )
 
         return {
@@ -198,7 +196,7 @@ class LayerWiseCVEvaluation(CVEvaluationBase):
                      max_layers=5,
                      layer_progress_thresh=0.1,
                      **params):
-        return layerwise_evaluation(
+        best = layerwise_evaluation(
             dataset=self._dataset,
             settings_fn=self._settings_fn,
             training_folds=training_folds,
@@ -207,6 +205,10 @@ class LayerWiseCVEvaluation(CVEvaluationBase):
             layer_progress_thresh=layer_progress_thresh,
             **params
         )
+
+        stats = best['stats']
+        stats.update({'layer': best['layer']})
+        return stats
 
 
 class CVEvaluation(CVEvaluationBase):
@@ -221,13 +223,20 @@ class CVEvaluation(CVEvaluationBase):
                      validation_folds,
                      **params):
         model = DeepKernelModel(verbose=False)
-        return model.fit_and_validate(
+        best = model.fit_and_validate(
             data_settings_fn=self._settings_fn,
             training_folds=training_folds,
             validation_folds=validation_folds,
             data_location=get_data_location(self._dataset, folded=True),
             **params
         )
+
+        return {
+            'loss': best['val_error'],
+            'averaged': best,
+            'parameters': params,
+            'status': STATUS_OK
+        }
 
 
 class SingleEvaluation(ModelEvaluation):
@@ -272,7 +281,7 @@ class SingleLayerWiseEvaluation(ModelEvaluation):
         validation_fold = np.random.randint(n_folds)
 
         model = DeepKernelModel(verbose=False)
-        return layerwise_evaluation(
+        best = layerwise_evaluation(
             training_folds=[x for x in range(n_folds) if x != validation_fold],
             validation_folds=[validation_fold],
             dataset=self._dataset,
@@ -280,6 +289,16 @@ class SingleLayerWiseEvaluation(ModelEvaluation):
             folder=self._folder,
             **params
         )
+
+        all_params = params.copy()
+        all_params.update({'layer': best['layer']})
+
+        return {
+            'loss': best['stats']['val_error'],
+            'averaged': best['stats'],
+            'parameters': all_params,
+            'status': STATUS_OK
+        }
 
 
 def layerwise_evaluation(dataset,
@@ -302,7 +321,7 @@ def layerwise_evaluation(dataset,
     all_stats, stop, prev_val_error = [], False, float('inf')
     for i in range(1, max_layers+1):
 
-        logger.info('\n Using %d layers...' % i)
+        logger.info('Using %d layers...' % i)
 
         subfolder = os.path.join(aux_folder, 'layer_%d' % i)
         create_dir(subfolder)
@@ -312,7 +331,7 @@ def layerwise_evaluation(dataset,
         # For #layers > 1 we look for weights in the previous one
         if i > 1:
             current_params['prev_layer_folder'] = os.path.join(
-                folder, 'layer_' + str(i-1)
+                aux_folder, 'layer_' + str(i-1)
             )
 
         model = DeepKernelModel(verbose=False)
@@ -326,7 +345,7 @@ def layerwise_evaluation(dataset,
         )
 
         logger.info(
-            '\nNetwork with {} layers results {} \n'.format(i, stats)
+            'Network with {} layers results {} \n'.format(i, stats)
         )
 
         all_stats.append(stats)
@@ -346,7 +365,7 @@ def layerwise_evaluation(dataset,
             stop = True
 
         if stop is True:
-            best = {'layer': i-2, 'stats': all_stats[i-2]}
+            best = {'layer': i-1, 'stats': all_stats[i-1]}
             break
         else:
             prev_val_error = stats['val_error']
@@ -355,14 +374,16 @@ def layerwise_evaluation(dataset,
     if folder is None:
         shutil.rmtree(aux_folder)
 
-    logger.info('Best configuration found for {}'.format(best))
+    logger.info('Best configuration found for {} \n'.format(best))
     return best
 
 
 def _average_results(results):
+    print(results)
+    median_params = ['epoch', 'layer']
     return {
         k: np.mean([x[k] for x in results])
-        if k != 'epoch' else np.median([x[k] for x in results])
+        if k not in median_params else int(np.median([x[k] for x in results]))
         for k in results[0].keys()
     }
 
