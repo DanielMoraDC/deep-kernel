@@ -4,7 +4,7 @@ import numpy as np
 from protodata import datasets
 from model_validation import LayerWiseCVEvaluation
 
-CV_TRIALS = 1
+CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
