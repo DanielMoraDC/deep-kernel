@@ -4,8 +4,8 @@ import numpy as np
 from protodata import datasets
 from model_validation import CVEvaluation
 
-CV_TRIALS = 1
-SIM_RUNS = 2
+CV_TRIALS = 25
+SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
 
