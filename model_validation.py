@@ -60,6 +60,13 @@ class ModelEvaluation(object):
         the best model found for that configuration given its custom logic.
         """
 
+    @abc.abstractmethod
+    def _fit(self, folder, **params):
+        """
+        This function fits a network best parameters found in the training
+        process and stores the model into the given folder
+        """
+
     def _evaluate_setting(self,
                           best_stats,
                           best_params,
@@ -70,10 +77,6 @@ class ModelEvaluation(object):
         for a given number of times. Then returns the summarized metrics
         on the test set
         """
-        # Remove not used parameters
-        if 'max_epochs' in best_params:
-            del best_params['max_epochs']
-
         if self._folder is None:
             out_folder = tempfile.mkdtemp()
         else:
@@ -92,13 +95,7 @@ class ModelEvaluation(object):
             logger.info('Running training [{}] in {}'.format(i, run_folder))
 
             before = time.time()
-            model.fit(
-                data_settings_fn=self._settings_fn,
-                folder=run_folder,
-                max_epochs=best_stats['epoch'],
-                data_location=get_data_location(self._dataset, folded=True),
-                **best_params
-            )
+            self._fit(run_folder, **best_params)
             diff = time.time() - before
 
             # Evaluate test for current simulation
@@ -127,17 +124,14 @@ class CVEvaluationBase(ModelEvaluation):
 
     __metaclass__ = abc.ABCMeta
 
-    """
-    TODO: add option for custom folder
-    """
-
     def _evaluate(self, **params):
         """
             Returns the average metric over the folds for the
             given execution setting
         """
         dataset_location = get_data_location(self._dataset, folded=True)
-        n_folds = self._settings_fn(dataset_location).get_fold_num()
+        # n_folds = self._settings_fn(dataset_location).get_fold_num()
+        n_folds = 2
         folds_set = range(n_folds)
         results = []
 
@@ -196,7 +190,7 @@ class LayerWiseCVEvaluation(CVEvaluationBase):
                      max_layers=5,
                      layer_progress_thresh=0.1,
                      **params):
-        best = layerwise_evaluation(
+        best, epochs_per_layer = layerwise_evaluation(
             dataset=self._dataset,
             settings_fn=self._settings_fn,
             training_folds=training_folds,
@@ -207,8 +201,22 @@ class LayerWiseCVEvaluation(CVEvaluationBase):
         )
 
         stats = best['stats']
+
+        # Replace last epoch by epochs per layer
+        del stats['epoch']
+        stats.update({'epochs': epochs_per_layer})
+
+        # Add layer information
         stats.update({'layer': best['layer']})
         return stats
+
+    def _fit(self, folder, **params):
+        layerwise_fit(
+            self._settings_fn,
+            self._dataset,
+            folder,
+            **params
+        )
 
 
 class CVEvaluation(CVEvaluationBase):
@@ -238,6 +246,15 @@ class CVEvaluation(CVEvaluationBase):
             'status': STATUS_OK
         }
 
+    def _fit(self, folder, **params):
+        model = DeepKernelModel(verbose=False)
+        model.fit(
+            data_settings_fn=self._settings_fn,
+            folder=folder,
+            data_location=get_data_location(self._dataset, folded=True),
+            **params
+        )
+
 
 class SingleEvaluation(ModelEvaluation):
 
@@ -266,6 +283,15 @@ class SingleEvaluation(ModelEvaluation):
             'parameters': params,
             'status': STATUS_OK
         }
+
+    def _fit(self, folder, **params):
+        model = DeepKernelModel(verbose=False)
+        model.fit(
+            data_settings_fn=self._settings_fn,
+            folder=folder,
+            data_location=get_data_location(self._dataset, folded=True),
+            **params
+        )
 
 
 class SingleLayerWiseEvaluation(ModelEvaluation):
@@ -299,6 +325,63 @@ class SingleLayerWiseEvaluation(ModelEvaluation):
             'parameters': all_params,
             'status': STATUS_OK
         }
+
+    def _fit(self, folder, **params):
+        layerwise_fit(
+            self._dataset,
+            self._settings_fn,
+            folder,
+            **params
+        )
+
+
+def layerwise_fit(dataset,
+                  settings_fn,
+                  folder,
+                  **params):
+    """
+    Incrementally builds a network given the fitted parameters and stored
+    the resulting model into the given folder
+    """
+    print(params)
+    layerwise_epochs = params['epochs']
+    num_layers = params['layer']
+
+    if num_layers != len(layerwise_epochs):
+        raise RuntimeError(
+            'Number of layers should much the list of epochs'
+        )
+
+    # Keep all except for last layer into temporary folders
+    tmp_folder = tempfile.mkdtemp()
+
+    model = DeepKernelModel(verbose=False)
+    for layer, max_epochs in list(zip(range(num_layers), layerwise_epochs)):
+
+        current_params = params.copy()
+
+        # Last layer goes into destination folder
+        if layer == num_layers - 1:
+            dst_folder = folder
+        else:
+            dst_folder = os.path.join(tmp_folder, 'layer_' + str(i-1))
+            create_dir(dst_folder)
+
+        if i > 1:
+            current_params['prev_layer_folder'] = os.path.join(
+                tmp_folder, 'layer_' + str(i-1)
+            )
+
+        model.fit(
+            data_settings_fn=settings_fn,
+            data_location=get_data_location(dataset, folded=True),
+            num_layers=layer,
+            max_epochs=max_epochs,
+            folder=dst_folder,
+            **current_params
+        )
+
+    shutil.rmtree(tmp_folder)
 
 
 def layerwise_evaluation(dataset,
@@ -338,7 +421,6 @@ def layerwise_evaluation(dataset,
         stats = model.fit_and_validate(
             data_settings_fn=settings_fn,
             data_location=get_data_location(dataset, folded=True),
-            layerwise_training=True,
             num_layers=i,
             folder=subfolder,
             **current_params
@@ -375,17 +457,45 @@ def layerwise_evaluation(dataset,
         shutil.rmtree(aux_folder)
 
     logger.info('Best configuration found for {} \n'.format(best))
-    return best
+
+    epochs_per_layer = [all_stats[i]['epoch'] for i in range(best['layer'])]
+    return best, epochs_per_layer
 
 
 def _average_results(results):
-    print(results)
     median_params = ['epoch', 'layer']
-    return {
+
+    print(results)
+
+    key_subset = [k for k in results[0].keys() if k != 'epochs']
+
+    averages = {
         k: np.mean([x[k] for x in results])
         if k not in median_params else int(np.median([x[k] for x in results]))
-        for k in results[0].keys()
+        for k in key_subset
     }
+
+    if 'epochs' in results[0].keys():
+        averages['epochs'] = _average_layerwise_epochs(
+            [x['epochs'] for x in results], num_layers=averages['layer']
+        )
+
+    return averages
+
+
+def _average_layerwise_epochs(epochs, num_layers):
+
+    median_epochs = []
+    for layer in range(1, num_layers + 1):
+        valid_values = []
+        for trial in epochs:
+            print(trial)
+            print(layer)
+            if layer <= len(trial):
+                valid_values.append(trial[layer-1])
+        median_epochs.append(np.median(valid_values))
+
+    return median_epochs
 
 
 def _get_millis_time():

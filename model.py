@@ -54,12 +54,19 @@ class DeepKernelModel():
             summary_op = tf.summary.merge_all(DataMode.TRAINING)
             saver = tf.train.Saver()
 
+            if 'prev_layer_folder' in params:
+                restore_info = get_restore_info(
+                    params['num_layers'], params['prev_layer_folder']
+                )
+            else:
+                restore_info = None
+
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                self._perform_assigns(sess, **params)
+                self._perform_assigns(sess, restore_info, **params)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
