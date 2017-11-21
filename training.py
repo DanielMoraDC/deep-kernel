@@ -230,27 +230,30 @@ def build_run_context(dataset,
             **params
         )
 
-        # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
-        decayed_lr = tf.train.inverse_time_decay(
-            lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
-        )
-        tf.summary.scalar('lr', decayed_lr, [tag])
-
-        optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
-
-        # Fix all but last layer and output if requested
-        train_vars = variables_from_layers([params['num_layers']], True) \
-            if 'prev_layer_folder' in params \
-            else tf.trainable_variables()
-
-        logger.info('Optimizing over {}'.format(train_vars))
-
-        # This is needed for the batch norm moving averages
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            train_op = optimizer.minimize(
-                loss_op, var_list=train_vars, global_step=step
+        if is_training:
+            # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
+            decayed_lr = tf.train.inverse_time_decay(
+                lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
             )
+            tf.summary.scalar('lr', decayed_lr, [tag])
+
+            optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
+
+            # Fix all but last layer and output if requested
+            train_vars = variables_from_layers([params['num_layers']], True) \
+                if 'prev_layer_folder' in params \
+                else tf.trainable_variables()
+
+            logger.info('Optimizing over {}'.format(train_vars))
+
+            # This is needed for the batch norm moving averages
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                train_op = optimizer.minimize(
+                    loss_op, var_list=train_vars, global_step=step
+                )
+        else:
+            train_op = None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(

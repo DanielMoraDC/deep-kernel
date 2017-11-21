@@ -31,7 +31,7 @@ def tune_model(dataset,
 
     trials = Trials()
     best = fmin(
-        fn=lambda x: validate_fn(dataset, settings_fn, folder, **x),
+        fn=lambda x: validate_fn(dataset, settings_fn, **x),
         algo=tpe.suggest,
         space=search_space,
         max_evals=n_trials,
@@ -51,7 +51,6 @@ def tune_model(dataset,
                         test_batch_size=test_batch_size)
 
 
-# TODO: see if we can reuse
 def _run_setting(dataset,
                  settings_fn,
                  best_stats,
@@ -114,12 +113,10 @@ def _run_setting(dataset,
     return total_stats
 
 
-def _simple_evaluate(dataset, settings_fn, folder, **params):
+def _simple_evaluate(dataset, settings_fn, **params):
     """
     Returns the metrics for a single early stopping layerwise run
     """
-    subfolder = os.path.join(folder, str(_get_millis_time()))
-
     # Random validation fold for each iteration
     data_location = get_data_location(dataset, folded=True)
     n_folds = settings_fn(data_location).get_fold_num()
@@ -131,7 +128,6 @@ def _simple_evaluate(dataset, settings_fn, folder, **params):
         settings_fn=settings_fn,
         training_folds=[x for x in range(n_folds) if x != validation_fold],
         validation_folds=[validation_fold],
-        folder=subfolder,
         **params
     )
 
@@ -143,7 +139,7 @@ def _simple_evaluate(dataset, settings_fn, folder, **params):
     }
 
 
-def _cross_validate(dataset, settings_fn,  **params):
+def _cross_validate(dataset, settings_fn, **params):
     """
     Returns the average metric over the folds for the
     given execution setting
@@ -220,7 +216,7 @@ def _layerwise_fit(data_location,
         if layer == num_layers:
             dst_folder = folder
         else:
-            dst_folder = os.path.join(tmp_folder, 'layer_' + str(layer-1))
+            dst_folder = os.path.join(tmp_folder, 'layer_' + str(layer))
             create_dir(dst_folder)
 
         if layer > 1:
@@ -273,7 +269,7 @@ def _layerwise_evaluation(data_location,
                 aux_folder, 'layer_' + str(i-1)
             )
 
-        model = DeepKernelModel(verbose=True)
+        model = DeepKernelModel(verbose=False)
         stats = model.fit_and_validate(
             data_settings_fn=settings_fn,
             data_location=data_location,
@@ -350,8 +346,6 @@ def _average_layerwise_epochs(epochs, num_layers):
     for layer in range(1, num_layers + 1):
         valid_values = []
         for trial in epochs:
-            print(trial)
-            print(layer)
             if layer <= len(trial):
                 valid_values.append(trial[layer-1])
         median_epochs.append(np.median(valid_values))
