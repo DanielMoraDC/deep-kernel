@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from validation.base import tune_model
+from validation.layerwise import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -12,13 +12,13 @@ MAX_EPOCHS = 10000
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [16]),
+        'batch_size': hp.choice('batch_size', [16, 32]),
         # l1 ratio not present in paper
         'l2_ratio': hp.choice('l2_ratio', [1e-2, 1e-3, 1e-4]),
-        'lr': hp.choice('lr', [1e-2, 1e-3, 1e-4]),
-        'kernel_size': hp.choice('kernel_size', [32, 64, 128]),
+        'lr': hp.choice('lr', [1e-3, 1e-4, 1e-5]),
+        'kernel_size': hp.choice('kernel_size', [32, 64]),
         'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [64, 128, 256])
+        'hidden_units': hp.choice('hidden_units', [32, 64])
     }
 
     # Fixed parameters
@@ -26,19 +26,19 @@ if __name__ == '__main__':
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
-        'memory_factor': 1,
         'strip_length': 5,
+        'memory_factor': 1,
         'max_epochs': MAX_EPOCHS,
-        'progress_thresh': 0.1
+        'kernel_mean': 0.0
     })
 
     stats = tune_model(
-        dataset=datasets.Datasets.MONK2,
-        settings_fn=datasets.Monk2Settings,
+        dataset=datasets.Datasets.AUS,
+        settings_fn=datasets.AusSettings,
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=True,
-        folder='balance',
+        folder='aus',
         runs=SIM_RUNS,
         test_batch_size=1
     )

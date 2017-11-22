@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from model_validation import evaluate_model_cv
+from validation.base import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -32,16 +32,18 @@ if __name__ == '__main__':
         'progress_thresh': 0.1
     })
 
-    all_stats = evaluate_model_cv(
-        datasets.Datasets.BALANCE,
-        datasets.BalanceSettings,
-        search_space,
-        '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/ev_balance',
-        cv_trials=CV_TRIALS,
-        runs=SIM_RUNS
+    stats = tune_model(
+        dataset=datasets.Datasets.BALANCE,
+        settings_fn=datasets.BalanceSettings,
+        search_space=search_space,
+        n_trials=CV_TRIALS,
+        cross_validate=True,
+        folder='balance',
+        runs=SIM_RUNS,
+        test_batch_size=1
     )
 
-    metrics = all_stats[0].keys()
+    metrics = stats[0].keys()
     for m in metrics:
-        values = [x[m] for x in all_stats]
+        values = [x[m] for x in stats]
         print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
