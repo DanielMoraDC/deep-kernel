@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from model_validation import CVEvaluation
+from validation.base import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -32,16 +32,14 @@ if __name__ == '__main__':
         'progress_thresh': 0.1
     })
 
-    model_ev = CVEvaluation(
+    stats = tune_model(
         dataset=datasets.Datasets.BALANCE,
         settings_fn=datasets.BalanceSettings,
-        folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/bal',
-    )
-
-    stats = model_ev.evaluate(
         search_space=search_space,
-        cv_trials=CV_TRIALS,
-        n_runs=SIM_RUNS,
+        n_trials=CV_TRIALS,
+        cross_validate=True,
+        folder='balance',
+        runs=SIM_RUNS,
         test_batch_size=1
     )
 

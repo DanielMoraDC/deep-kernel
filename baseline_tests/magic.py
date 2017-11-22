@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from model_validation import SingleEvaluation
+from validation.base import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -32,16 +32,14 @@ if __name__ == '__main__':
         'progress_thresh': 0.1
     })
 
-    model_ev = SingleEvaluation(
-        dataset=datasets.Datasets.MAGIC,
+    stats = tune_model(
+        dataset=datasets.Datasets.Magic,
         settings_fn=datasets.MagicSettings,
-        folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/mag',
-    )
-
-    stats = model_ev.evaluate(
         search_space=search_space,
-        cv_trials=CV_TRIALS,
-        n_runs=SIM_RUNS,
+        n_trials=CV_TRIALS,
+        cross_validate=False,
+        folder='magic',
+        runs=SIM_RUNS,
         test_batch_size=1
     )
 

@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from validation.base import tune_model
+from validation.layerwise import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
