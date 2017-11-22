@@ -122,7 +122,6 @@ def _simple_evaluate(dataset, settings_fn, **params):
     n_folds = settings_fn(data_location).get_fold_num()
     validation_fold = np.random.randint(n_folds)
 
-    # TODO: see if we can return a single value
     best = _layerwise_evaluation(
         data_location=data_location,
         settings_fn=settings_fn,
@@ -145,8 +144,7 @@ def _cross_validate(dataset, settings_fn, **params):
     given execution setting
     """
     dataset_location = get_data_location(dataset, folded=True)
-    # n_folds = settings_fn(dataset_location).get_fold_num()
-    n_folds = 2
+    n_folds = settings_fn(dataset_location).get_fold_num()
     folds_set = range(n_folds)
     results = []
 
