@@ -33,7 +33,7 @@ if __name__ == '__main__':
     })
 
     stats = tune_model(
-        dataset=datasets.Datasets.Magic,
+        dataset=datasets.Datasets.MAGIC,
         settings_fn=datasets.MagicSettings,
         search_space=search_space,
         n_trials=CV_TRIALS,

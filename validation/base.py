@@ -44,7 +44,7 @@ def tune_model(dataset,
                         best_stats=stats,
                         best_params=params,
                         n_runs=runs,
-                        output_folder=folder,
+                        folder=folder,
                         test_batch_size=test_batch_size)
 
 
@@ -60,6 +60,9 @@ def _run_setting(dataset,
     for a given number of times. Then returns the summarized metrics
     on the test set.
     """
+    if 'max_epochs' in best_params:
+        del best_params['max_epochs']
+
     if folder is None:
         out_folder = tempfile.mkdtemp()
     else:
@@ -126,6 +129,8 @@ def _simple_evaluate(dataset, settings_fn, **params):
         **params
     )
 
+    logger.info('Setting {} got results'.format(params, best))
+
     return {
         'loss': best['val_error'],
         'averaged': best,
@@ -140,8 +145,7 @@ def _cross_validate(dataset, settings_fn, **params):
     given execution setting
     """
     dataset_location = get_data_location(dataset, folded=True)
-    # n_folds = self._settings_fn(dataset_location).get_fold_num()
-    n_folds = 2
+    n_folds = settings_fn(dataset_location).get_fold_num()
     folds_set = range(n_folds)
     results = []
 
