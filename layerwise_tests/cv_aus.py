@@ -2,11 +2,11 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from validation.layerwise import tune_model
+from model_validation import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
-MAX_EPOCHS = 10000
+MAX_EPOCHS = 5000
 
 
 if __name__ == '__main__':
@@ -23,13 +23,16 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
+        'num_layers': 5,
+        'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
         'strip_length': 5,
         'memory_factor': 1,
         'max_epochs': MAX_EPOCHS,
-        'kernel_mean': 0.0
+        'progress_thresh': 0.1,
+        'kernel_mean': 0.0,
     })
 
     stats = tune_model(
@@ -38,6 +41,7 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=True,
+        layerwise=True,
         folder='aus',
         runs=SIM_RUNS,
         test_batch_size=1

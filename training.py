@@ -298,10 +298,13 @@ def train_ops_list(step, lr, loss_op, n_layers):
     train_ops.append(
         get_train_op(step, lr, loss_op, tf.trainable_variables())
     )
+    logger.info('Optimizer {} uses {}'.format(0, tf.trainable_variables()))
 
     for i in range(1, n_layers + 1):
+        opt_vars = variables_from_layers(i, True)
+        logger.info('Optimizer {} uses {}'.format(i, opt_vars))
         train_ops.append(
-            get_train_op(step, lr, loss_op, variables_from_layers(i, True))
+            get_train_op(step, lr, loss_op, opt_vars)
         )
 
     return train_ops

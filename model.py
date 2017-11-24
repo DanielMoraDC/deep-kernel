@@ -58,7 +58,7 @@ class DeepKernelModel():
             summary_op = tf.summary.merge_all(DataMode.TRAINING)
             saver = tf.train.Saver()
 
-            self._initialize_training(is_layerwise, **params)
+            self._initialize_training(is_layerwise)
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
@@ -122,7 +122,7 @@ class DeepKernelModel():
         prev_val_err = float('inf')
         successive_fails = 0
 
-        self._initialize_training(layerwise=is_layerwise, **params)
+        self._initialize_training(is_layerwise)
 
         with tf.Graph().as_default() as graph:
 
@@ -342,7 +342,7 @@ class DeepKernelModel():
         if self._verbose:
             logger.warn(msg)
 
-    def _initialize_training(self, layerwise, **params):
+    def _initialize_training(self, layerwise):
         if layerwise:
             self._layer_idx = 1
             self._epochs = []
