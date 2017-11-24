@@ -5,7 +5,7 @@ import numpy as np
 
 from training import create_global_step, save_model, get_writer, \
     eval_epoch, progress, run_training_epoch, init_kernel_ops, \
-    build_run_context, get_restore_info
+    build_run_context, variables_from_layers
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -24,6 +24,8 @@ class DeepKernelModel():
 
     def __init__(self, verbose=True):
         self._verbose = verbose
+        self._layer_idx = None
+        self._epochs = None
 
     def fit(self, **params):
 
@@ -54,19 +56,12 @@ class DeepKernelModel():
             summary_op = tf.summary.merge_all(DataMode.TRAINING)
             saver = tf.train.Saver()
 
-            if 'prev_layer_folder' in params:
-                restore_info = get_restore_info(
-                    params['num_layers'], params['prev_layer_folder']
-                )
-            else:
-                restore_info = None
-
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                self._perform_assigns(sess, restore_info, **params)
+                init_kernel_ops(sess)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -75,7 +70,7 @@ class DeepKernelModel():
                 for epoch in range(max_epochs):
 
                     loss_mean, acc_mean = run_training_epoch(
-                        sess, train_context
+                        sess, train_context, self._layer_idx
                     )
 
                     if epoch % summary_epochs == 0:
@@ -112,10 +107,13 @@ class DeepKernelModel():
         strip_length = params.get('strip_length', 5)
         progress_thresh = params.get('progress_thresh', 0.1)
         max_successive_strips = params.get('max_successive_strips', 3)
+        is_layerwise = params.get('layerwise', False)
 
         best_model = {'val_error': float('inf')}
         prev_val_err = float('inf')
         successive_fails = 0
+
+        self._initialize_training(**params)
 
         with tf.Graph().as_default() as graph:
 
@@ -151,19 +149,12 @@ class DeepKernelModel():
             if should_save:
                 saver = tf.train.Saver()
 
-            if 'prev_layer_folder' in params:
-                restore_info = get_restore_info(
-                    params['num_layers'], params['prev_layer_folder']
-                )
-            else:
-                restore_info = None
-
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                self._perform_assigns(sess, restore_info, **params)
+                init_kernel_ops(sess)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
@@ -172,7 +163,7 @@ class DeepKernelModel():
                 for epoch in range(max_epochs):
 
                     epoch_loss, epoch_acc = run_training_epoch(
-                        sess, train_context
+                        sess, train_context, self._layer_idx
                     )
                     train_losses.append(epoch_loss)
                     train_errors.append(1-epoch_acc)
@@ -185,6 +176,8 @@ class DeepKernelModel():
                         val_writer.add_summary(sum_str_val, epoch)
 
                     if epoch % strip_length == 0 and epoch != 0:
+                        
+                        stop = False
 
                         # Track training loss and restart values
                         self.log_info(
@@ -226,7 +219,7 @@ class DeepKernelModel():
                                 'lack of progress (%f < %f). Halting...'
                                 % (train_progress, progress_thresh)
                             )
-                            break
+                            stop = True
 
                         # Stop using UP criteria
                         if prev_val_err < (1 - mean_val_acc):
@@ -244,41 +237,25 @@ class DeepKernelModel():
                                 'for %d successive ' % max_successive_strips +
                                 'times. Halting ...'
                             )
-                            break
+                            stop = True
 
-                        # Restart strip information
-                        prev_val_err = 1 - mean_val_acc
-                        train_losses, train_errors = [], []
+                        if stop and is_layerwise:
+                            self._iterate_layer(**params)
+                        elif stop and not is_layerwise:
+                            break
+                        else:
+                            # Restart strip information
+                            prev_val_err = 1 - mean_val_acc
+                            train_losses, train_errors = [], []
 
                 self.log_info('Best model found: {}'.format(best_model))
+
+                print('log10')
 
                 coord.request_stop()
                 coord.join(threads)
 
-                return best_model
-
-    def _perform_assigns(self, sess, restore_info=None, **params):
-        """
-        Assigns variables from folder checkpoints and perform pending ops
-        """
-        self.log_info('Initializing kernels...')
-        init_kernel_ops(sess)
-
-        if restore_info is None:
-            self.log_info(
-                'No restore info provided. No assign ops will be performed'
-            )
-        else:
-            restore_saver, prev_layer_folder, variables = restore_info
-            ckpt = tf.train.get_checkpoint_state(prev_layer_folder)
-            if ckpt and ckpt.model_checkpoint_path:
-                self.log_info('Restoring variables {}'.format(variables))
-                restore_saver.restore(sess, ckpt.model_checkpoint_path)
-            else:
-                raise RuntimeError(
-                    'Restore saver provided but no valid checkpoint ' +
-                    'found in folder %s' % prev_layer_folder
-                )
+        return best_model
 
     def predict(self, X=None, y=None, **params):
 
@@ -354,6 +331,19 @@ class DeepKernelModel():
         if self._verbose:
             logger.warn(msg)
 
+    def _initialize_training(self, is_layerwise, **params):
+        if is_layerwise:
+            self._layer_idx = 1
+            self._epochs = []
+        else:
+            self._layer_idx = 0
+
+    def _iterate_layer(self, epoch, **params):
+        layers = params.get('num_layers')
+        self._layer_idx = ((self._layer + 1) % layers) + 1
+        self._epochs.append(epoch)
+
+
 
 from protodata import datasets
 from protodata.utils import get_data_location
@@ -363,9 +353,9 @@ import shutil
 if __name__ == '__main__':
 
     fit = bool(int(sys.argv[1]))
-    
+
     folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/model'
-    
+
     '''
     params = {
         'l2_ratio': 1e-3,
@@ -395,7 +385,8 @@ if __name__ == '__main__':
         'kernel_mean': 0.0,
         'kernel_std': 0.1,
         'strip_length': 2,
-        'batch_size': 16
+        'batch_size': 16,
+        'num_layers': 1
     }
 
     m = DeepKernelModel(verbose=True)
@@ -410,6 +401,7 @@ if __name__ == '__main__':
             training_folds=range(9),
             validation_folds=[9],
             max_epochs=100000,
+            is_layerwise=True,
             data_location=get_data_location(datasets.Datasets.MONK2, folded=True),  # noqa
             folder=folder,
             **params

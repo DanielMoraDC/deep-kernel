@@ -15,15 +15,18 @@ logger = logging.getLogger(__name__)
 
 RunContext = collections.namedtuple(
     'RunContext',
-    ['logits_op', 'train_op', 'loss_op', 'acc_op', 'steps_per_epoch']
+    ['logits_op', 'train_ops', 'loss_op', 'acc_op', 'steps_per_epoch']
 )
 
 
-def run_training_epoch(sess, context):
+def run_training_epoch(sess, context, layer_idx):
     epoch_loss, epoch_accs = [], []
+
+    logger.info('Running training epoch on {} variables'.format(layer_idx))
+
     for i in range(context.steps_per_epoch):
         _, loss, acc = sess.run(
-            [context.train_op, context.loss_op, context.acc_op]
+            [context.train_ops[layer_idx], context.loss_op, context.acc_op],
         )
         epoch_loss.append(loss)
         epoch_accs.append(acc)
@@ -231,29 +234,18 @@ def build_run_context(dataset,
         )
 
         if is_training:
+
+            n_layers = params.get('num_layers')
+
             # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
             decayed_lr = tf.train.inverse_time_decay(
                 lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
             )
             tf.summary.scalar('lr', decayed_lr, [tag])
 
-            optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
-
-            # Fix all but last layer and output if requested
-            train_vars = variables_from_layers([params['num_layers']], True) \
-                if 'prev_layer_folder' in params \
-                else tf.trainable_variables()
-
-            logger.info('Optimizing over {}'.format(train_vars))
-
-            # This is needed for the batch norm moving averages
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            with tf.control_dependencies(update_ops):
-                train_op = optimizer.minimize(
-                    loss_op, var_list=train_vars, global_step=step
-                )
+            train_ops = train_ops_list(step, decayed_lr, loss_op, n_layers)
         else:
-            train_op = None
+            train_ops = None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
@@ -263,10 +255,10 @@ def build_run_context(dataset,
 
     return RunContext(
         logits_op=logits,
-        train_op=train_op,
+        train_ops=train_ops,
         loss_op=loss_op,
         acc_op=accuracy_op,
-        steps_per_epoch=steps_per_epoch
+        steps_per_epoch=steps_per_epoch,
     )
 
 
@@ -292,3 +284,37 @@ def get_restore_info(num_layers, prev_layer_folder):
     )
     restore_saver = tf.train.Saver(var_list=vars_to_restore)
     return restore_saver, prev_layer_folder, vars_to_restore
+
+
+def train_ops_list(step, lr, loss_op, n_layers):
+    """
+    Builds a tensor with training ops where the ith position
+    corresponds to the operation to train layer i. The zero position
+    is the function where we optimize everything
+    """
+    train_ops = []
+
+    # First position is for all
+    train_ops.append(
+        get_train_op(step, lr, loss_op, tf.trainable_variables())
+    )
+
+    for i in range(1, n_layers + 1):
+        train_ops.append(
+            get_train_op(step, lr, loss_op, variables_from_layers(i, True))
+        )
+
+    return train_ops
+
+
+def get_train_op(step, lr, loss_op, opt_var_list):
+    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+
+    # This is needed for the batch norm moving averages
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        train_op = optimizer.minimize(
+            loss_op, var_list=opt_var_list, global_step=step
+        )
+
+    return train_op
