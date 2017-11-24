@@ -5,7 +5,7 @@ import numpy as np
 
 from training import create_global_step, save_model, get_writer, \
     eval_epoch, progress, run_training_epoch, init_kernel_ops, \
-    build_run_context, variables_from_layers
+    build_run_context
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -176,7 +176,7 @@ class DeepKernelModel():
                         val_writer.add_summary(sum_str_val, epoch)
 
                     if epoch % strip_length == 0 and epoch != 0:
-                        
+
                         stop = False
 
                         # Track training loss and restart values
@@ -240,7 +240,7 @@ class DeepKernelModel():
                             stop = True
 
                         if stop and is_layerwise:
-                            self._iterate_layer(**params)
+                            self._iterate_layer(epoch, **params)
                         elif stop and not is_layerwise:
                             break
                         else:
@@ -249,8 +249,6 @@ class DeepKernelModel():
                             train_losses, train_errors = [], []
 
                 self.log_info('Best model found: {}'.format(best_model))
-
-                print('log10')
 
                 coord.request_stop()
                 coord.join(threads)
@@ -331,8 +329,8 @@ class DeepKernelModel():
         if self._verbose:
             logger.warn(msg)
 
-    def _initialize_training(self, is_layerwise, **params):
-        if is_layerwise:
+    def _initialize_training(self, layerwise, **params):
+        if layerwise:
             self._layer_idx = 1
             self._epochs = []
         else:
@@ -340,9 +338,9 @@ class DeepKernelModel():
 
     def _iterate_layer(self, epoch, **params):
         layers = params.get('num_layers')
-        self._layer_idx = ((self._layer + 1) % layers) + 1
+        self._layer_idx = max(((self._layer_idx + 1) % (layers + 1)), 1)
         self._epochs.append(epoch)
-
+        self.log_info('Switching to layer %d' % self._layer_idx)
 
 
 from protodata import datasets
@@ -353,25 +351,7 @@ import shutil
 if __name__ == '__main__':
 
     fit = bool(int(sys.argv[1]))
-
     folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/model'
-
-    '''
-    params = {
-        'l2_ratio': 1e-3,
-        'lr': 1e-3,
-        'lr_decay': 0.5,
-        'lr_decay_epocs': 400,
-        'memory_factor': 2,
-        'hidden_units': 64,
-        'n_threads': 4,
-        'kernel_size': 64,
-        'kernel_mean': 0.0,
-        'kernel_std': 0.1,
-        'strip_length': 2,
-        'batch_size': 16
-    }
-    '''
 
     params = {
         'l2_ratio': 1e-3,
@@ -386,7 +366,8 @@ if __name__ == '__main__':
         'kernel_std': 0.1,
         'strip_length': 2,
         'batch_size': 16,
-        'num_layers': 1
+        'num_layers': 2,
+        'max_epochs': 1000
     }
 
     m = DeepKernelModel(verbose=True)
@@ -400,8 +381,7 @@ if __name__ == '__main__':
             data_settings_fn=datasets.Monk2Settings,
             training_folds=range(9),
             validation_folds=[9],
-            max_epochs=100000,
-            is_layerwise=True,
+            layerwise=True,
             data_location=get_data_location(datasets.Datasets.MONK2, folded=True),  # noqa
             folder=folder,
             **params
