@@ -36,6 +36,8 @@ class DeepKernelModel():
 
         # Parameters with default values
         folder = params.get('folder')
+        switch_epochs = params.get('switch_epochs', None).copy()
+        is_layerwise = switch_epochs is not None
         summary_epochs = params.get('summary_epochs', 1)
 
         with tf.Graph().as_default() as graph:
@@ -55,6 +57,8 @@ class DeepKernelModel():
             writer = tf.summary.FileWriter(folder, graph)
             summary_op = tf.summary.merge_all(DataMode.TRAINING)
             saver = tf.train.Saver()
+
+            self._initialize_training(is_layerwise, **params)
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
@@ -79,9 +83,14 @@ class DeepKernelModel():
                         writer.add_summary(sum_str, epoch)
 
                         self.log_info(
-                            '[%d] Training Loss: %f, Accuracy: %f'
-                            % (epoch, loss_mean, acc_mean)
+                            '[%d] Training Loss: %f, Error: %f'
+                            % (epoch, loss_mean, 1-acc_mean)
                         )
+
+                    if switch_epochs is not None and len(switch_epochs) > 0 \
+                            and epoch == switch_epochs[0]:
+                        self._iterate_layer(epoch, [1-acc_mean], **params)
+                        switch_epochs = switch_epochs[1:]
 
                 self.log_info('Finished training at step %d' % max_epochs)
                 model_path = save_model(sess, saver, folder, max_epochs)
@@ -113,7 +122,7 @@ class DeepKernelModel():
         prev_val_err = float('inf')
         successive_fails = 0
 
-        self._initialize_training(**params)
+        self._initialize_training(layerwise=is_layerwise, **params)
 
         with tf.Graph().as_default() as graph:
 
@@ -355,13 +364,13 @@ class DeepKernelModel():
             thresh = params.get('layerwise_progress_thresh', 0.1)
             if progress(self._train_errors) < thresh:
                 self.log_info(
-                    'Stoppign layerwise cyclying due to lack of progress'
+                    'Stopping layerwise cyclying due to lack of progress.'
                 )
                 return True
             elif self._prev_val_error < val_error:
                 self.log_info(
-                    'Stoppign layerwise cyclying: validation error increase' +
-                    '. Had %f, now %f' % (self._prev_val_error, val_error))
+                    'Stopping layerwise cyclying: validation error increase' +
+                    '. Had %f, now %f.' % (self._prev_val_error, val_error))
                 return True
 
             self._prev_val_error = val_error
@@ -394,7 +403,7 @@ if __name__ == '__main__':
         'strip_length': 2,
         'batch_size': 16,
         'num_layers': 2,
-        'max_epochs': 1000
+        'max_epochs': 100
     }
 
     m = DeepKernelModel(verbose=True)
@@ -402,13 +411,23 @@ if __name__ == '__main__':
     if fit:
 
         if os.path.isdir(folder):
-            shutil.rmtree(folder)            
+            shutil.rmtree(folder)           
 
-        m.fit_and_validate(
+        '''m.fit_and_validate(
             data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
             layerwise=True,
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
+            folder=folder,
+            **params
+        )'''
+
+        m.fit(
+            data_settings_fn=datasets.AusSettings,
+            training_folds=range(9),
+            validation_folds=[9],
+            switch_epochs=[20, 50, 80],
             data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             folder=folder,
             **params
