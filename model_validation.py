@@ -128,7 +128,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     if layerwise:
         params_cp.update({'layerwise': layerwise})
 
-    model = DeepKernelModel(verbose=False)
+    model = DeepKernelModel(verbose=True)
     best = model.fit_and_validate(
         training_folds=[x for x in range(n_folds) if x != validation_fold],
         validation_folds=[validation_fold],

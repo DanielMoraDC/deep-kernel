@@ -278,14 +278,6 @@ def variables_from_layers(layer_list, include_output=True):
     return selected
 
 
-def get_restore_info(num_layers, prev_layer_folder):
-    vars_to_restore = variables_from_layers(
-        range(1, num_layers), include_output=False
-    )
-    restore_saver = tf.train.Saver(var_list=vars_to_restore)
-    return restore_saver, prev_layer_folder, vars_to_restore
-
-
 def train_ops_list(step, lr, loss_op, n_layers):
     """
     Builds a tensor with training ops where the ith position
@@ -301,7 +293,7 @@ def train_ops_list(step, lr, loss_op, n_layers):
     logger.info('Optimizer {} uses {}'.format(0, tf.trainable_variables()))
 
     for i in range(1, n_layers + 1):
-        opt_vars = variables_from_layers(i, True)
+        opt_vars = variables_from_layers([i], True)
         logger.info('Optimizer {} uses {}'.format(i, opt_vars))
         train_ops.append(
             get_train_op(step, lr, loss_op, opt_vars)
