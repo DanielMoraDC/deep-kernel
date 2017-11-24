@@ -240,7 +240,11 @@ class DeepKernelModel():
                             stop = True
 
                         if stop and is_layerwise:
-                            self._iterate_layer(epoch, **params)
+                            self._iterate_layer(
+                                epoch, train_errors, **params
+                            )
+                            if self._layerwise_stop(1-mean_val_acc, **params):
+                                break
                         elif stop and not is_layerwise:
                             break
                         else:
@@ -333,15 +337,38 @@ class DeepKernelModel():
         if layerwise:
             self._layer_idx = 1
             self._epochs = []
+            self._train_errors = []
+            self._prev_val_error = float('inf')
         else:
             self._layer_idx = 0
 
-    def _iterate_layer(self, epoch, **params):
+    def _iterate_layer(self, epoch, train_errors, **params):
         layers = params.get('num_layers')
         self._layer_idx = max(((self._layer_idx + 1) % (layers + 1)), 1)
         self._epochs.append(epoch)
+        self._train_errors.append(np.mean(train_errors))
         self.log_info('Switching to layer %d' % self._layer_idx)
 
+    def _layerwise_stop(self, val_error, **params):
+        if self._layer_idx == 1:
+            # Evaluate only when a cmoplete cycle finished
+            thresh = params.get('layerwise_progress_thresh', 0.1)
+            if progress(self._train_errors) < thresh:
+                self.log_info(
+                    'Stoppign layerwise cyclying due to lack of progress'
+                )
+                return True
+            elif self._prev_val_error < val_error:
+                self.log_info(
+                    'Stoppign layerwise cyclying: validation error increase' +
+                    '. Had %f, now %f' % (self._prev_val_error, val_error))
+                return True
+
+            self._prev_val_error = val_error
+            self._train_errors = []
+            return False
+        else:
+            return False
 
 from protodata import datasets
 from protodata.utils import get_data_location
@@ -378,11 +405,11 @@ if __name__ == '__main__':
             shutil.rmtree(folder)            
 
         m.fit_and_validate(
-            data_settings_fn=datasets.Monk2Settings,
+            data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
             layerwise=True,
-            data_location=get_data_location(datasets.Datasets.MONK2, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             folder=folder,
             **params
         )
@@ -390,9 +417,9 @@ if __name__ == '__main__':
     else:
 
         res = m.predict(
-            data_settings_fn=datasets.Monk2Settings,
+            data_settings_fn=datasets.AusSettings,
             folder=folder,
-            data_location=get_data_location(datasets.Datasets.MONK2, folded=True),  # noqa
+            data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             **params
         )
 
