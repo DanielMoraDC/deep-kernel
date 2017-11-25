@@ -12,18 +12,26 @@ from protodata.data_ops import DataMode
 
 logger = logging.getLogger(__name__)
 
+# TODO: file is getting big and hetergeneous, need to refactor
+
 
 RunContext = collections.namedtuple(
     'RunContext',
-    ['logits_op', 'train_op', 'loss_op', 'acc_op', 'steps_per_epoch']
+    ['logits_op', 'train_ops', 'loss_ops', 'acc_op', 'steps_per_epoch']
 )
 
 
-def run_training_epoch(sess, context):
+def run_training_epoch(sess, context, layer_idx):
     epoch_loss, epoch_accs = [], []
+
+    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+
     for i in range(context.steps_per_epoch):
         _, loss, acc = sess.run(
-            [context.train_op, context.loss_op, context.acc_op]
+            [
+                context.train_ops[layer_idx],
+                context.loss_ops[layer_idx],
+                context.acc_op],
         )
         epoch_loss.append(loss)
         epoch_accs.append(acc)
@@ -31,10 +39,10 @@ def run_training_epoch(sess, context):
     return np.mean(epoch_loss), np.mean(epoch_accs)
 
 
-def eval_epoch(sess, context):
+def eval_epoch(sess, context, layer_idx):
     losses, accs = [], []
     for _ in range(context.steps_per_epoch):
-        loss, acc = sess.run([context.loss_op, context.acc_op])
+        loss, acc = sess.run([context.loss_ops[layer_idx], context.acc_op])
         losses.append(loss)
         accs.append(acc)
 
@@ -96,25 +104,22 @@ def get_loss_fn(logits, labels, n_classes):
         raise ValueError('Number of outputs must be at least 2')
 
 
-def l1_norm(weights):
-    return tf.add_n([tf.reduce_sum(tf.abs(x)) for x in weights])
-
-
 def l2_norm(weights):
     return tf.add_n([tf.nn.l2_loss(x) for x in weights])
 
 
-def get_model_weights():
+def get_model_weights(layers):
     """ Returns the list of models parameters """
     weights = []
-    for var in tf.get_collection(tf.GraphKeys.WEIGHTS):
+    vars_layers = variables_from_layers(layers, True)
+    for var in vars_layers:
         if 'bias' in var.name:
-            logger.info('Ignoring bias %s for regularization ' % (var.name))
+            logger.debug('Ignoring bias %s for regularization ' % (var.name))
         elif 'weight' in var.name:
             weights.append(var)
-            logger.info('Using weights %s for regularization ' % (var.name))
+            logger.debug('Using weights %s for regularization ' % (var.name))
         else:
-            logger.info('Ignoring unknown parameter type %s' % (var.name))
+            logger.warning('Ignoring unknown parameter type %s' % (var.name))
     return weights
 
 
@@ -151,32 +156,6 @@ def init_kernel_ops(sess):
     sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))
 
 
-def get_loss_op(logits, y, sum_collection, n_classes, **params):
-    l1_ratio = params.get('l1_ratio', None)
-    l2_ratio = params.get('l2_ratio', None)
-
-    l1_term = l1_norm(get_model_weights()) * l1_ratio \
-        if l1_ratio is not None else tf.constant(0.0)
-    tf.summary.scalar('l1_term', l1_term, [sum_collection])
-
-    l2_term = l2_norm(get_model_weights()) * l2_ratio \
-        if l2_ratio is not None else tf.constant(0.0)
-    tf.summary.scalar('l2_term', l2_term, [sum_collection])
-
-    loss_term = tf.reduce_mean(
-        get_loss_fn(
-            logits, y, n_classes
-        )
-    )
-
-    tf.summary.scalar('loss_term', loss_term, [sum_collection])
-
-    loss_op = loss_term + l1_term + l2_term
-    tf.summary.scalar('total_loss', loss_op, [sum_collection])
-
-    return loss_op
-
-
 def build_run_context(dataset,
                       reader,
                       tag,
@@ -192,6 +171,7 @@ def build_run_context(dataset,
     batch_size = params.get('batch_size')
     memory_factor = params.get('memory_factor')
     n_threads = params.get('n_threads')
+    n_layers = params.get('num_layers')
 
     if folds is not None:
         fold_size = dataset.get_fold_size()
@@ -222,7 +202,7 @@ def build_run_context(dataset,
                             is_training=is_training,
                             **params)
 
-        loss_op = get_loss_op(
+        loss_ops = loss_ops_list(
             logits=logits,
             y=labels,
             sum_collection=tag,
@@ -231,29 +211,16 @@ def build_run_context(dataset,
         )
 
         if is_training:
+
             # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
             decayed_lr = tf.train.inverse_time_decay(
                 lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
             )
             tf.summary.scalar('lr', decayed_lr, [tag])
 
-            optimizer = tf.train.AdamOptimizer(learning_rate=decayed_lr)
-
-            # Fix all but last layer and output if requested
-            train_vars = variables_from_layers([params['num_layers']], True) \
-                if 'prev_layer_folder' in params \
-                else tf.trainable_variables()
-
-            logger.info('Optimizing over {}'.format(train_vars))
-
-            # This is needed for the batch norm moving averages
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            with tf.control_dependencies(update_ops):
-                train_op = optimizer.minimize(
-                    loss_op, var_list=train_vars, global_step=step
-                )
+            train_ops = train_ops_list(step, decayed_lr, loss_ops, n_layers)
         else:
-            train_op = None
+            train_ops = None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
@@ -263,16 +230,16 @@ def build_run_context(dataset,
 
     return RunContext(
         logits_op=logits,
-        train_op=train_op,
-        loss_op=loss_op,
+        train_ops=train_ops,
+        loss_ops=loss_ops,
         acc_op=accuracy_op,
-        steps_per_epoch=steps_per_epoch
+        steps_per_epoch=steps_per_epoch,
     )
 
 
 def variables_from_layers(layer_list, include_output=True):
     selected = []
-    train_vars = tf.trainable_variables()
+    train_vars = tf.get_collection(tf.GraphKeys.WEIGHTS)
     for var in train_vars:
         try:
             layer_name = var.name.split('/')[1]
@@ -286,9 +253,94 @@ def variables_from_layers(layer_list, include_output=True):
     return selected
 
 
-def get_restore_info(num_layers, prev_layer_folder):
-    vars_to_restore = variables_from_layers(
-        range(1, num_layers), include_output=False
+def get_loss_op(logits, y, weights, sum_collection, n_classes, **params):
+    l2_ratio = params.get('l2_ratio', None)
+
+    l2_term = l2_norm(weights) * l2_ratio \
+        if l2_ratio is not None else tf.constant(0.0)
+    tf.summary.scalar('l2_term', l2_term, [sum_collection])
+
+    loss_term = tf.reduce_mean(
+        get_loss_fn(
+            logits, y, n_classes
+        )
     )
-    restore_saver = tf.train.Saver(var_list=vars_to_restore)
-    return restore_saver, prev_layer_folder, vars_to_restore
+    tf.summary.scalar('loss_term', loss_term, [sum_collection])
+
+    loss_op = loss_term + l2_term
+    tf.summary.scalar('total_loss', loss_op, [sum_collection])
+
+    return loss_op
+
+
+def loss_ops_list(logits, y, sum_collection, n_classes, num_layers, **params):
+    """
+    Builds a tensor with loss ops where the ith position
+    corresponds to the operation to train layer i. The zero position
+    is the function where we all layers
+    """
+    loss_ops = []
+
+    # First position is for all layers
+    all_weights = get_model_weights(list(range(1, num_layers + 1)))
+    loss_all = get_loss_op(
+        logits,
+        y,
+        all_weights,
+        sum_collection,
+        n_classes,
+        **params
+    )
+    loss_ops.append(loss_all)
+    logger.debug('L2 #{} uses {}'.format(0, all_weights))
+
+    for i in range(1, num_layers + 1):
+        layer_weights = get_model_weights([i])
+        layer_loss = get_loss_op(
+            logits,
+            y,
+            layer_weights,
+            sum_collection,
+            n_classes
+        )
+        logger.debug('L2 #{} uses {}'.format(i, layer_weights))
+        loss_ops.append(layer_loss)
+
+    return loss_ops
+
+
+def train_ops_list(step, lr, loss_ops, n_layers):
+    """
+    Builds a tensor with training ops where the ith position
+    corresponds to the operation to train layer i. The zero position
+    is the function where we optimize everything
+    """
+    train_ops = []
+
+    # First position is for all
+    train_ops.append(
+        get_train_op(step, lr, loss_ops[0], tf.trainable_variables())
+    )
+    logger.debug('Optimizer #{} uses {}'.format(0, tf.trainable_variables()))
+
+    for i in range(1, n_layers + 1):
+        opt_vars = variables_from_layers([i], True)
+        logger.debug('Optimizer #{} uses {}'.format(i, opt_vars))
+        train_ops.append(
+            get_train_op(step, lr, loss_ops[i], opt_vars)
+        )
+
+    return train_ops
+
+
+def get_train_op(step, lr, loss_op, opt_var_list):
+    optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+
+    # This is needed for the batch norm moving averages
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+        train_op = optimizer.minimize(
+            loss_op, var_list=opt_var_list, global_step=step
+        )
+
+    return train_op

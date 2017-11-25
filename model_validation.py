@@ -18,6 +18,7 @@ def tune_model(dataset,
                search_space,
                n_trials,
                cross_validate,
+               layerwise=True,
                folder=None,
                runs=10,
                test_batch_size=1):
@@ -29,7 +30,7 @@ def tune_model(dataset,
 
     trials = Trials()
     best = fmin(
-        fn=lambda x: validate_fn(dataset, settings_fn, **x),
+        fn=lambda x: validate_fn(dataset, settings_fn, layerwise, **x),
         algo=tpe.suggest,
         space=search_space,
         max_evals=n_trials,
@@ -39,9 +40,19 @@ def tune_model(dataset,
     params = space_eval(search_space, best)
     stats = trials.best_trial['result']['averaged']
 
+    # Replace max epochs by once found in the test
+    if 'max_epochs' in params:
+        del params['max_epochs']
+    params['max_epochs'] = stats['epoch']
+
+    if layerwise:
+        params['switch_epochs'] = stats['switch_epochs']
+
+    logger.info('Using model {} for training with results {}'
+                .format(params, stats))
+
     return _run_setting(dataset=dataset,
                         settings_fn=settings_fn,
-                        best_stats=stats,
                         best_params=params,
                         n_runs=runs,
                         folder=folder,
@@ -50,7 +61,6 @@ def tune_model(dataset,
 
 def _run_setting(dataset,
                  settings_fn,
-                 best_stats,
                  best_params,
                  folder=None,
                  n_runs=10,
@@ -60,16 +70,10 @@ def _run_setting(dataset,
     for a given number of times. Then returns the summarized metrics
     on the test set.
     """
-    if 'max_epochs' in best_params:
-        del best_params['max_epochs']
-
     if folder is None:
         out_folder = tempfile.mkdtemp()
     else:
         out_folder = folder
-
-    logger.info('Using model {} for training with results {}'
-                .format(best_params, best_stats))
 
     model = DeepKernelModel(verbose=False)
 
@@ -84,7 +88,6 @@ def _run_setting(dataset,
         model.fit(
             data_settings_fn=settings_fn,
             folder=run_folder,
-            max_epochs=best_stats['epoch'],
             data_location=get_data_location(dataset, folded=True),
             **best_params
         )
@@ -112,7 +115,7 @@ def _run_setting(dataset,
     return total_stats
 
 
-def _simple_evaluate(dataset, settings_fn, **params):
+def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     """
     Returns the metrics for a single early stopping run
     """
@@ -120,26 +123,33 @@ def _simple_evaluate(dataset, settings_fn, **params):
     n_folds = settings_fn(data_location).get_fold_num()
     validation_fold = np.random.randint(n_folds)
 
-    model = DeepKernelModel(verbose=False)
+    params_cp = params.copy()
+    if layerwise:
+        params_cp['layerwise'] = layerwise
+
+    model = DeepKernelModel(verbose=True)
     best = model.fit_and_validate(
         training_folds=[x for x in range(n_folds) if x != validation_fold],
         validation_folds=[validation_fold],
         data_settings_fn=settings_fn,
         data_location=data_location,
-        **params
+        **params_cp
     )
+
+    if layerwise:
+        best['switch_epochs'] = model._epochs
 
     logger.info('Setting {} got results'.format(params, best))
 
     return {
         'loss': best['val_error'],
         'averaged': best,
-        'parameters': params,
+        'parameters': params_cp,
         'status': STATUS_OK
     }
 
 
-def _cross_validate(dataset, settings_fn, **params):
+def _cross_validate(dataset, settings_fn, layerwise, **params):
     """
     Returns the average metric over the folds for the
     given execution setting
@@ -149,18 +159,25 @@ def _cross_validate(dataset, settings_fn, **params):
     folds_set = range(n_folds)
     results = []
 
-    logger.info('Starting evaluation on {} ...'.format(params))
+    params_cp = params.copy()
+    if layerwise:
+        params_cp.update({'layerwise': layerwise})
+
+    logger.info('Starting evaluation on {} ...'.format(params_cp))
 
     for val_fold in folds_set:
 
-        model = DeepKernelModel(verbose=False)
+        model = DeepKernelModel(verbose=True)
         best = model.fit_and_validate(
             data_settings_fn=settings_fn,
             training_folds=[x for x in folds_set if x != val_fold],
             validation_folds=[val_fold],
             data_location=get_data_location(dataset, folded=True),
-            **params
+            **params_cp
         )
+
+        if layerwise:
+            best.update({'switch_epochs': model._epochs})
 
         logger.info(
             'Using validation fold {}: {}'.format(val_fold, best)
@@ -171,7 +188,7 @@ def _cross_validate(dataset, settings_fn, **params):
     avg_results = _average_results(results)
 
     logger.info(
-        'Cross validating on: {} \n'.format(params) +
+        'Cross validating on: {} \n'.format(params_cp) +
         'Got results: {} \n'.format(avg_results) +
         '---------------------------------------- \n'
     )
@@ -179,7 +196,7 @@ def _cross_validate(dataset, settings_fn, **params):
     return {
         'loss': avg_results['val_error'],
         'averaged': avg_results,
-        'parameters': params,
+        'parameters': params_cp,
         'all': results,
         'status': STATUS_OK
     }
@@ -189,11 +206,28 @@ def _average_results(results):
     """
     Returns the average of the metrics for all the folds
     """
-    return {
-        k: np.mean([x[k] for x in results])
-        if k != 'epoch' else np.median([x[k] for x in results])
-        for k in results[0].keys()
-    }
+    avg = {}
+    for k in results[0].keys():
+        if k == 'epoch':
+            avg[k] = np.median([x[k] for x in results])
+        elif k == 'switch_epochs':
+            avg[k] = _average_layerwise_switches([x[k] for x in results])
+        else:
+            avg[k] = np.mean([x[k] for x in results])
+    return avg
+
+
+def _average_layerwise_switches(epochs):
+    longest = np.max([len(x) for x in epochs])
+    medians = []
+    for current in range(longest):
+        valid_values = []
+        for trial in epochs:
+            if len(trial) > current:
+                valid_values.append(trial[current])
+
+        medians.append(int(np.median(valid_values)))
+    return medians
 
 
 def _get_millis_time():
