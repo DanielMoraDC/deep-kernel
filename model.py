@@ -196,7 +196,7 @@ class DeepKernelModel():
 
                         # Track validation loss
                         mean_val_loss, mean_val_acc = eval_epoch(
-                            sess, val_context
+                            sess, val_context, self._layer_idx
                         )
                         self.log_info(
                             '[%d] Validation loss: %f, Error: %f'
@@ -252,6 +252,9 @@ class DeepKernelModel():
                             self._iterate_layer(
                                 epoch, train_errors, **params
                             )
+
+                            successive_fails = 0
+                            prev_val_err = float('inf')
                             if self._layerwise_stop(1-mean_val_acc, **params):
                                 break
                         elif stop and not is_layerwise:
@@ -318,7 +321,7 @@ class DeepKernelModel():
                         # Track loss and accuracy until queue exhausted
                         loss, acc, summary = sess.run(
                             [
-                                test_context.loss_op,
+                                test_context.loss_ops[0],  # Use all layers
                                 test_context.acc_op,
                                 summary_op
                             ]
@@ -340,7 +343,7 @@ class DeepKernelModel():
 
     def log_info(self, msg):
         if self._verbose:
-            logger.warn(msg)
+            logger.info(msg)
 
     def _initialize_training(self, layerwise):
         if layerwise:
@@ -360,7 +363,7 @@ class DeepKernelModel():
 
     def _layerwise_stop(self, val_error, **params):
         if self._layer_idx == 1:
-            # Evaluate only when a cmoplete cycle finished
+            # Evaluate only when a complete cycle finished
             thresh = params.get('layerwise_progress_thresh', 0.1)
             if progress(self._train_errors) < thresh:
                 self.log_info(
@@ -379,6 +382,9 @@ class DeepKernelModel():
         else:
             return False
 
+
+logging.basicConfig(level=logging.DEBUG)
+
 from protodata import datasets
 from protodata.utils import get_data_location
 import sys
@@ -387,7 +393,7 @@ import shutil
 if __name__ == '__main__':
 
     fit = bool(int(sys.argv[1]))
-    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/model'
+    folder = 'aus'
 
     params = {
         'l2_ratio': 1e-3,
@@ -402,8 +408,8 @@ if __name__ == '__main__':
         'kernel_std': 0.1,
         'strip_length': 2,
         'batch_size': 16,
-        'num_layers': 2,
-        'max_epochs': 100
+        'num_layers': 3,
+        'max_epochs': 1000
     }
 
     m = DeepKernelModel(verbose=True)
@@ -413,7 +419,7 @@ if __name__ == '__main__':
         if os.path.isdir(folder):
             shutil.rmtree(folder)           
 
-        '''m.fit_and_validate(
+        m.fit_and_validate(
             data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
@@ -421,8 +427,9 @@ if __name__ == '__main__':
             data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             folder=folder,
             **params
-        )'''
+        )
 
+        '''
         m.fit(
             data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
@@ -432,6 +439,7 @@ if __name__ == '__main__':
             folder=folder,
             **params
         )
+        '''
 
     else:
 

@@ -11,6 +11,9 @@ OUTPUT_LAYER = 'output'
 LAYER_NAME = '{layer_id}_{layer_type}'
 
 
+# TODO: batch normalization has not been adapted to layerwise framework
+
+
 def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
 
     logger.info(
@@ -188,3 +191,4 @@ def _input_layer(x, name, **params):
 
 def get_layer_id(name):
     return float(name.split('_')[0])
+
