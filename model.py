@@ -253,17 +253,13 @@ class DeepKernelModel():
                                 epoch, train_errors, **params
                             )
 
-                            # When changing to new layer we restart some stats
                             successive_fails = 0
-                            prev_val_err = float('inf')
                             if self._layerwise_stop(1-mean_val_acc, **params):
                                 break
                         elif stop and not is_layerwise:
                             break
-                        else:
-                            # Restart strip information
-                            prev_val_err = 1 - mean_val_acc
 
+                        prev_val_err = 1 - mean_val_acc
                         train_losses, train_errors = [], []
 
                 self.log_info('Best model found: {}'.format(best_model))
@@ -385,7 +381,7 @@ class DeepKernelModel():
             return False
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 from protodata import datasets
 from protodata.utils import get_data_location
@@ -398,8 +394,8 @@ if __name__ == '__main__':
     folder = 'aus'
 
     params = {
-        'l2_ratio': 1e-3,
-        'lr': 1e-2,
+        'l2_ratio': 1e-2,
+        'lr': 1e-3,
         'lr_decay': 0.5,
         'lr_decay_epocs': 400,
         'memory_factor': 2,
@@ -411,7 +407,7 @@ if __name__ == '__main__':
         'strip_length': 2,
         'batch_size': 16,
         'num_layers': 3,
-        'max_epochs': 1000
+        'max_epochs': 60
     }
 
     m = DeepKernelModel(verbose=True)
@@ -421,6 +417,7 @@ if __name__ == '__main__':
         if os.path.isdir(folder):
             shutil.rmtree(folder)           
 
+        '''
         m.fit_and_validate(
             data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
@@ -430,18 +427,17 @@ if __name__ == '__main__':
             folder=folder,
             **params
         )
-
         '''
+
         m.fit(
             data_settings_fn=datasets.AusSettings,
             training_folds=range(9),
             validation_folds=[9],
-            switch_epochs=[20, 50, 80],
+            switch_epochs=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 140],
             data_location=get_data_location(datasets.Datasets.AUS, folded=True),  # noqa
             folder=folder,
             **params
         )
-        '''
 
     else:
 
