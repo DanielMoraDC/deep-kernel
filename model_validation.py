@@ -40,12 +40,19 @@ def tune_model(dataset,
     params = space_eval(search_space, best)
     stats = trials.best_trial['result']['averaged']
 
-    if layerwise:
-        params.update(stats['switch_epochs'])
+    # Replace max epochs by once found in the test
+    if 'max_epochs' in params:
+        del params['max_epochs']     
+    params['max_epochs'] = stats['epoch']
 
+    if layerwise:
+        params['switch_epochs'] = stats['switch_epochs']
+
+    logger.info('Using model {} for training with results {}'
+                .format(params, stats))
+    
     return _run_setting(dataset=dataset,
                         settings_fn=settings_fn,
-                        best_stats=stats,
                         best_params=params,
                         n_runs=runs,
                         folder=folder,
@@ -54,7 +61,6 @@ def tune_model(dataset,
 
 def _run_setting(dataset,
                  settings_fn,
-                 best_stats,
                  best_params,
                  folder=None,
                  n_runs=10,
@@ -64,16 +70,10 @@ def _run_setting(dataset,
     for a given number of times. Then returns the summarized metrics
     on the test set.
     """
-    if 'max_epochs' in best_params:
-        del best_params['max_epochs']
-
     if folder is None:
         out_folder = tempfile.mkdtemp()
     else:
         out_folder = folder
-
-    logger.info('Using model {} for training with results {}'
-                .format(best_params, best_stats))
 
     model = DeepKernelModel(verbose=False)
 
@@ -88,7 +88,6 @@ def _run_setting(dataset,
         model.fit(
             data_settings_fn=settings_fn,
             folder=run_folder,
-            max_epochs=best_stats['epoch'],
             data_location=get_data_location(dataset, folded=True),
             **best_params
         )
@@ -126,7 +125,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
 
     params_cp = params.copy()
     if layerwise:
-        params_cp.update({'layerwise': layerwise})
+        params_cp['layerwise'] = layerwise
 
     model = DeepKernelModel(verbose=True)
     best = model.fit_and_validate(
@@ -138,7 +137,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     )
 
     if layerwise:
-        best.update({'switch_epochs': model._epochs})
+        best['switch_epochs'] =  model._epochs
 
     logger.info('Setting {} got results'.format(params, best))
 
@@ -210,7 +209,6 @@ def _average_results(results):
     """
     avg = {}
     for k in results[0].keys():
-
         if k == 'epoch':
             avg[k] = np.median([x[k] for x in results])
         elif k == 'switch_epochs':
@@ -229,7 +227,7 @@ def _average_layerwise_switches(epochs):
             if len(trial) > current:
                 valid_values.append(trial[current])
 
-        medians.append(np.median(valid_values))
+        medians.append(int(np.median(valid_values)))
     return medians
 
 
