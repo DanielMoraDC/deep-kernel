@@ -42,7 +42,7 @@ def tune_model(dataset,
 
     # Replace max epochs by once found in the test
     if 'max_epochs' in params:
-        del params['max_epochs']     
+        del params['max_epochs']
     params['max_epochs'] = stats['epoch']
 
     if layerwise:
@@ -50,7 +50,7 @@ def tune_model(dataset,
 
     logger.info('Using model {} for training with results {}'
                 .format(params, stats))
-    
+
     return _run_setting(dataset=dataset,
                         settings_fn=settings_fn,
                         best_params=params,
@@ -137,7 +137,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     )
 
     if layerwise:
-        best['switch_epochs'] =  model._epochs
+        best['switch_epochs'] = model._epochs
 
     logger.info('Setting {} got results'.format(params, best))
 
@@ -177,7 +177,6 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
         )
 
         if layerwise:
-            print(model._epochs)
             best.update({'switch_epochs': model._epochs})
 
         logger.info(
