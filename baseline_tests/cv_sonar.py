@@ -27,9 +27,10 @@ if __name__ == '__main__':
         'lr_decay_epocs': 250,
         'n_threads': 4,
         'strip_length': 5,
-        'memory_factor': 2,
+        'memory_factor': 1,
         'max_epochs': MAX_EPOCHS,
-        'kernel_mean': 0.0
+        'progress_thresh': 0.1,
+        'kernel_mean': 0.0,
     })
 
     stats = tune_model(
