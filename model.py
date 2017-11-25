@@ -253,6 +253,7 @@ class DeepKernelModel():
                                 epoch, train_errors, **params
                             )
 
+                            # When changing to new layer we restart some stats
                             successive_fails = 0
                             prev_val_err = float('inf')
                             if self._layerwise_stop(1-mean_val_acc, **params):
@@ -262,7 +263,8 @@ class DeepKernelModel():
                         else:
                             # Restart strip information
                             prev_val_err = 1 - mean_val_acc
-                            train_losses, train_errors = [], []
+
+                        train_losses, train_errors = [], []
 
                 self.log_info('Best model found: {}'.format(best_model))
 
