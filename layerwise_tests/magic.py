@@ -16,7 +16,6 @@ if __name__ == '__main__':
 
     search_space = {
         'batch_size': hp.choice('batch_size', [128]),
-        # l1 ratio not present in paper
         'l2_ratio': hp.choice('l2_ratio', [0, 1e-1, 1e-2, 1e-3, 1e-4]),
         'lr': hp.choice('lr', [1e-2, 1e-3, 1e-4]),
         'kernel_size': hp.choice('kernel_size', [64, 128, 256, 512]),
@@ -28,14 +27,14 @@ if __name__ == '__main__':
     search_space.update({
         'num_layers': 5,
         'layerwise_progress_thresh': 0.1,
-        'layer_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
-        'memory_factor': 2,
-        'max_epochs': MAX_EPOCHS,
         'strip_length': 5,
-        'progress_thresh': 0.1
+        'memory_factor': 1,
+        'max_epochs': MAX_EPOCHS,
+        'progress_thresh': 0.1,
+        'kernel_mean': 0.0
     })
 
     stats = tune_model(
