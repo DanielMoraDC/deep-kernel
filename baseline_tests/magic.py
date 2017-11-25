@@ -2,7 +2,7 @@ from hyperopt import hp
 import numpy as np
 
 from protodata import datasets
-from validation.base import tune_model
+from model_validation import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -39,6 +39,7 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=False,
+        layerwise=False,
         folder='magic',
         runs=SIM_RUNS,
         test_batch_size=1
