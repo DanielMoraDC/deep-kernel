@@ -381,8 +381,6 @@ class DeepKernelModel():
             return False
 
 
-logging.basicConfig(level=logging.INFO)
-
 from protodata import datasets
 from protodata.utils import get_data_location
 import sys

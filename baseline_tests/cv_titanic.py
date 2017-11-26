@@ -1,5 +1,6 @@
 from hyperopt import hp
 import numpy as np
+import logging
 
 from protodata import datasets
 from model_validation import tune_model
@@ -8,11 +9,13 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
+logging.basicConfig(level=logging.INFO)
+
+
 if __name__ == '__main__':
 
     search_space = {
         'batch_size': hp.choice('batch_size', [16, 32]),
-        # l1 ratio not present in paper
         'l2_ratio': hp.choice('l2_ratio', [1e-1, 1e-2, 1e-3, 1e-4]),
         'lr': hp.choice('lr', [1e-2, 1e-3, 1e-4]),
         'kernel_size': hp.choice('kernel_size', [32, 64, 128]),

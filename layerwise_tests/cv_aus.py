@@ -1,12 +1,15 @@
 from hyperopt import hp
 import numpy as np
+import logging
 
 from protodata import datasets
 from model_validation import tune_model
 
 CV_TRIALS = 25
 SIM_RUNS = 10
-MAX_EPOCHS = 5000
+MAX_EPOCHS = 10000
+
+logging.basicConfig(level=logging.INFO)
 
 
 if __name__ == '__main__':
