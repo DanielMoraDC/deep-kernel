@@ -16,7 +16,7 @@ LAYER_NAME = '{layer_id}_{layer_type}'
 
 def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
 
-    logger.info(
+    logger.debug(
         'Building FC network with %s data(training=%s) with %d layers'
         % (tag, str(is_training), num_layers)
     )
@@ -59,7 +59,7 @@ def kernel_example_layout_fn(x,
                              num_layers=1,
                              **params):
 
-    logger.info(
+    logger.debug(
         'Building kernel network with %s data(training=%s) with %d layers'
         % (tag, str(is_training), num_layers)
     )

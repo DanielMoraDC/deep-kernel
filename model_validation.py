@@ -7,10 +7,11 @@ import shutil
 
 from model import DeepKernelModel
 
-from protodata.utils import get_data_location, get_logger
+from protodata.utils import get_data_location
 
 
-logger = get_logger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 def tune_model(dataset,
@@ -127,7 +128,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     if layerwise:
         params_cp['layerwise'] = layerwise
 
-    model = DeepKernelModel(verbose=True)
+    model = DeepKernelModel(verbose=False)
     best = model.fit_and_validate(
         training_folds=[x for x in range(n_folds) if x != validation_fold],
         validation_folds=[validation_fold],
@@ -163,11 +164,11 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     if layerwise:
         params_cp.update({'layerwise': layerwise})
 
-    logger.info('Starting evaluation on {} ...'.format(params_cp))
+    logger.debug('Starting evaluation on {} ...'.format(params_cp))
 
     for val_fold in folds_set:
 
-        model = DeepKernelModel(verbose=True)
+        model = DeepKernelModel(verbose=False)
         best = model.fit_and_validate(
             data_settings_fn=settings_fn,
             training_folds=[x for x in folds_set if x != val_fold],
@@ -179,7 +180,7 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
         if layerwise:
             best.update({'switch_epochs': model._epochs})
 
-        logger.info(
+        logger.debug(
             'Using validation fold {}: {}'.format(val_fold, best)
         )
 
@@ -188,9 +189,11 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     avg_results = _average_results(results)
 
     logger.info(
-        'Cross validating on: {} \n'.format(params_cp) +
-        'Got results: {} \n'.format(avg_results) +
-        '---------------------------------------- \n'
+        'Finished cross validaton on: {} \n'.format(params_cp)
+     )
+
+    logger.info(
+        'Results: {} \n'.format(avg_results)
     )
 
     return {
