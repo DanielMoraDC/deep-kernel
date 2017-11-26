@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 5,
+        'num_layers': 3,
         'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
