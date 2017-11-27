@@ -140,7 +140,9 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     if layerwise:
         best['switch_epochs'] = model._epochs
 
-    logger.info('Setting {} got results'.format(params, best))
+    logger.info('Finished evaluation on {}'.format(params))
+    
+    logger.info('Obtained results {}'.format(best))
 
     return {
         'loss': best['val_error'],
