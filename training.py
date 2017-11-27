@@ -17,8 +17,67 @@ logger = logging.getLogger(__name__)
 
 RunContext = collections.namedtuple(
     'RunContext',
-    ['logits_op', 'train_ops', 'loss_ops', 'acc_op', 'steps_per_epoch']
+    [
+        'logits_op', 'train_ops', 'loss_ops', 'acc_op',
+        'steps_per_epoch', 'l2_ops'
+    ]
 )
+
+
+def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
+    epoch_loss, epoch_accs = [], []
+
+    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+
+    trained_weight = np.random.randint(1, num_layers + 1)
+    weight_ops = [get_model_weights(i) for i in range(1, num_layers+1)]
+
+    for i in range(context.steps_per_epoch):
+        _, loss, acc, weights = sess.run(
+            [
+                context.train_ops[trained_weight],
+                context.loss_ops[trained_weight],
+                context.acc_op
+            ] + weight_ops
+        )
+
+        for i, w in enumerate(weights):
+            trained = '[Trained]' if i + 1 == trained_weight else ''
+            print('First value for layer %d is %f %s'
+                  % (i + 1, w[0, 0], trained))
+
+        epoch_loss.append(loss)
+        epoch_accs.append(acc)
+
+    return np.mean(epoch_loss), np.mean(epoch_accs)
+
+
+def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
+    epoch_loss, epoch_accs = [], []
+
+    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+
+    trained_weight = np.random.randint(1, num_layers + 1)
+    l2_ops = [context.l2_ops[i] for i in range(1, num_layers+1)]
+
+    for i in range(context.steps_per_epoch):
+        _, loss, acc, l2_results = sess.run(
+            [
+                context.train_ops[trained_weight],
+                context.loss_ops[trained_weight],
+                context.acc_op
+            ] + l2_ops
+        )
+
+        for i, l2 in enumerate(l2_results):
+            trained = '[Trained]' if i + 1 == trained_weight else ''
+            print('L2 value for layer %d is %f %s'
+                  % (i + 1, l2, trained))
+
+        epoch_loss.append(loss)
+        epoch_accs.append(acc)
+
+    return np.mean(epoch_loss), np.mean(epoch_accs)
 
 
 def run_training_epoch(sess, context, layer_idx):
@@ -234,6 +293,7 @@ def build_run_context(dataset,
         loss_ops=loss_ops,
         acc_op=accuracy_op,
         steps_per_epoch=steps_per_epoch,
+        l2_ops=get_l2_ops_list(**params)
     )
 
 
@@ -271,6 +331,26 @@ def get_loss_op(logits, y, weights, sum_collection, n_classes, **params):
     tf.summary.scalar('total_loss', loss_op, [sum_collection])
 
     return loss_op
+
+
+def get_l2_ops_list(**params):
+
+    l2_ratio = params.get('l2_ratio', None)
+    num_layers = params.get('num_layers')
+
+    def get_l2_op(weights):
+        return l2_norm(weights) * l2_ratio \
+            if l2_ratio is not None else tf.constant(0.0)
+
+    l2_list = []
+    all_weights = variables_from_layers(range(1, num_layers+1))
+    l2_list.append(get_l2_op(all_weights))
+
+    for i in range(1, num_layers+1):
+        current_weights = variables_from_layers([i])
+        l2_list.append(get_l2_op(current_weights))
+
+    return l2_list
 
 
 def loss_ops_list(logits, y, sum_collection, n_classes, num_layers, **params):
