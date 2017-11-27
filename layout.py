@@ -34,14 +34,14 @@ def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
         OUTPUT_LAYER,
         tag,
         is_training,
-        batch_norm=True,
+        batch_norm=False,
         activation_fn=None
     )
 
 
 def fc_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
-    batch_norm = params.get('batch_norm', True)
+    batch_norm = params.get('batch_norm', False)
     return _fully_connected(
         x,
         hidden_units,
