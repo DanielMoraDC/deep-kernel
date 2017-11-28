@@ -17,8 +17,100 @@ logger = logging.getLogger(__name__)
 
 RunContext = collections.namedtuple(
     'RunContext',
-    ['logits_op', 'train_ops', 'loss_ops', 'acc_op', 'steps_per_epoch']
+    [
+        'logits_op', 'train_ops', 'loss_ops', 'acc_op',
+        'steps_per_epoch', 'l2_ops'
+    ]
 )
+
+
+def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
+    epoch_loss, epoch_accs = [], []
+
+    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+
+    trained_weight = np.random.randint(1, num_layers + 1)
+
+    weight_ops = []
+    for i in range(1, num_layers + 1):
+        if i == num_layers:
+            include_output = True
+        else:
+            include_output = False
+
+        current_weights = get_model_weights([i], include_output)
+
+        for weight in current_weights:
+            logger.info('Adding %s' % weight.name)
+            weight_ops.append(weight)
+
+    for i in range(context.steps_per_epoch):
+        results = sess.run(
+            [
+                context.train_ops[trained_weight],
+                context.loss_ops[trained_weight],
+                context.acc_op
+            ] + weight_ops
+        )
+
+        _, loss, acc = results[:3]
+        weights = results[3:]
+
+        for i, w in enumerate(weights):
+            trained = '[Trained]' if i + 1 == trained_weight else ''
+            logger.info(
+                'First value layer %d %.10f %s\n'
+                % (i + 1, w[0, 0], trained)
+            )
+        logger.info('Ended step\n')
+
+        epoch_loss.append(loss)
+        epoch_accs.append(acc)
+
+    return np.mean(epoch_loss), np.mean(epoch_accs)
+
+
+def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
+    epoch_loss, epoch_accs = [], []
+
+    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+
+    trained_weight = np.random.randint(1, num_layers + 1)
+    l2_ops = [context.l2_ops[i] for i in range(0, num_layers+1)]
+
+    for i in range(context.steps_per_epoch):
+        results = sess.run(
+            [
+                context.train_ops[trained_weight],
+                context.loss_ops[trained_weight],
+                context.acc_op
+            ] + l2_ops
+        )
+
+        _, loss, acc = results[:3]
+        l2_results = results[3:]
+
+        for i, l2 in enumerate(l2_results):
+            trained = '[Trained]' if i == trained_weight else ''
+            num = str('layer %d + output' % i) if i != 0 else 'all'
+            logger.info(
+                'L2 {0:20} {1:.8f} {2}'.format(
+                    num, l2, trained
+                )
+            )
+
+        out_l2 = (np.sum(l2_results[1:]) - l2_results[0])/(num_layers-1)
+        logger.info(
+            'L2 {0:20} {1:.8f} [Trained]'.format(
+                'output_layer', out_l2
+            )
+        )
+        logger.info('Ended step\n')
+
+        epoch_loss.append(loss)
+        epoch_accs.append(acc)
+
+    return np.mean(epoch_loss), np.mean(epoch_accs)
 
 
 def run_training_epoch(sess, context, layer_idx):
@@ -108,10 +200,10 @@ def l2_norm(weights):
     return tf.add_n([tf.nn.l2_loss(x) for x in weights])
 
 
-def get_model_weights(layers):
+def get_model_weights(layers, include_output=True):
     """ Returns the list of models parameters """
     weights = []
-    vars_layers = variables_from_layers(layers, True)
+    vars_layers = variables_from_layers(layers, include_output)
     for var in vars_layers:
         if 'bias' in var.name:
             logger.debug('Ignoring bias %s for regularization ' % (var.name))
@@ -234,6 +326,7 @@ def build_run_context(dataset,
         loss_ops=loss_ops,
         acc_op=accuracy_op,
         steps_per_epoch=steps_per_epoch,
+        l2_ops=get_l2_ops_list(**params)
     )
 
 
@@ -271,6 +364,26 @@ def get_loss_op(logits, y, weights, sum_collection, n_classes, **params):
     tf.summary.scalar('total_loss', loss_op, [sum_collection])
 
     return loss_op
+
+
+def get_l2_ops_list(**params):
+
+    l2_ratio = params.get('l2_ratio', None)
+    num_layers = params.get('num_layers')
+
+    def get_l2_op(weights):
+        return l2_norm(weights) * l2_ratio \
+            if l2_ratio is not None else tf.constant(0.0)
+
+    l2_list = []
+    all_weights = variables_from_layers(range(1, num_layers+1))
+    l2_list.append(get_l2_op(all_weights))
+
+    for i in range(1, num_layers+1):
+        current_weights = variables_from_layers([i])
+        l2_list.append(get_l2_op(current_weights))
+
+    return l2_list
 
 
 def loss_ops_list(logits, y, sum_collection, n_classes, num_layers, **params):
