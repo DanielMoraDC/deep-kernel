@@ -36,8 +36,9 @@ class DeepKernelModel():
 
         # Parameters with default values
         folder = params.get('folder')
-        switch_epochs = params.get('switch_epochs', None).copy()
-        is_layerwise = switch_epochs is not None
+        is_layerwise = params.get('switch_epochs') is not None
+        switch_epochs = params.get('switch_epochs').copy() \
+            if is_layerwise else None
         summary_epochs = params.get('summary_epochs', 1)
 
         with tf.Graph().as_default() as graph:
@@ -385,6 +386,8 @@ from protodata import datasets
 from protodata.utils import get_data_location
 import sys
 import shutil
+
+from layout import kernel_example_layout_fn
 
 
 logging.basicConfig(
