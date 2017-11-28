@@ -29,8 +29,6 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
 
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
-    trained_weight = np.random.randint(1, num_layers + 1)
-
     weight_ops = []
     for i in range(1, num_layers + 1):
         if i == num_layers:
@@ -47,8 +45,8 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
     for i in range(context.steps_per_epoch):
         results = sess.run(
             [
-                context.train_ops[trained_weight],
-                context.loss_ops[trained_weight],
+                context.train_ops[layer_idx],
+                context.loss_ops[layer_idx],
                 context.acc_op
             ] + weight_ops
         )
@@ -57,7 +55,8 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
         weights = results[3:]
 
         for i, w in enumerate(weights):
-            trained = '[Trained]' if i + 1 == trained_weight else ''
+            trained = '[Trained]' if i + 1 == layer_idx or layer_idx == 0 \
+                else ''
             logger.info(
                 'First value layer %d %.10f %s\n'
                 % (i + 1, w[0, 0], trained)
@@ -75,14 +74,13 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
 
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
-    trained_weight = np.random.randint(1, num_layers + 1)
     l2_ops = [context.l2_ops[i] for i in range(0, num_layers+1)]
 
     for i in range(context.steps_per_epoch):
         results = sess.run(
             [
-                context.train_ops[trained_weight],
-                context.loss_ops[trained_weight],
+                context.train_ops[layer_idx],
+                context.loss_ops[layer_idx],
                 context.acc_op
             ] + l2_ops
         )
@@ -91,7 +89,8 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
         l2_results = results[3:]
 
         for i, l2 in enumerate(l2_results):
-            trained = '[Trained]' if i == trained_weight else ''
+            trained = '[Trained]' if i == layer_idx or layer_idx == 0 \
+                else ''
             num = str('layer %d + output' % i) if i != 0 else 'all'
             logger.info(
                 'L2 {0:20} {1:.8f} {2}'.format(
