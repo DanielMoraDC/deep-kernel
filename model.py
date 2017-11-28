@@ -3,9 +3,9 @@ import os
 import logging
 import numpy as np
 
-from training import create_global_step, save_model, get_writer, \
-    eval_epoch, progress, run_training_epoch, init_kernel_ops, \
-    build_run_context
+from training import eval_epoch, run_training_epoch, build_run_context
+from ops import create_global_step, save_model, get_writer, progress, \
+                init_kernel_ops
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -380,84 +380,3 @@ class DeepKernelModel():
             return False
         else:
             return False
-
-
-from protodata import datasets
-from protodata.utils import get_data_location
-import sys
-import shutil
-
-from layout import kernel_example_layout_fn
-
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)-8s %(message)s',
-)
-
-
-if __name__ == '__main__':
-
-    fit = bool(int(sys.argv[1]))
-    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/aus'
-
-    params = {
-        'l2_ratio': 1e-2,
-        'lr': 1e-3,
-        'lr_decay': 0.5,
-        'lr_decay_epocs': 500,
-        'memory_factor': 2,
-        'hidden_units': 512,
-        'n_threads': 4,
-        'kernel_size': 512,
-        'kernel_mean': 0.0,
-        'kernel_std': 0.25,
-        'strip_length': 5,
-        'batch_size': 128,
-        'num_layers': 4,
-        'max_epochs': 10000,
-        # DEBUG
-        # 'layerwise': False,
-        # 'network_fn': example_layout_fn
-        'layerwise': True,
-        'network_fn': kernel_example_layout_fn
-    }
-
-    m = DeepKernelModel(verbose=True)
-
-    if fit:
-
-        if os.path.isdir(folder):
-            shutil.rmtree(folder)        
-
-        '''
-        m.fit_and_validate(
-            data_settings_fn=datasets.CoverTypeSettings,
-            training_folds=range(9),
-            validation_folds=[9],
-            data_location=get_data_location(datasets.Datasets.COVERTYPE, folded=True),  # noqa
-            folder=folder,
-            **params
-        )
-        '''
-
-        m.fit(
-            data_settings_fn=datasets.MagicSettings,
-            training_folds=range(9),
-            validation_folds=[9],
-            switch_epochs=[50, 200, 400],
-            data_location=get_data_location(datasets.Datasets.MAGIC, folded=True),  # noqa
-            folder=folder,
-            **params
-        )
-
-    else:
-
-        res = m.predict(
-            data_settings_fn=datasets.CoverTypeSettings,
-            folder=folder,
-            data_location=get_data_location(datasets.Datasets.COVERTYPE, folded=True),  # noqa
-            **params
-        )
-
-        print('Got results {} for prediction'.format(res))

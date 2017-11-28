@@ -4,13 +4,13 @@ import time
 from hyperopt import fmin, tpe, Trials, STATUS_OK, space_eval
 import tempfile
 import shutil
+import logging
 
 from model import DeepKernelModel
 
 from protodata.utils import get_data_location
 
 
-import logging
 logger = logging.getLogger(__name__)
 
 
@@ -141,7 +141,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
         best['switch_epochs'] = model._epochs
 
     logger.info('Finished evaluation on {}'.format(params))
-    
+
     logger.info('Obtained results {}'.format(best))
 
     return {
