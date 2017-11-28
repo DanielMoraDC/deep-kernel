@@ -55,17 +55,17 @@ class RandomFourierFeatures(KernelFunction):
 
         # Check: see matrix does not change with time
         tf.summary.histogram(self._name + '_matrix', matrix, [tag])
-        
+
         # Check: input to be centered around 0
         matrix_mul = tf.matmul(x, matrix)
         tf.summary.histogram(self._name + '_matrix_mul', matrix_mul, [tag])
-        
+
         # Check: input to be centered around pi/2
         matrix_mul_centeterd = matrix_mul + tf.constant(np.pi/2.0) 
         tf.summary.histogram(
             self._name + '_matrix_mul_centered', matrix_mul_centeterd, [tag]
         )
-        
+
         # We assume input is centered around 0. Since cos of 0 is 1,
         # output would be shifted to the right limit of the axes.
         # Adding pi/2 we center the output of the cosinus around 0

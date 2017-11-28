@@ -191,4 +191,3 @@ def _input_layer(x, name, **params):
 
 def get_layer_id(name):
     return float(name.split('_')[0])
-

@@ -44,7 +44,7 @@ if __name__ == '__main__':
         n_trials=CV_TRIALS,
         cross_validate=True,
         layerwise=True,
-        folder='sonar',
+        folder='/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/walle/mai/sonar',
         runs=SIM_RUNS,
         test_batch_size=1
     )
