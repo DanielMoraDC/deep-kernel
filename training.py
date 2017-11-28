@@ -30,10 +30,22 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
     trained_weight = np.random.randint(1, num_layers + 1)
-    weight_ops = [get_model_weights(i) for i in range(1, num_layers+1)]
+
+    weight_ops = []
+    for i in range(1, num_layers + 1):
+        if i == num_layers:
+            include_output = True
+        else:
+            include_output = False
+
+        current_weights = get_model_weights([i], include_output)
+
+        for weight in current_weights:
+            logger.info('Adding %s' % weight.name)
+            weight_ops.append(weight)
 
     for i in range(context.steps_per_epoch):
-        _, loss, acc, weights = sess.run(
+        results = sess.run(
             [
                 context.train_ops[trained_weight],
                 context.loss_ops[trained_weight],
@@ -41,10 +53,16 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
             ] + weight_ops
         )
 
+        _, loss, acc = results[:3]
+        weights = results[3:]
+
         for i, w in enumerate(weights):
             trained = '[Trained]' if i + 1 == trained_weight else ''
-            print('First value for layer %d is %f %s'
-                  % (i + 1, w[0, 0], trained))
+            logger.info(
+                'First value layer %d %.10f %s\n'
+                % (i + 1, w[0, 0], trained)
+            )
+        logger.info('Ended step\n')
 
         epoch_loss.append(loss)
         epoch_accs.append(acc)
@@ -58,10 +76,10 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
     trained_weight = np.random.randint(1, num_layers + 1)
-    l2_ops = [context.l2_ops[i] for i in range(1, num_layers+1)]
+    l2_ops = [context.l2_ops[i] for i in range(0, num_layers+1)]
 
     for i in range(context.steps_per_epoch):
-        _, loss, acc, l2_results = sess.run(
+        results = sess.run(
             [
                 context.train_ops[trained_weight],
                 context.loss_ops[trained_weight],
@@ -69,10 +87,25 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
             ] + l2_ops
         )
 
+        _, loss, acc = results[:3]
+        l2_results = results[3:]
+
         for i, l2 in enumerate(l2_results):
-            trained = '[Trained]' if i + 1 == trained_weight else ''
-            print('L2 value for layer %d is %f %s'
-                  % (i + 1, l2, trained))
+            trained = '[Trained]' if i == trained_weight else ''
+            num = str('layer %d + output' % i) if i != 0 else 'all'
+            logger.info(
+                'L2 {0:20} {1:.8f} {2}'.format(
+                    num, l2, trained
+                )
+            )
+
+        out_l2 = (np.sum(l2_results[1:]) - l2_results[0])/(num_layers-1)
+        logger.info(
+            'L2 {0:20} {1:.8f} [Trained]'.format(
+                'output_layer', out_l2
+            )
+        )
+        logger.info('Ended step\n')
 
         epoch_loss.append(loss)
         epoch_accs.append(acc)
@@ -167,10 +200,10 @@ def l2_norm(weights):
     return tf.add_n([tf.nn.l2_loss(x) for x in weights])
 
 
-def get_model_weights(layers):
+def get_model_weights(layers, include_output=True):
     """ Returns the list of models parameters """
     weights = []
-    vars_layers = variables_from_layers(layers, True)
+    vars_layers = variables_from_layers(layers, include_output)
     for var in vars_layers:
         if 'bias' in var.name:
             logger.debug('Ignoring bias %s for regularization ' % (var.name))
