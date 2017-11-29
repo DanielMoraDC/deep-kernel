@@ -36,12 +36,6 @@ def init_kernel_ops(sess):
     sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))
 
 
-def get_writer(graph, folder, data_mode):
-    writer_path = os.path.join(folder, data_mode)
-    os.makedirs(writer_path)
-    return tf.summary.FileWriter(writer_path, graph)
-
-
 def get_global_step(graph=None):
     """ Loads the unique global step, if found """
     graph = tf.get_default_graph() if graph is None else graph
@@ -135,18 +129,14 @@ def get_loss_op(logits, y, weights, sum_collection, n_classes, **params):
 
     l2_term = l2_norm(weights) * l2_ratio \
         if l2_ratio is not None else tf.constant(0.0)
-    tf.summary.scalar('l2_term', l2_term, [sum_collection])
 
     loss_term = tf.reduce_mean(
         get_loss_fn(
             logits, y, n_classes
         )
     )
-    tf.summary.scalar('loss_term', loss_term, [sum_collection])
 
     loss_op = loss_term + l2_term
-    tf.summary.scalar('total_loss', loss_op, [sum_collection])
-
     return loss_op
 
 

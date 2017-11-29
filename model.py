@@ -4,8 +4,8 @@ import logging
 import numpy as np
 
 from training import eval_epoch, run_training_epoch, build_run_context
-from ops import create_global_step, save_model, get_writer, progress, \
-                init_kernel_ops
+from ops import create_global_step, save_model, progress, init_kernel_ops
+from visualization import get_writer, write_epoch, write_scalar
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -56,7 +56,7 @@ class DeepKernelModel():
 
             # Initialize writers and summaries
             writer = tf.summary.FileWriter(folder, graph)
-            summary_op = tf.summary.merge_all(DataMode.TRAINING)
+            hist_summary_op = tf.summary.merge_all(DataMode.TRAINING)
             saver = tf.train.Saver()
 
             self._initialize_training(is_layerwise)
@@ -74,14 +74,17 @@ class DeepKernelModel():
 
                 for epoch in range(max_epochs):
 
-                    loss_mean, acc_mean = run_training_epoch(
+                    loss_mean, acc_mean, l2_mean = run_training_epoch(
                         sess, train_context, self._layer_idx
                     )
 
                     if epoch % summary_epochs == 0:
-                        # Store training summaries
-                        sum_str = sess.run(summary_op)
+                        # Store training summaries and log
+                        sum_str = sess.run(hist_summary_op)
                         writer.add_summary(sum_str, epoch)
+                        write_epoch(
+                            writer, loss_mean, acc_mean, l2_mean, epoch
+                        )
 
                         self.log_info(
                             '[%d] Training Loss: %f, Error: %f'
@@ -113,7 +116,6 @@ class DeepKernelModel():
         # Parameters with default values
         folder = params.get('folder', None)
         should_save = folder is not None
-        summary_epochs = params.get('summary_epochs', 1)
         strip_length = params.get('strip_length', 5)
         progress_thresh = params.get('progress_thresh', 0.1)
         max_successive_strips = params.get('max_successive_strips', 3)
@@ -172,31 +174,24 @@ class DeepKernelModel():
 
                 for epoch in range(max_epochs):
 
-                    epoch_loss, epoch_acc = run_training_epoch(
+                    epoch_loss, epoch_acc, epoch_l2 = run_training_epoch(
                         sess, train_context, self._layer_idx
                     )
                     train_losses.append(epoch_loss)
                     train_errors.append(1-epoch_acc)
 
-                    if should_save and epoch % summary_epochs == 0:
-                        # Store training summaries for current
-                        sum_str = sess.run(train_summary_op)
-                        sum_str_val = sess.run(val_summary_op)
-                        train_writer.add_summary(sum_str, epoch)
-                        val_writer.add_summary(sum_str_val, epoch)
-
                     if epoch % strip_length == 0 and epoch != 0:
 
                         stop = False
 
-                        # Track training loss and restart values
+                        # Track training stats
                         self.log_info(
                             '[%d] Training Loss: %f, Error: %f'
                             % (epoch, epoch_loss, 1 - epoch_acc)
                         )
 
-                        # Track validation loss
-                        mean_val_loss, mean_val_acc = eval_epoch(
+                        # Track validation stats
+                        mean_val_loss, mean_val_acc, mean_val_l2 = eval_epoch(
                             sess, val_context, self._layer_idx
                         )
                         self.log_info(
@@ -204,14 +199,30 @@ class DeepKernelModel():
                             % (epoch, mean_val_loss, 1 - mean_val_acc)
                         )
 
+                        if should_save:
+                            # Write histograms
+                            sum_str = sess.run(train_summary_op)
+                            sum_str_val = sess.run(val_summary_op)
+                            train_writer.add_summary(sum_str, epoch)
+                            val_writer.add_summary(sum_str_val, epoch)
+                            # Write learning rate
+                            write_scalar(
+                                train_writer, 'lr', train_context.lr_op, epoch
+                            )
+                            # Write stats
+                            write_epoch(
+                                train_writer, epoch_loss, epoch_acc, epoch_l2, epoch  # noqa
+                            )
+                            write_epoch(
+                                val_writer, mean_val_loss, mean_val_acc, mean_val_l2, epoch  # noqa
+                            )
+
                         # Track best model at validation
                         if best_model['val_error'] > (1 - mean_val_acc):
                             self.log_info('[%d] New best found' % epoch)
 
                             if should_save:
-                                save_model(
-                                    sess, saver, folder, epoch
-                                )
+                                save_model(sess, saver, folder, epoch)
 
                             best_model = {
                                 'val_loss': mean_val_loss,
@@ -250,13 +261,11 @@ class DeepKernelModel():
                             stop = True
 
                         if stop and is_layerwise:
-                            self._iterate_layer(
-                                epoch, train_errors, **params
-                            )
-
+                            self._iterate_layer(epoch, train_errors, **params)
                             successive_fails = 0
                             if self._layerwise_stop(1-mean_val_acc, **params):
                                 break
+
                         elif stop and not is_layerwise:
                             break
 
@@ -325,6 +334,7 @@ class DeepKernelModel():
                                 summary_op
                             ]
                         )
+
                         losses.append(loss)
                         accs.append(acc)
 
