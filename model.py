@@ -206,8 +206,9 @@ class DeepKernelModel():
                             train_writer.add_summary(sum_str, epoch)
                             val_writer.add_summary(sum_str_val, epoch)
                             # Write learning rate
+                            lr_val = sess.run(train_context.lr_op)
                             write_scalar(
-                                train_writer, 'lr', train_context.lr_op, epoch
+                                train_writer, 'lr', lr_val, epoch
                             )
                             # Write stats
                             write_epoch(
