@@ -6,7 +6,7 @@ import collections
 
 from layout import kernel_example_layout_fn
 from ops import get_model_weights, loss_ops_list, get_accuracy_op, \
-                train_ops_list, get_l2_ops_list
+                train_ops_list, get_l2_ops_list, progress
 
 from protodata.data_ops import DataMode
 
@@ -20,6 +20,83 @@ RunContext = collections.namedtuple(
         'steps_per_epoch', 'l2_ops', 'lr_op'
     ]
 )
+
+
+class EarlyStop(object):
+
+    def __init__(self, name, progress_thresh, max_succ_errors):
+        self._name = name
+        self._train_errors = []
+        self._prev_val_error = float('inf')
+        self._successive_errors = 1
+        self._progress_thresh = progress_thresh
+        self._max_succ_errors = max_succ_errors
+
+        self._best = {'val_error': float('inf')}
+        self._succ_fails = 0
+
+    def epoch_update(self, train_error):
+        self._train_errors.append(train_error)
+
+    def strip_update(self,
+                     train_error,
+                     train_loss,
+                     val_error,
+                     val_loss,
+                     epoch):
+        best_found, stop = False, False
+
+        # Track best model at validation
+        if self._best['val_error'] > val_error:
+            logger.debug('[%s, %d] New best found' % (self._name, epoch))
+
+            best_found = True
+            self._best = {
+                'val_loss': val_loss,
+                'val_error': val_error,
+                'epoch': epoch,
+                'train_loss': train_loss,
+                'train_error': train_error,
+            }
+
+        # Stop using progress criteria
+        train_progress = progress(self._train_errors)
+        if train_progress < self._progress_thresh:
+            logger.debug(
+                '[%s, %d] Stuck in training due to ' % (self._name, epoch) +
+                'lack of progress (%f < %f). Halting...'
+                % (train_progress, self._progress_thresh)
+            )
+            stop = True
+
+        # Stop using UP criteria
+        if self._prev_val_error < val_error:
+            self._succ_fails += 1
+            logger.debug(
+                '[%s, %d] Validation error increase. ' % (self._name, epoch) +
+                'Successive fails: %d' % self._succ_fails
+            )
+        else:
+            self._succ_fails = 0
+
+        if self._succ_fails == self._max_succ_errors:
+            logger.debug(
+                '[%s, %d] Validation error increased ' % (self._name, epoch) +
+                'for %d successive times. Halting ...' % self._max_succ_errors
+            )
+            stop = True
+
+        self._prev_val_error = val_error
+        train_errors = self._train_errors.copy()
+        self._train_errors = []
+
+        return best_found, stop, train_errors
+
+    def set_zero_fails(self):
+        self._succ_fails = 0
+
+    def get_best(self):
+        return self._best
 
 
 class RunStatus(object):
@@ -154,7 +231,7 @@ def eval_epoch(sess, context, layer_idx):
             [
                 context.loss_ops[layer_idx],
                 context.acc_op,
-                context.l2_ops[layer_idx]   
+                context.l2_ops[layer_idx]
             ]
         )
 

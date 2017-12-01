@@ -3,7 +3,8 @@ import os
 import logging
 import numpy as np
 
-from training import eval_epoch, run_training_epoch, build_run_context
+from training import eval_epoch, run_training_epoch, build_run_context, \
+    EarlyStop
 from ops import create_global_step, save_model, progress, init_kernel_ops
 from visualization import get_writer, write_epoch, write_scalar
 
@@ -121,10 +122,6 @@ class DeepKernelModel():
         max_successive_strips = params.get('max_successive_strips', 3)
         is_layerwise = params.get('layerwise', False)
 
-        best_model = {'val_error': float('inf')}
-        prev_val_err = float('inf')
-        successive_fails = 0
-
         self._initialize_training(is_layerwise)
 
         with tf.Graph().as_default() as graph:
@@ -137,6 +134,9 @@ class DeepKernelModel():
             # Get training operations
             train_context = build_run_context(
                 dataset, reader, DataMode.TRAINING, train_flds, step, **params
+            )
+            early_stop = EarlyStop(
+                'global', progress_thresh, max_successive_strips
             )
 
             # Get validation operations
@@ -155,8 +155,6 @@ class DeepKernelModel():
             # Gather summaries by dataset
             train_summary_op = tf.summary.merge_all(DataMode.TRAINING)
             val_summary_op = tf.summary.merge_all(DataMode.VALIDATION)
-
-            train_losses, train_errors = [], []
 
             if should_save:
                 saver = tf.train.Saver()
@@ -177,12 +175,9 @@ class DeepKernelModel():
                     epoch_loss, epoch_acc, epoch_l2 = run_training_epoch(
                         sess, train_context, self._layer_idx
                     )
-                    train_losses.append(epoch_loss)
-                    train_errors.append(1-epoch_acc)
+                    early_stop.epoch_update(1-epoch_acc)
 
                     if epoch % strip_length == 0 and epoch != 0:
-
-                        stop = False
 
                         # Track training stats
                         self.log_info(
@@ -218,61 +213,27 @@ class DeepKernelModel():
                                 val_writer, mean_val_loss, mean_val_acc, mean_val_l2, epoch  # noqa
                             )
 
-                        # Track best model at validation
-                        if best_model['val_error'] > (1 - mean_val_acc):
-                            self.log_info('[%d] New best found' % epoch)
+                        is_best, stop, train_errors = early_stop.strip_update(
+                            1 - epoch_acc,
+                            epoch_loss,
+                            1 - mean_val_acc,
+                            mean_val_loss,
+                            epoch
+                        )
 
-                            if should_save:
-                                save_model(sess, saver, folder, epoch)
-
-                            best_model = {
-                                'val_loss': mean_val_loss,
-                                'val_error': 1 - mean_val_acc,
-                                'epoch': epoch,
-                                'train_loss': epoch_loss,
-                                'train_error': 1 - epoch_acc,
-                            }
-
-                        # Stop using progress criteria
-                        train_progress = progress(train_errors)
-                        if train_progress < progress_thresh:
-                            self.log_info(
-                                '[%d] Stuck in training due to ' % epoch +
-                                'lack of progress (%f < %f). Halting...'
-                                % (train_progress, progress_thresh)
-                            )
-                            stop = True
-
-                        # Stop using UP criteria
-                        if prev_val_err < (1 - mean_val_acc):
-                            successive_fails += 1
-                            self.log_info(
-                                '[%d] Validation error increases. ' % epoch +
-                                'Successive fails: %d' % successive_fails
-                            )
-                        else:
-                            successive_fails = 0
-
-                        if successive_fails == max_successive_strips:
-                            self.log_info(
-                                '[%d] Validation error increased ' % epoch +
-                                'for %d successive ' % max_successive_strips +
-                                'times. Halting ...'
-                            )
-                            stop = True
+                        if is_best and should_save:
+                            save_model(sess, saver, folder, epoch)
 
                         if stop and is_layerwise:
                             self._iterate_layer(epoch, train_errors, **params)
-                            successive_fails = 0
+                            early_stop.set_zero_fails()
                             if self._layerwise_stop(1-mean_val_acc, **params):
                                 break
 
                         elif stop and not is_layerwise:
                             break
 
-                        prev_val_err = 1 - mean_val_acc
-                        train_losses, train_errors = [], []
-
+                best_model = early_stop.get_best()
                 self.log_info('Best model found: {}'.format(best_model))
 
                 coord.request_stop()
