@@ -17,13 +17,30 @@ RunContext = collections.namedtuple(
     'RunContext',
     [
         'logits_op', 'train_ops', 'loss_ops', 'acc_op',
-        'steps_per_epoch', 'l2_ops'
+        'steps_per_epoch', 'l2_ops', 'lr_op'
     ]
 )
 
 
+class RunStatus(object):
+
+    def __init__(self):
+        self.loss, self.acc, self.l2 = [], [], []
+
+    def update(self, loss, acc, l2):
+        self.loss.append(loss)
+        self.acc.append(acc)
+        self.l2.append(l2)
+
+    def clear(self):
+        self.loss, self.acc, self.l2 = [], [], []
+
+    def get_means(self):
+        return np.mean(self.loss), np.mean(self.acc), np.mean(self.l2)
+
+
 def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
-    epoch_loss, epoch_accs = [], []
+    status = RunStatus()
 
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
@@ -45,12 +62,13 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
             [
                 context.train_ops[layer_idx],
                 context.loss_ops[layer_idx],
-                context.acc_op
+                context.acc_op,
+                context.l2_ops[layer_idx],
             ] + weight_ops
         )
 
-        _, loss, acc = results[:3]
-        weights = results[3:]
+        _, loss, acc, l2 = results[:4]
+        weights = results[4:]
 
         for i, w in enumerate(weights):
             trained = '[Trained]' if i + 1 == layer_idx or layer_idx == 0 \
@@ -61,14 +79,13 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
             )
         logger.info('Ended step\n')
 
-        epoch_loss.append(loss)
-        epoch_accs.append(acc)
+        status.update(loss, acc, l2)
 
-    return np.mean(epoch_loss), np.mean(epoch_accs)
+    return status.get_means()
 
 
 def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
-    epoch_loss, epoch_accs = [], []
+    status = RunStatus()
 
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
@@ -79,12 +96,13 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
             [
                 context.train_ops[layer_idx],
                 context.loss_ops[layer_idx],
-                context.acc_op
+                context.acc_op,
+                context.l2_ops[layer_idx],
             ] + l2_ops
         )
 
-        _, loss, acc = results[:3]
-        l2_results = results[3:]
+        _, loss, acc, l2_truth = results[:4]
+        l2_results = results[4:]
 
         for i, l2 in enumerate(l2_results):
             trained = '[Trained]' if i == layer_idx or layer_idx == 0 \
@@ -104,38 +122,45 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
         )
         logger.info('Ended step\n')
 
-        epoch_loss.append(loss)
-        epoch_accs.append(acc)
+        status.update(loss, acc, l2_truth)
 
-    return np.mean(epoch_loss), np.mean(epoch_accs)
+    return status.get_means()
 
 
 def run_training_epoch(sess, context, layer_idx):
-    epoch_loss, epoch_accs = [], []
+    status = RunStatus()
 
     logger.debug('Running training epoch on {} variables'.format(layer_idx))
 
     for i in range(context.steps_per_epoch):
-        _, loss, acc = sess.run(
+        _, loss, acc, l2 = sess.run(
             [
                 context.train_ops[layer_idx],
                 context.loss_ops[layer_idx],
-                context.acc_op],
+                context.acc_op,
+                context.l2_ops[layer_idx]
+            ]
         )
-        epoch_loss.append(loss)
-        epoch_accs.append(acc)
+        status.update(loss, acc, l2)
 
-    return np.mean(epoch_loss), np.mean(epoch_accs)
+    return status.get_means()
 
 
 def eval_epoch(sess, context, layer_idx):
-    losses, accs = [], []
-    for _ in range(context.steps_per_epoch):
-        loss, acc = sess.run([context.loss_ops[layer_idx], context.acc_op])
-        losses.append(loss)
-        accs.append(acc)
+    status = RunStatus()
 
-    return np.mean(losses), np.mean(accs)
+    for _ in range(context.steps_per_epoch):
+        loss, acc, l2 = sess.run(
+            [
+                context.loss_ops[layer_idx],
+                context.acc_op,
+                context.l2_ops[layer_idx]   
+            ]
+        )
+
+        status.update(loss, acc, l2)
+
+    return status.get_means()
 
 
 def build_run_context(dataset,
@@ -195,25 +220,24 @@ def build_run_context(dataset,
         if is_training:
 
             # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
-            decayed_lr = tf.train.inverse_time_decay(
+            lr_op = tf.train.inverse_time_decay(
                 lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
             )
-            tf.summary.scalar('lr', decayed_lr, [tag])
 
-            train_ops = train_ops_list(step, decayed_lr, loss_ops, n_layers)
+            train_ops = train_ops_list(step, lr_op, loss_ops, n_layers)
         else:
-            train_ops = None
+            train_ops, lr_op = None, None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
             logits, labels, dataset.get_num_classes()
         )
-        tf.summary.scalar('accuracy', accuracy_op, [tag])
 
     return RunContext(
         logits_op=logits,
         train_ops=train_ops,
         loss_ops=loss_ops,
+        lr_op=lr_op,
         acc_op=accuracy_op,
         steps_per_epoch=steps_per_epoch,
         l2_ops=get_l2_ops_list(**params)
