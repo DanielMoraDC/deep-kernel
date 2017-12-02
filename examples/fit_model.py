@@ -7,7 +7,7 @@ import logging
 import os
 
 from layout import kernel_example_layout_fn
-from model import DeepKernelModel
+from training.fit_validate import DeepNetworkValidation
 
 
 logging.basicConfig(
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__':
 
     fit = bool(int(sys.argv[1]))
-    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb0/aus'
+    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb01/walle/aus'
 
     params = {
         'l2_ratio': 1e-3,
@@ -42,8 +42,6 @@ if __name__ == '__main__':
         'network_fn': kernel_example_layout_fn
     }
 
-    m = DeepKernelModel(verbose=True)
-
     settings = datasets.MagicSettings
     dataset = datasets.Datasets.MAGIC
 
@@ -52,6 +50,7 @@ if __name__ == '__main__':
         if os.path.isdir(folder):
             shutil.rmtree(folder)
 
+        '''
         m.fit(
             data_settings_fn=settings,
             training_folds=range(9),
@@ -61,6 +60,14 @@ if __name__ == '__main__':
             folder=folder,
             **params
         )
+        '''
+
+        m = DeepNetworkValidation(
+            folder=folder,
+            settings_fn=settings,
+            data_location=get_data_location(dataset, folded=True)
+        )
+        m.fit(train_folds=range(9), val_folds=[9], **params)
 
     else:
 

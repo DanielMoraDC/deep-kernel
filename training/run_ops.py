@@ -1,13 +1,12 @@
 import tensorflow as tf
 import numpy as np
 
-import abc
 import logging
 import collections
 
 from layout import kernel_example_layout_fn
 from ops import get_model_weights, loss_ops_list, get_accuracy_op, \
-                train_ops_list, get_l2_ops_list, progress
+                train_ops_list, get_l2_ops_list
 
 from protodata.data_ops import DataMode
 
@@ -18,144 +17,37 @@ RunContext = collections.namedtuple(
     'RunContext',
     [
         'logits_op', 'train_ops', 'loss_ops', 'acc_op',
-        'steps_per_epoch', 'l2_ops', 'lr_op'
+        'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op'
     ]
 )
 
 
-class LayerPolicy(object):
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, num_layers):
-        self._num_layers = num_layers
-        self._layer_id = self.initial_layer_id()
-
-    @abc.abstractmethod
-    def initial_layer_id(self):
-        """
-        Returns the identifier of the first later to train
-        """
-
-    @abc.abstractmethod
-    def next_layer_id(self):
-        """
-        Returns the id of next layer to train
-        """
-
-    @abc.abstractmethod
-    def cycle_ended(self):
-        """
-        Whether the current layer is the beginning of a new cycle
-        """
-
-
-class CyclicPolicy(LayerPolicy):
-
-    def initial_layer_id(self):
-        return 1
-
-    def next_layer_id(self):
-        next_layer = (self._layer_id + 1) % (self._num_layers + 1)
-        self._layer_id = max(next_layer, 1)
-        return self._layer_id
-
-    def cycle_ended(self):
-        return self._layer_id == 1
-
-
-class EarlyStop(object):
-
-    def __init__(self, name, progress_thresh, max_succ_errors):
-        self._name = name
-        self._train_errors = []
-        self._prev_val_error = float('inf')
-        self._successive_errors = 1
-        self._progress_thresh = progress_thresh
-        self._max_succ_errors = max_succ_errors
-
-        self._best = {'val_error': float('inf')}
-        self._succ_fails = 0
-
-    def epoch_update(self, train_error):
-        self._train_errors.append(train_error)
-
-    def strip_update(self,
-                     train_error,
-                     train_loss,
-                     val_error,
-                     val_loss,
-                     epoch):
-        best_found, stop = False, False
-
-        # Track best model at validation
-        if self._best['val_error'] > val_error:
-            logger.debug('[%s, %d] New best found' % (self._name, epoch))
-
-            best_found = True
-            self._best = {
-                'val_loss': val_loss,
-                'val_error': val_error,
-                'epoch': epoch,
-                'train_loss': train_loss,
-                'train_error': train_error,
-            }
-
-        # Stop using progress criteria
-        train_progress = progress(self._train_errors)
-        if train_progress < self._progress_thresh:
-            logger.debug(
-                '[%s, %d] Stuck in training due to ' % (self._name, epoch) +
-                'lack of progress (%f < %f). Halting...'
-                % (train_progress, self._progress_thresh)
-            )
-            stop = True
-
-        # Stop using UP criteria
-        if self._prev_val_error < val_error:
-            self._succ_fails += 1
-            logger.debug(
-                '[%s, %d] Validation error increase. ' % (self._name, epoch) +
-                'Successive fails: %d' % self._succ_fails
-            )
-        else:
-            self._succ_fails = 0
-
-        if self._succ_fails == self._max_succ_errors:
-            logger.debug(
-                '[%s, %d] Validation error increased ' % (self._name, epoch) +
-                'for %d successive times. Halting ...' % self._max_succ_errors
-            )
-            stop = True
-
-        self._prev_val_error = val_error
-        train_errors = self._train_errors.copy()
-        self._train_errors = []
-
-        return best_found, stop, train_errors
-
-    def set_zero_fails(self):
-        self._succ_fails = 0
-
-    def get_best(self):
-        return self._best
-
-
 class RunStatus(object):
 
-    def __init__(self):
-        self.loss, self.acc, self.l2 = [], [], []
+    def __init__(self, loss=None, acc=None, l2=None):
+        self._loss = loss if loss is not None else []
+        self._acc = acc if acc is not None else []
+        self._l2 = l2 if l2 is not None else []
 
     def update(self, loss, acc, l2):
-        self.loss.append(loss)
-        self.acc.append(acc)
-        self.l2.append(l2)
+        self._loss.append(loss)
+        self._acc.append(acc)
+        self._l2.append(l2)
 
     def clear(self):
-        self.loss, self.acc, self.l2 = [], [], []
+        self._loss, self._acc, self._l2 = [], [], []
 
-    def get_means(self):
-        return np.mean(self.loss), np.mean(self.acc), np.mean(self.l2)
+    def loss(self):
+        return np.mean(self._loss)
+
+    def acc(self):
+        return np.mean(self._acc)
+
+    def l2(self):
+        return np.mean(self._l2)
+
+    def error(self):
+        return 1 - np.mean(self._acc)
 
 
 def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
@@ -200,7 +92,7 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
 
         status.update(loss, acc, l2)
 
-    return status.get_means()
+    return status
 
 
 def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
@@ -243,7 +135,7 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
 
         status.update(loss, acc, l2_truth)
 
-    return status.get_means()
+    return status
 
 
 def run_training_epoch(sess, context, layer_idx):
@@ -262,7 +154,7 @@ def run_training_epoch(sess, context, layer_idx):
         )
         status.update(loss, acc, l2)
 
-    return status.get_means()
+    return status
 
 
 def eval_epoch(sess, context, layer_idx):
@@ -279,7 +171,7 @@ def eval_epoch(sess, context, layer_idx):
 
         status.update(loss, acc, l2)
 
-    return status.get_means()
+    return status
 
 
 def build_run_context(dataset,
@@ -352,6 +244,8 @@ def build_run_context(dataset,
             logits, labels, dataset.get_num_classes()
         )
 
+        summary_op = tf.summary.merge_all(tag)
+
     return RunContext(
         logits_op=logits,
         train_ops=train_ops,
@@ -359,5 +253,6 @@ def build_run_context(dataset,
         lr_op=lr_op,
         acc_op=accuracy_op,
         steps_per_epoch=steps_per_epoch,
+        summary_op=summary_op,
         l2_ops=get_l2_ops_list(**params)
     )

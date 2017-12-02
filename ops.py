@@ -2,27 +2,12 @@ import os
 import logging
 
 import tensorflow as tf
-import numpy as np
 
 from layout import get_layer_id
 from kernels import KERNEL_ASSIGN_OPS
 
 
 logger = logging.getLogger(__name__)
-
-
-def progress(strip):
-    """
-    As detailed in:
-        Early stopping - but when?. Lutz Prechelt (1997)
-
-    Progress is the measure of how much training error during a strip
-    is larger than the minimum training error during the strip.
-    """
-    k = len(strip)
-    num = np.sum(strip)
-    den = np.min(strip)*k
-    return 1000 * ((num/den) - 1) if den != 0.0 else 0.0
 
 
 def save_model(monitored_sess, saver, folder, step):
