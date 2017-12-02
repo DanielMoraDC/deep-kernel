@@ -43,7 +43,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         if is_layerwise:
             layerwise_thresh = params.get('layerwise_progress_thresh', 0.1)
             layerwise_succ_strips = params.get('layer_successive_strips', 1)
-            switch_policy_fn = params.get('switch_policy', CyclicPolicy)
+            switch_policy_fn = params.get('switch_policy')
 
             self._layer_stop = EarlyStop(
                 'layerwise', layerwise_thresh, layerwise_succ_strips
@@ -208,6 +208,6 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
         return best_model
 
-    def predict(self):
+    def predict(self, **params):
         # TODO
         return None

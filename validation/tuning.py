@@ -6,7 +6,8 @@ import tempfile
 import shutil
 import logging
 
-from model import DeepKernelModel
+from training.fit_validate import DeepNetworkValidation
+from training.fit import DeepNetworkTraining
 
 from protodata.utils import get_data_location
 
@@ -76,8 +77,6 @@ def _run_setting(dataset,
     else:
         out_folder = folder
 
-    model = DeepKernelModel(verbose=False)
-
     total_stats = []
     for i in range(n_runs):
 
@@ -85,11 +84,14 @@ def _run_setting(dataset,
         run_folder = os.path.join(out_folder, str(_get_millis_time()))
         logger.info('Running training [{}] in {}'.format(i, run_folder))
 
+        model = DeepNetworkTraining(
+            folder=run_folder,
+            settings_fn=settings_fn,
+            data_location=get_data_location(dataset, folded=True)
+        )
+
         before = time.time()
         model.fit(
-            data_settings_fn=settings_fn,
-            folder=run_folder,
-            data_location=get_data_location(dataset, folded=True),
             **best_params
         )
         diff = time.time() - before
@@ -98,10 +100,7 @@ def _run_setting(dataset,
         test_params = best_params.copy()
         del test_params['batch_size']
         test_stats = model.predict(
-            data_settings_fn=settings_fn,
-            folder=run_folder,
             batch_size=test_batch_size,
-            data_location=get_data_location(dataset, folded=True),
             **test_params
         )
 
@@ -128,12 +127,15 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     if layerwise:
         params_cp['layerwise'] = layerwise
 
-    model = DeepKernelModel(verbose=False)
-    best = model.fit_and_validate(
-        training_folds=[x for x in range(n_folds) if x != validation_fold],
-        validation_folds=[validation_fold],
-        data_settings_fn=settings_fn,
-        data_location=data_location,
+    model = DeepNetworkValidation(
+         settings_fn,
+         data_location,
+         folder=params.get('folder')
+    )
+
+    best = model.fit(
+        train_folds=[x for x in range(n_folds) if x != validation_fold],
+        val_folds=[validation_fold],
         **params_cp
     )
 
@@ -168,14 +170,17 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
 
     logger.debug('Starting evaluation on {} ...'.format(params_cp))
 
+    model = DeepNetworkValidation(
+         settings_fn,
+         dataset_location,
+         folder=params.get('folder')
+    )
+
     for val_fold in folds_set:
 
-        model = DeepKernelModel(verbose=False)
-        best = model.fit_and_validate(
-            data_settings_fn=settings_fn,
-            training_folds=[x for x in folds_set if x != val_fold],
-            validation_folds=[val_fold],
-            data_location=get_data_location(dataset, folded=True),
+        best = model.fit(
+            train_folds=[x for x in folds_set if x != val_fold],
+            val_folds=[val_fold],
             **params_cp
         )
 

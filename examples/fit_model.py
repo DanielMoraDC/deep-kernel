@@ -7,9 +7,10 @@ import logging
 import os
 
 from layout import kernel_example_layout_fn
+
 from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
-
+from training.policy import CyclycPolicy
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -39,6 +40,7 @@ if __name__ == '__main__':
         'batch_size': 128,
         'num_layers': 4,
         'max_epochs': 20,
+        'policy': CyclycPolicy,
         'network_fn': kernel_example_layout_fn
     }
 

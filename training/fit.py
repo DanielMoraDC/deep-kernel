@@ -5,6 +5,7 @@ import logging
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 from training.run_ops import run_training_epoch, build_run_context
+from training.predict import predict_fn
 
 from ops import create_global_step, save_model, init_kernel_ops
 from visualization import write_epoch
@@ -28,7 +29,9 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
     def _initialize_fit(self, is_layerwise, **params):
         if is_layerwise:
-            self._layer_idx = params.get('starting_layer')
+            switch_policy_fn = params.get('switch_policy')
+            self._policy = switch_policy_fn(params.get('num_layers'))
+            self._layer_idx = self._policy.initial_layer_id()
             logger.info(
                 'Layerwise fit initialized...'
             )
@@ -36,6 +39,8 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
             self._layer_idx = 0
 
     def fit(self, max_epochs, **params):
+
+        max_epochs = int(max_epochs)
 
         # Parameters with default values
         is_layerwise = params.get('switch_epochs') is not None
@@ -93,8 +98,8 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                         )
 
                     if switch_epochs is not None and len(switch_epochs) > 0 \
-                            and epoch == switch_epochs[0][0]:
-                        self._layer_idx = switch_epochs[0][1]
+                            and epoch == switch_epochs[0]:
+                        self._layer_idx = self._policy.next_layer_id()
                         logger.info(
                             'Switching to layer %d' % self._layer_idx
                         )
@@ -108,10 +113,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
         return model_path, run.loss(), run.error(), run.l2()
 
-    def predict(self):
-        # TODO
-        return None
-        '''return predict_fn(
+    def predict(self, **params):
+        return predict_fn(
             self._settings_fn, self._data_location, self._folder
         )
-        '''

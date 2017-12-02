@@ -1,9 +1,9 @@
 import tensorflow as tf
 import logging
 
-from ops import create_global_step, save_model, init_kernel_ops
-from visualization import get_writer, write_epoch, write_scalar
-from training.run_ops import build_run_context, RunStatus
+from ops import create_global_step
+from visualization import get_writer
+from training.run_ops import build_run_context, eval_epoch, RunStatus
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -12,7 +12,7 @@ from protodata.reading_ops import DataReader
 logger = logging.getLogger(__name__)
 
 
-def predict_fn(self, data_settings_fn, data_location, folder, **params):
+def predict_fn(data_settings_fn, data_location, folder, **params):
 
     store_summaries = params.get('summaries', True)
 
@@ -30,7 +30,6 @@ def predict_fn(self, data_settings_fn, data_location, folder, **params):
 
         if store_summaries:
             writer = get_writer(graph, folder, DataMode.TEST)
-        summary_op = tf.summary.merge_all(DataMode.TEST)
 
         saver = tf.train.Saver()
 
@@ -56,18 +55,16 @@ def predict_fn(self, data_settings_fn, data_location, folder, **params):
 
                 try:
                     # Track loss and accuracy until queue exhausted
-                    loss, acc, l2, summary = sess.run(
-                        [
-                            test_context.loss_ops[0],  # Use all layers
-                            test_context.acc_op,
-                            test_context.l2_op,
-                            summary_op
-                        ]
+                    test_run = eval_epoch(
+                        sess, test_context, layer_idx=0
                     )
 
-                    status.update(loss, acc, l2)
+                    status.update(
+                        test_run.loss(), test_run.acc(), test_run.l2()
+                    )
 
                     if store_summaries:
+                        summary = sess.run(test_context.summary_op)
                         writer.add_summary(summary)
 
                 except tf.errors.OutOfRangeError:
@@ -77,6 +74,4 @@ def predict_fn(self, data_settings_fn, data_location, folder, **params):
             coord.request_stop()
             coord.join(threads)
 
-    loss_mean, acc_mean, _ = status.get_means()
-
-    return {'loss': loss_mean, 'error': 1 - acc_mean}
+    return {'loss': status.loss(), 'error': status.error()}
