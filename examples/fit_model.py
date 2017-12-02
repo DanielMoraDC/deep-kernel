@@ -8,6 +8,7 @@ import os
 
 from layout import kernel_example_layout_fn
 from training.fit_validate import DeepNetworkValidation
+from training.fit import DeepNetworkTraining
 
 
 logging.basicConfig(
@@ -50,24 +51,26 @@ if __name__ == '__main__':
         if os.path.isdir(folder):
             shutil.rmtree(folder)
 
-        '''
-        m.fit(
-            data_settings_fn=settings,
-            training_folds=range(9),
-            validation_folds=[9],
-            switch_epochs=[50, 200, 400],
-            data_location=get_data_location(dataset, folded=True),
+        m = DeepNetworkTraining(
             folder=folder,
+            settings_fn=settings,
+            data_location=get_data_location(dataset, folded=True)
+        )
+
+        m.fit(
+            starting_layer=1,
+            switch_epochs=[(50, 2), (200, 3), (400, 4)],
             **params
         )
-        '''
 
+        '''
         m = DeepNetworkValidation(
             folder=folder,
             settings_fn=settings,
             data_location=get_data_location(dataset, folded=True)
         )
         m.fit(train_folds=range(9), val_folds=[9], **params)
+        '''
 
     else:
 

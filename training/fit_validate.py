@@ -207,3 +207,8 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                 coord.join(threads)
 
         return best_model
+
+    
+    def predict(self):
+        # TODO
+        return None

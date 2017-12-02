@@ -1,24 +1,19 @@
 import tensorflow as tf
 import os
 import logging
-import numpy as np
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
-from training.run_ops import RunStatus
-from training import eval_epoch, run_training_epoch, build_run_context, \
-    EarlyStop, RandomPolicy
-from ops import create_global_step, save_model, init_kernel_ops
-from visualization import get_writer, write_epoch, write_scalar
+from training.run_ops import run_training_epoch, build_run_context
 
-from training.predict import predict_fn
+from ops import create_global_step, save_model, init_kernel_ops
+from visualization import write_epoch
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
 
 logger = logging.getLogger(__name__)
 
-# TODO: switch Monitored Session by custom
 
 # Disable Tensorflow debug messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -33,18 +28,14 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
     def _initialize_fit(self, is_layerwise, **params):
         if is_layerwise:
-            self._layer_idx = 0  # TODO, defined by swithcing policy
+            self._layer_idx = params.get('starting_layer')
             logger.info(
                 'Layerwise fit initialized...'
             )
         else:
             self._layer_idx = 0
 
-    def _iterate_layer(self, epoch, train_errors):
-        self._layer_idx = 1 # TODO fix
-        self.log_info('Switching to layer %d' % self._layer_idx)
-
-    def fit(self, folder, max_epochs, **params):
+    def fit(self, max_epochs, **params):
 
         # Parameters with default values
         is_layerwise = params.get('switch_epochs') is not None
@@ -66,12 +57,10 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
             )
 
             # Initialize writers and summaries
-            writer = tf.summary.FileWriter(folder, graph)
+            writer = tf.summary.FileWriter(self._folder, graph)
             saver = tf.train.Saver()
 
-            self._initialize_training(is_layerwise, **params)
-
-            status = RunStatus()
+            self._initialize_fit(is_layerwise, **params)
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
@@ -86,11 +75,9 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
                 for epoch in range(max_epochs):
 
-                    loss_mean, acc_mean, l2_mean = run_training_epoch(
+                    run = run_training_epoch(
                         sess, context, self._layer_idx
                     )
-
-                    status.update(loss_mean, acc_mean, l2_mean)
 
                     if epoch % summary_epochs == 0:
                         # Store histogram
@@ -98,29 +85,33 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                         writer.add_summary(sum_str, epoch)
 
                         # Store stats from current epoch
-                        write_epoch(
-                            writer, loss_mean, acc_mean, l2_mean, epoch
-                        )
+                        write_epoch(writer, run, epoch)
 
-                        self.log_info(
+                        logger.info(
                             '[%d] Training Loss: %f, Error: %f'
-                            % (epoch, loss_mean, 1-acc_mean)
+                            % (epoch, run.loss(), run.error())
                         )
 
                     if switch_epochs is not None and len(switch_epochs) > 0 \
-                            and epoch == switch_epochs[0]:
-                        self._iterate_layer(epoch, [1-acc_mean])
+                            and epoch == switch_epochs[0][0]:
+                        self._layer_idx = switch_epochs[0][1]
+                        logger.info(
+                            'Switching to layer %d' % self._layer_idx
+                        )
                         switch_epochs = switch_epochs[1:]
 
-                self.log_info('Finished training at step %d' % max_epochs)
-                model_path = save_model(sess, saver, folder, max_epochs)
+                logger.info('Finished training at step %d' % max_epochs)
+                model_path = save_model(sess, saver, self._folder, max_epochs)
 
                 coord.request_stop()
                 coord.join(threads)
 
-        return model_path, status.get_means()
+        return model_path, run.loss(), run.error(), run.l2()
 
     def predict(self):
-        return predict_fn(
+        # TODO
+        return None
+        '''return predict_fn(
             self._settings_fn, self._data_location, self._folder
         )
+        '''
