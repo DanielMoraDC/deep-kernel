@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+import abc
 import logging
 import collections
 
@@ -20,6 +21,47 @@ RunContext = collections.namedtuple(
         'steps_per_epoch', 'l2_ops', 'lr_op'
     ]
 )
+
+
+class LayerPolicy(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, num_layers):
+        self._num_layers = num_layers
+        self._layer_id = self.initial_layer_id()
+
+    @abc.abstractmethod
+    def initial_layer_id(self):
+        """
+        Returns the identifier of the first later to train
+        """
+
+    @abc.abstractmethod
+    def next_layer_id(self):
+        """
+        Returns the id of next layer to train
+        """
+
+    @abc.abstractmethod
+    def cycle_ended(self):
+        """
+        Whether the current layer is the beginning of a new cycle
+        """
+
+
+class CyclicPolicy(LayerPolicy):
+
+    def initial_layer_id(self):
+        return 1
+
+    def next_layer_id(self):
+        next_layer = (self._layer_id + 1) % (self._num_layers + 1)
+        self._layer_id = max(next_layer, 1)
+        return self._layer_id
+
+    def cycle_ended(self):
+        return self._layer_id == 1
 
 
 class EarlyStop(object):

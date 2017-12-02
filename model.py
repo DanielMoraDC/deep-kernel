@@ -4,8 +4,8 @@ import logging
 import numpy as np
 
 from training import eval_epoch, run_training_epoch, build_run_context, \
-    EarlyStop
-from ops import create_global_step, save_model, progress, init_kernel_ops
+    EarlyStop, CyclicPolicy
+from ops import create_global_step, save_model, init_kernel_ops
 from visualization import get_writer, write_epoch, write_scalar
 
 from protodata.data_ops import DataMode
@@ -94,7 +94,7 @@ class DeepKernelModel():
 
                     if switch_epochs is not None and len(switch_epochs) > 0 \
                             and epoch == switch_epochs[0]:
-                        self._iterate_layer(epoch, [1-acc_mean], **params)
+                        self._iterate_layer(epoch, [1-acc_mean])
                         switch_epochs = switch_epochs[1:]
 
                 self.log_info('Finished training at step %d' % max_epochs)
@@ -122,7 +122,7 @@ class DeepKernelModel():
         max_successive_strips = params.get('max_successive_strips', 3)
         is_layerwise = params.get('layerwise', False)
 
-        self._initialize_training(is_layerwise)
+        self._initialize_training(is_layerwise, **params)
 
         with tf.Graph().as_default() as graph:
 
@@ -225,10 +225,18 @@ class DeepKernelModel():
                             save_model(sess, saver, folder, epoch)
 
                         if stop and is_layerwise:
-                            self._iterate_layer(epoch, train_errors, **params)
+                            self._iterate_layer(epoch, train_errors)
                             early_stop.set_zero_fails()
-                            if self._layerwise_stop(1-mean_val_acc, **params):
-                                break
+                            if self._policy.cycle_ended():
+                                _, l_stop, _ = self._layer_stop.strip_update(
+                                    1 - epoch_acc,
+                                    epoch_loss,
+                                    1 - mean_val_acc,
+                                    mean_val_loss,
+                                    epoch
+                                )
+                                if l_stop:
+                                    break
 
                         elif stop and not is_layerwise:
                             break
@@ -316,6 +324,20 @@ class DeepKernelModel():
         if self._verbose:
             logger.info(msg)
 
+    def _initialize_training(self, is_layerwise, **params):
+        if is_layerwise:
+            self._epochs = []
+            layerwise_thresh = params.get('layerwise_progress_thresh', 0.1)
+            layerwise_succ_strips = params.get('layer_successive_strips', 1)
+            self._layer_stop = EarlyStop(
+                'layerwise', layerwise_thresh, layerwise_succ_strips
+            )
+            self._policy = CyclicPolicy(params.get('num_layers'))
+            self._layer_idx = self._policy.initial_layer_id()
+        else:
+            self._layer_idx = 0
+
+    '''
     def _initialize_training(self, layerwise):
         if layerwise:
             self._layer_idx = 1
@@ -324,31 +346,12 @@ class DeepKernelModel():
             self._prev_val_error = float('inf')
         else:
             self._layer_idx = 0
+    '''
 
-    def _iterate_layer(self, epoch, train_errors, **params):
-        layers = params.get('num_layers')
-        self._layer_idx = max(((self._layer_idx + 1) % (layers + 1)), 1)
+    def _iterate_layer(self, epoch, train_errors):
+        # self._layer_idx = max(((self._layer_idx + 1) % (layers + 1)), 1)
+        self._layer_idx = self._policy.next_layer_id()
+        self._layer_stop.epoch_update(np.mean(train_errors))
         self._epochs.append(epoch)
-        self._train_errors.append(np.mean(train_errors))
+        # self._train_errors.append(np.mean(train_errors))
         self.log_info('Switching to layer %d' % self._layer_idx)
-
-    def _layerwise_stop(self, val_error, **params):
-        if self._layer_idx == 1:
-            # Evaluate only when a complete cycle finished
-            thresh = params.get('layerwise_progress_thresh', 0.1)
-            if progress(self._train_errors) < thresh:
-                self.log_info(
-                    'Stopping layerwise cyclying due to lack of progress.'
-                )
-                return True
-            elif self._prev_val_error < val_error:
-                self.log_info(
-                    'Stopping layerwise cyclying: validation error increase' +
-                    '. Had %f, now %f.' % (self._prev_val_error, val_error))
-                return True
-
-            self._prev_val_error = val_error
-            self._train_errors = []
-            return False
-        else:
-            return False
