@@ -201,14 +201,13 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                             break
 
                 best_model = early_stop.get_best()
-                self.log_info('Best model found: {}'.format(best_model))
+                logger.info('Best model found: {}'.format(best_model))
 
                 coord.request_stop()
                 coord.join(threads)
 
         return best_model
 
-    
     def predict(self):
         # TODO
         return None

@@ -38,8 +38,7 @@ if __name__ == '__main__':
         'strip_length': 5,
         'batch_size': 128,
         'num_layers': 4,
-        'max_epochs': 500,
-        'layerwise': True,
+        'max_epochs': 20,
         'network_fn': kernel_example_layout_fn
     }
 
@@ -51,6 +50,7 @@ if __name__ == '__main__':
         if os.path.isdir(folder):
             shutil.rmtree(folder)
 
+        '''
         m = DeepNetworkTraining(
             folder=folder,
             settings_fn=settings,
@@ -58,19 +58,18 @@ if __name__ == '__main__':
         )
 
         m.fit(
-            starting_layer=1,
-            switch_epochs=[(50, 2), (200, 3), (400, 4)],
+            # starting_layer=1,
+            # switch_epochs=[(50, 2), (200, 3), (400, 4)],
             **params
         )
-
         '''
+
         m = DeepNetworkValidation(
             folder=folder,
             settings_fn=settings,
             data_location=get_data_location(dataset, folded=True)
         )
-        m.fit(train_folds=range(9), val_folds=[9], **params)
-        '''
+        m.fit(train_folds=range(9), val_folds=[9], layerwise=False, **params)
 
     else:
 
