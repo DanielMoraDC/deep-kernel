@@ -17,26 +17,37 @@ RunContext = collections.namedtuple(
     'RunContext',
     [
         'logits_op', 'train_ops', 'loss_ops', 'acc_op',
-        'steps_per_epoch', 'l2_ops', 'lr_op'
+        'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op'
     ]
 )
 
 
 class RunStatus(object):
 
-    def __init__(self):
-        self.loss, self.acc, self.l2 = [], [], []
+    def __init__(self, loss=None, acc=None, l2=None):
+        self._loss = loss if loss is not None else []
+        self._acc = acc if acc is not None else []
+        self._l2 = l2 if l2 is not None else []
 
     def update(self, loss, acc, l2):
-        self.loss.append(loss)
-        self.acc.append(acc)
-        self.l2.append(l2)
+        self._loss.append(loss)
+        self._acc.append(acc)
+        self._l2.append(l2)
 
     def clear(self):
-        self.loss, self.acc, self.l2 = [], [], []
+        self._loss, self._acc, self._l2 = [], [], []
 
-    def get_means(self):
-        return np.mean(self.loss), np.mean(self.acc), np.mean(self.l2)
+    def loss(self):
+        return np.mean(self._loss)
+
+    def acc(self):
+        return np.mean(self._acc)
+
+    def l2(self):
+        return np.mean(self._l2)
+
+    def error(self):
+        return 1 - np.mean(self._acc)
 
 
 def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
@@ -81,7 +92,7 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
 
         status.update(loss, acc, l2)
 
-    return status.get_means()
+    return status
 
 
 def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
@@ -124,7 +135,7 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
 
         status.update(loss, acc, l2_truth)
 
-    return status.get_means()
+    return status
 
 
 def run_training_epoch(sess, context, layer_idx):
@@ -143,7 +154,7 @@ def run_training_epoch(sess, context, layer_idx):
         )
         status.update(loss, acc, l2)
 
-    return status.get_means()
+    return status
 
 
 def eval_epoch(sess, context, layer_idx):
@@ -154,13 +165,21 @@ def eval_epoch(sess, context, layer_idx):
             [
                 context.loss_ops[layer_idx],
                 context.acc_op,
-                context.l2_ops[layer_idx]   
+                context.l2_ops[layer_idx]
             ]
         )
 
         status.update(loss, acc, l2)
 
-    return status.get_means()
+    return status
+
+
+def test_step(sess, test_context):
+    return sess.run([
+        test_context.loss_ops[0],
+        test_context.acc_op,
+        test_context.l2_ops[0]
+    ])
 
 
 def build_run_context(dataset,
@@ -233,6 +252,8 @@ def build_run_context(dataset,
             logits, labels, dataset.get_num_classes()
         )
 
+        summary_op = tf.summary.merge_all(tag)
+
     return RunContext(
         logits_op=logits,
         train_ops=train_ops,
@@ -240,5 +261,6 @@ def build_run_context(dataset,
         lr_op=lr_op,
         acc_op=accuracy_op,
         steps_per_epoch=steps_per_epoch,
+        summary_op=summary_op,
         l2_ops=get_l2_ops_list(**params)
     )
