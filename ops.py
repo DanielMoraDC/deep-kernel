@@ -188,7 +188,8 @@ def train_ops_list(step, lr, loss_ops, n_layers):
 def get_train_op(step, lr, loss_op, opt_var_list):
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
-    # This is needed for the batch norm moving averages
+    # This is just a safe option if we use update ops such
+    # as moving averages (e.g. batch norm)
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_op = optimizer.minimize(
