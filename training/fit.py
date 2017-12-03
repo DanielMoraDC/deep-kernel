@@ -30,8 +30,8 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
     def _initialize_fit(self, is_layerwise, **params):
         if is_layerwise:
             switch_policy_fn = params.get('switch_policy')
-            self._policy = switch_policy_fn(params.get('num_layers'))
-            self._layer_idx = self._policy.initial_layer_id()
+            self._policy = switch_policy_fn(**params)
+            self._layer_idx = self._policy.layer()
             logger.info(
                 'Layerwise fit initialized...'
             )

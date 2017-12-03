@@ -1,5 +1,10 @@
-import numpy as np
 import abc
+from numpy.random import RandomState
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class LayerPolicy(object):
@@ -9,6 +14,9 @@ class LayerPolicy(object):
     def __init__(self, num_layers):
         self._num_layers = num_layers
         self._layer_id = self.initial_layer_id()
+
+    def layer(self):
+        return self._layer_id
 
     @abc.abstractmethod
     def name(self):
@@ -71,16 +79,21 @@ class InverseCyclingPolicy(LayerPolicy):
 
 class RandomPolicy(LayerPolicy):
 
-    def __init__(self, num_layers):
-        super(RandomPolicy, self).__init__(num_layers)
+    def __init__(self, num_layers, policy_seed, **params):
         self._count = 0
+        self._seed = policy_seed
+        self._state = RandomState(policy_seed)
+        super(RandomPolicy, self).__init__(num_layers)
+
+    def _random_layer(self):
+        return self._state.randint(1, self._num_layers+1)
 
     def initial_layer_id(self):
-        return self._num_layers
+        return self._random_layer()
 
     def next_layer_id(self):
         self._count = (self._count + 1) % self._num_layers
-        self._layer_id = np.random.randint(1, self._num_layers+1)
+        self._layer_id = self._random_layer()
         return self._layer_id
 
     def cycle_ended(self):
