@@ -6,7 +6,7 @@ import shutil
 import logging
 import os
 
-from layout import kernel_example_layout_fn
+from layout import kernel_fc_layout_fn
 
 from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         'num_layers': 4,
         'max_epochs': 20,
         'policy': CyclicPolicy,
-        'network_fn': kernel_example_layout_fn
+        'network_fn': kernel_fc_layout_fn
     }
 
     settings = datasets.MagicSettings
