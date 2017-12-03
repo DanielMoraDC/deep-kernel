@@ -3,7 +3,9 @@ import numpy as np
 import logging
 
 from protodata import datasets
-from model_validation import tune_model
+
+from validation.tuning import tune_model
+from training.policy import CyclicPolicy
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -25,7 +27,7 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 3,
+        'num_layers': 1,
         'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
@@ -34,7 +36,9 @@ if __name__ == '__main__':
         'memory_factor': 1,
         'max_epochs': MAX_EPOCHS,
         'progress_thresh': 0.1,
-        'kernel_mean': 0.0
+        'kernel_mean': 0.0,
+        'switch_policy': CyclicPolicy,
+        'policy_seed': np.random.randint(1, 1000)
     })
 
     stats = tune_model(
@@ -43,8 +47,8 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=True,
-        layerwise=True,
-        folder='monk2',
+        layerwise=False,
+        folder='monk',
         runs=SIM_RUNS,
         test_batch_size=1
     )
