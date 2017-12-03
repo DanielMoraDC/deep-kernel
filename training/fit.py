@@ -32,7 +32,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
             switch_policy_fn = params.get('switch_policy')
             self._policy = switch_policy_fn(**params)
             self._layer_idx = self._policy.layer()
-            logger.info(
+            logger.debug(
                 'Layerwise fit initialized...'
             )
         else:
@@ -92,7 +92,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                         # Store stats from current epoch
                         write_epoch(writer, run, epoch)
 
-                        logger.info(
+                        logger.debug(
                             '[%d] Training Loss: %f, Error: %f'
                             % (epoch, run.loss(), run.error())
                         )
@@ -100,12 +100,12 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                     if switch_epochs is not None and len(switch_epochs) > 0 \
                             and epoch == switch_epochs[0]:
                         self._layer_idx = self._policy.next_layer_id()
-                        logger.info(
+                        logger.debug(
                             'Switching to layer %d' % self._layer_idx
                         )
                         switch_epochs = switch_epochs[1:]
 
-                logger.info('Finished training at step %d' % max_epochs)
+                logger.debug('Finished training at step %d' % max_epochs)
                 model_path = save_model(sess, saver, self._folder, max_epochs)
 
                 coord.request_stop()
