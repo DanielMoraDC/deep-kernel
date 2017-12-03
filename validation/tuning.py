@@ -84,6 +84,8 @@ def _run_setting(dataset,
         run_folder = os.path.join(out_folder, str(_get_millis_time()))
         logger.info('Running training [{}] in {}'.format(i, run_folder))
 
+        run_stats = {}
+
         model = DeepNetworkTraining(
             folder=run_folder,
             settings_fn=settings_fn,
@@ -91,10 +93,17 @@ def _run_setting(dataset,
         )
 
         before = time.time()
-        model.fit(
+        _, fit_loss, fit_error, fit_l2, = model.fit(
             **best_params
         )
         diff = time.time() - before
+
+        run_stats.update({
+            'train_loss': fit_loss,
+            'train_error': fit_error,
+            'train_l2': fit_l2,
+            'time(s)': diff
+        })
 
         # Evaluate test for current simulation
         test_params = best_params.copy()
@@ -104,10 +113,10 @@ def _run_setting(dataset,
             **test_params
         )
 
-        test_stats.update({'time(s)': diff})
-        logger.info('Training [{}] got results {}'.format(i, test_stats))
+        run_stats.update(test_stats)
 
-        total_stats.append(test_stats)
+        logger.info('Training [{}] got results {}'.format(i, run_stats))
+        total_stats.append(run_stats)
 
     if folder is None:
         shutil.rmtree(out_folder)
