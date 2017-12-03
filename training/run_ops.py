@@ -174,6 +174,14 @@ def eval_epoch(sess, context, layer_idx):
     return status
 
 
+def test_step(sess, test_context):
+    return sess.run([
+        test_context.loss_ops[0],
+        test_context.acc_op,
+        test_context.l2_ops[0]
+    ])
+
+
 def build_run_context(dataset,
                       reader,
                       tag,

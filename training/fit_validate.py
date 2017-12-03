@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 from training.run_ops import eval_epoch, run_training_epoch, build_run_context
-from training.policy import CyclicPolicy
+from training.predict import predict_fn
 from validation.early_stop import EarlyStop
 
 from ops import create_global_step, save_model, init_kernel_ops
@@ -53,7 +53,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
             self._policy = switch_policy_fn(params.get('num_layers'))
             self._layer_idx = self._policy.initial_layer_id()
 
-            logger.info(
+            logger.debug(
                 'Starting layerwise fit with %s' % self._policy.name() +
                 ' policy, progress thresh %f' % layerwise_thresh +
                 ' and max fails in row of %f' % layerwise_succ_strips
@@ -70,7 +70,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
         # Append epoch where to switch and layer to switch to
         self._epochs.append((epoch, self._layer_idx))
-        logger.info('Switching to layer %d' % self._layer_idx)
+        logger.debug('Switching to layer %d' % self._layer_idx)
 
     def _epoch_summary(self,
                        sess,
@@ -153,7 +153,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                     if epoch % strip_length == 0 and epoch != 0:
 
                         # Track training stats
-                        logger.info(
+                        logger.debug(
                             '[%d] Training Loss: %f, Error: %f'
                             % (epoch, train_run.loss(), train_run.error())
                         )
@@ -162,7 +162,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                         val_run = eval_epoch(
                             sess, val_context, self._layer_idx
                         )
-                        logger.info(
+                        logger.debug(
                             '[%d] Validation loss: %f, Error: %f'
                             % (epoch, val_run.loss(), val_run.error())
                         )
@@ -201,7 +201,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                             break
 
                 best_model = early_stop.get_best()
-                logger.info('Best model found: {}'.format(best_model))
+                logger.debug('Best model found: {}'.format(best_model))
 
                 coord.request_stop()
                 coord.join(threads)
@@ -209,5 +209,6 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         return best_model
 
     def predict(self, **params):
-        # TODO
-        return None
+        return predict_fn(
+            self._settings_fn, self._data_location, self._folder, **params
+        )

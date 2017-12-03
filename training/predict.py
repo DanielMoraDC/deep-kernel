@@ -3,7 +3,7 @@ import logging
 
 from ops import create_global_step
 from visualization import get_writer
-from training.run_ops import build_run_context, eval_epoch, RunStatus
+from training.run_ops import build_run_context, test_step, RunStatus
 
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
@@ -55,13 +55,8 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
 
                 try:
                     # Track loss and accuracy until queue exhausted
-                    test_run = eval_epoch(
-                        sess, test_context, layer_idx=0
-                    )
-
-                    status.update(
-                        test_run.loss(), test_run.acc(), test_run.l2()
-                    )
+                    loss, acc, l2 = test_step(sess, test_context)
+                    status.update(loss, acc, l2)
 
                     if store_summaries:
                         summary = sess.run(test_context.summary_op)

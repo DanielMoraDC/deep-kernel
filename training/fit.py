@@ -115,5 +115,5 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
     def predict(self, **params):
         return predict_fn(
-            self._settings_fn, self._data_location, self._folder
+            self._settings_fn, self._data_location, self._folder, **params
         )
