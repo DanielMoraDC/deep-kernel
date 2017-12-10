@@ -69,4 +69,4 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
             coord.request_stop()
             coord.join(threads)
 
-    return {'loss': status.loss(), 'error': status.error()}
+    return {'loss': status.loss(), 'l2': status.l2(), 'error': status.error()}
