@@ -69,7 +69,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         self._layer_stop.epoch_update(np.mean(train_errors))
 
         # Append epoch where to switch and layer to switch to
-        self._epochs.append((epoch, self._layer_idx))
+        self._epochs.append(epoch)
         logger.debug('Switching to layer %d' % self._layer_idx)
 
     def _epoch_summary(self,

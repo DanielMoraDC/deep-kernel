@@ -44,7 +44,7 @@ class LayerPolicy(object):
 
 
 class CyclicPolicy(LayerPolicy):
-    
+
     def __init__(self, num_layers, **params):
         super(CyclicPolicy, self).__init__(num_layers)
 
@@ -64,7 +64,7 @@ class CyclicPolicy(LayerPolicy):
 
 
 class InverseCyclingPolicy(LayerPolicy):
-    
+
     def __init__(self, num_layers, **params):
         super(InverseCyclingPolicy, self).__init__(num_layers)
 
