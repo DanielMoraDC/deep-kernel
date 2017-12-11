@@ -6,7 +6,7 @@ import shutil
 import logging
 import os
 
-from layout import kernel_fc_layout_fn
+from layout import kernel_example_layout_fn
 
 from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__':
 
     mode = int(sys.argv[1])
-    folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb01/walle/aus'
+    # folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb01/walle/aus'
+    folder = 'test_aux'
 
     params = {
         'l2_ratio': 1e-3,
@@ -39,9 +40,9 @@ if __name__ == '__main__':
         'strip_length': 5,
         'batch_size': 128,
         'num_layers': 4,
-        'max_epochs': 20,
+        'max_epochs': 20000,
         'policy': CyclicPolicy,
-        'network_fn': kernel_fc_layout_fn
+        'network_fn': kernel_example_layout_fn
     }
 
     settings = datasets.MagicSettings
@@ -61,7 +62,7 @@ if __name__ == '__main__':
         )
 
         m.fit(
-            switch_epochs=[(50, 2), (200, 3), (400, 4)],
+            # switch_epochs=[(50, 2), (200, 3), (400, 4)],
             **params
         )
 
@@ -80,11 +81,14 @@ if __name__ == '__main__':
         m.fit(train_folds=range(9), val_folds=[9], layerwise=False, **params)
 
     elif mode == 2:
+        
+        m = DeepNetworkValidation(
+            folder=folder,
+            settings_fn=settings,
+            data_location=get_data_location(dataset, folded=True)
+        )
 
         res = m.predict(
-            data_settings_fn=settings,
-            folder=folder,
-            data_location=get_data_location(dataset, folded=True),
             **params
         )
 
