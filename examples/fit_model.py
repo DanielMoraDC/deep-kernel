@@ -6,16 +6,17 @@ import shutil
 import logging
 import os
 
-from layout import kernel_example_layout_fn
+from layout import kernel_example_layout_fn, example_layout_fn
 
 from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
-from training.policy import CyclicPolicy
+from training.policy import CyclicPolicy, InverseCyclingPolicy
 
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)-8s %(message)s',
 )
+logging.getLogger().addHandler(logging.FileHandler('file.log'))
 
 logger = logging.getLogger(__name__)
 
@@ -27,26 +28,26 @@ if __name__ == '__main__':
     folder = 'test_aux'
 
     params = {
-        'l2_ratio': 1e-3,
-        'lr': 1e-4,
+        'l2_ratio': 1e-2,
+        'lr': 1e-3,
         'lr_decay': 0.5,
         'lr_decay_epocs': 500,
         'memory_factor': 2,
-        'hidden_units': 512,
+        'hidden_units': 256,
         'n_threads': 4,
-        'kernel_size': 512,
+        'kernel_size': 128,
         'kernel_mean': 0.0,
         'kernel_std': 0.25,
         'strip_length': 5,
-        'batch_size': 128,
-        'num_layers': 4,
-        'max_epochs': 20000,
-        'policy': CyclicPolicy,
+        'batch_size': 16,
+        'num_layers': 5,
+        'max_epochs': 250,
+        'switch_policy': InverseCyclingPolicy,
         'network_fn': kernel_example_layout_fn
     }
 
-    settings = datasets.MagicSettings
-    dataset = datasets.Datasets.MAGIC
+    settings = datasets.SonarSettings
+    dataset = datasets.Datasets.SONAR
 
     if mode == 0:
 
@@ -62,7 +63,7 @@ if __name__ == '__main__':
         )
 
         m.fit(
-            # switch_epochs=[(50, 2), (200, 3), (400, 4)],
+            switch_epochs=[20, 40, 60],
             **params
         )
 
