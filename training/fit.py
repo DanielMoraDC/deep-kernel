@@ -79,7 +79,6 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
                 for epoch in range(max_epochs):
-
                     run = run_training_epoch(
                         sess, context, self._layer_idx
                     )
@@ -93,8 +92,8 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                         write_epoch(writer, run, epoch)
 
                         logger.debug(
-                            '[%d] Training Loss: %f, Error: %f'
-                            % (epoch, run.loss(), run.error())
+                            '[%d] Training Loss: %f, Error: %f. L2: %f'
+                            % (epoch, run.loss(), run.error(), run.l2())
                         )
 
                     if switch_epochs is not None and len(switch_epochs) > 0 \
