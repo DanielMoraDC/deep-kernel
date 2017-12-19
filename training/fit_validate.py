@@ -154,8 +154,8 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
                         # Track training stats
                         logger.debug(
-                            '[%d] Training Loss: %f, Error: %f'
-                            % (epoch, train_run.loss(), train_run.error())
+                            '[%d] Training Loss: %f, Error: %f. L2: %f'
+                            % (epoch, train_run.loss(), train_run.error(), train_run.l2())  # noqa
                         )
 
                         # Track validation stats
