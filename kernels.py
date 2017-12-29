@@ -37,6 +37,7 @@ class RandomFourierFeatures(KernelFunction):
             # Get existing variable
             matrix = tf.get_variable(self._name)
         else:
+
             # Create variable
             matrix = tf.get_variable(
                 self._name,
@@ -53,6 +54,9 @@ class RandomFourierFeatures(KernelFunction):
             assign_op = matrix.assign(matrix_value)
             tf.add_to_collection(KERNEL_ASSIGN_OPS, assign_op)
 
+        # Let's store the matrix object so we have it if needed
+        self._matrix = matrix
+
         # Check: see matrix does not change with time
         tf.summary.histogram(self._name + '_matrix', matrix, [tag])
 
@@ -60,17 +64,19 @@ class RandomFourierFeatures(KernelFunction):
         matrix_mul = tf.matmul(x, matrix)
         tf.summary.histogram(self._name + '_matrix_mul', matrix_mul, [tag])
 
-        # Check: input to be centered around pi/2
-        matrix_mul_centeterd = matrix_mul + tf.constant(np.pi/2.0) 
+        # We assume input is centered around 0. Since cos of 0 is 1,
+        # output would be shifted to the right limit of the axes.
+        # Adding pi/2 we center the output of the cosinus around 0
+        matrix_mul_centeterd = matrix_mul + tf.constant(np.pi/2.0)
         tf.summary.histogram(
             self._name + '_matrix_mul_centered', matrix_mul_centeterd, [tag]
         )
 
-        # We assume input is centered around 0. Since cos of 0 is 1,
-        # output would be shifted to the right limit of the axes.
-        # Adding pi/2 we center the output of the cosinus around 0
+        # Difference from orifinal paper: empirical results show that
+        # by diving by a constant at each step we make the output of each
+        # progressively decrease and therefore and we get much higher error
         cos = tf.cos(matrix_mul_centeterd)
-        return tf.divide(cos, np.sqrt(self._kernel_size))
+        return cos
 
 
 def _exists_variable(name):
