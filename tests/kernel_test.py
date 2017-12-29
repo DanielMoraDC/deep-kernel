@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class KernelTestCase(unittest.TestCase):
 
-    def test_multilabel(self):
+    def test_rff(self):
         n, inp_dim, kernel_size = 5, 3, 6
         kernel_std = 0.1
 
