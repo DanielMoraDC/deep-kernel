@@ -40,9 +40,8 @@ if __name__ == '__main__':
         'kernel_std': 0.25,
         'strip_length': 5,
         'batch_size': 16,
-        'num_layers': 5,
+        'max_layers': 5,
         'max_epochs': 250,
-        'switch_policy': InverseCyclingPolicy,
         'network_fn': kernel_example_layout_fn
     }
 

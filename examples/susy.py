@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 1,
+        'max_layers': 1,
         'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
@@ -48,7 +48,6 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=False,
-        layerwise=False,
         folder='susy',
         runs=SIM_RUNS,
         test_batch_size=1

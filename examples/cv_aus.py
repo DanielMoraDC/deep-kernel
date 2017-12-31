@@ -7,7 +7,7 @@ from protodata import datasets
 from validation.tuning import tune_model
 from training.policy import CyclicPolicy
 
-CV_TRIALS = 25
+CV_TRIALS = 2
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 1,
+        'max_layers': 4,
         'layerwise_progress_thresh': 0.1,  # Only used if layerwise
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
@@ -47,8 +47,7 @@ if __name__ == '__main__':
         settings_fn=datasets.AusSettings,
         search_space=search_space,
         n_trials=CV_TRIALS,
-        cross_validate=True,
-        layerwise=False,
+        cross_validate=False,
         folder='aus',
         runs=SIM_RUNS,
         test_batch_size=1

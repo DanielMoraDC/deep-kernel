@@ -61,6 +61,19 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         else:
             self._layer_idx = 0
 
+    def _init_session(self, sess, saver, **params):
+        init_kernel_ops(sess)
+
+        # If folder provided, restore variables
+        restore_folder = params.get('restore_folder')
+        if restore_folder is not None:
+            ckpt = tf.train.get_checkpoint_state(restore_folder)
+            if ckpt and ckpt.model_checkpoint_path:
+                # Restores from checkpoint
+                saver.restore(sess, ckpt.model_checkpoint_path)
+            else:
+                raise ValueError('No model found in %s' % restore_folder)
+
     def _should_save(self):
         return self._folder is not None
 
@@ -130,14 +143,15 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
             if self._should_save():
                 self._init_writers(graph)
-                saver = tf.train.Saver()
+
+            saver = tf.train.Saver()
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                init_kernel_ops(sess)
+                self._init_session(sess, saver)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()

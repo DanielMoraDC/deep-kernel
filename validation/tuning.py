@@ -20,7 +20,6 @@ def tune_model(dataset,
                search_space,
                n_trials,
                cross_validate,
-               layerwise=True,
                folder=None,
                runs=10,
                test_batch_size=1):
@@ -32,7 +31,7 @@ def tune_model(dataset,
 
     trials = Trials()
     best = fmin(
-        fn=lambda x: validate_fn(dataset, settings_fn, layerwise, **x),
+        fn=lambda x: validate_fn(dataset, settings_fn, **x),
         algo=tpe.suggest,
         space=search_space,
         max_evals=n_trials,
@@ -45,10 +44,8 @@ def tune_model(dataset,
     # Replace max epochs by once found in the test
     if 'max_epochs' in params:
         del params['max_epochs']
-    params['max_epochs'] = stats['epoch']
 
-    if layerwise:
-        params['switch_epochs'] = stats['switch_epochs']
+    params['train_epochs'] = stats['train_epochs']
 
     logger.info('Using model {} for training with results {}'
                 .format(params, stats))
@@ -78,6 +75,10 @@ def _run_setting(dataset,
         out_folder = folder
 
     total_stats = []
+
+    print(best_params)
+    print(len(best_params.get('train_epochs')))
+
     for i in range(n_runs):
 
         # Train model for current simulation
@@ -86,15 +87,9 @@ def _run_setting(dataset,
 
         run_stats = {}
 
-        model = DeepNetworkTraining(
-            folder=run_folder,
-            settings_fn=settings_fn,
-            data_location=get_data_location(dataset, folded=True)
-        )
-
         before = time.time()
-        _, fit_loss, fit_error, fit_l2, = model.fit(
-            **best_params
+        _, fit_loss, fit_error, fit_l2 = _incremental_training(
+            dataset, settings_fn, run_folder, **best_params
         )
         diff = time.time() - before
 
@@ -108,7 +103,15 @@ def _run_setting(dataset,
         # Evaluate test for current simulation
         test_params = best_params.copy()
         del test_params['batch_size']
+
+        model = DeepNetworkTraining(
+            folder=run_folder,
+            settings_fn=settings_fn,
+            data_location=get_data_location(dataset, folded=True)
+        )
+
         test_stats = model.predict(
+            num_layers=len(best_params.get('train_epochs')),
             batch_size=test_batch_size,
             **test_params
         )
@@ -124,7 +127,7 @@ def _run_setting(dataset,
     return total_stats
 
 
-def _simple_evaluate(dataset, settings_fn, layerwise, **params):
+def _simple_evaluate(dataset, settings_fn, **params):
     """
     Returns the metrics for a single early stopping run
     """
@@ -132,38 +135,22 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     n_folds = settings_fn(data_location).get_fold_num()
     validation_fold = np.random.randint(n_folds)
 
-    params_cp = params.copy()
-    if layerwise:
-        params_cp['layerwise'] = layerwise
-
-    model = DeepNetworkValidation(
-         settings_fn,
-         data_location,
-         folder=params.get('folder')
+    best = _incremental_validation(
+        dataset, settings_fn, validation_fold, **params
     )
-
-    best = model.fit(
-        train_folds=[x for x in range(n_folds) if x != validation_fold],
-        val_folds=[validation_fold],
-        **params_cp
-    )
-
-    if layerwise:
-        best['switch_epochs'] = model._epochs
 
     logger.info('Finished evaluation on {}'.format(params))
-
     logger.info('Obtained results {}'.format(best))
 
     return {
         'loss': best['val_error'],
         'averaged': best,
-        'parameters': params_cp,
+        'parameters': params,
         'status': STATUS_OK
     }
 
 
-def _cross_validate(dataset, settings_fn, layerwise, **params):
+def _cross_validate(dataset, settings_fn, **params):
     """
     Returns the average metric over the folds for the
     given execution setting
@@ -173,28 +160,13 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     folds_set = range(n_folds)
     results = []
 
-    params_cp = params.copy()
-    if layerwise:
-        params_cp.update({'layerwise': layerwise})
-
-    logger.debug('Starting evaluation on {} ...'.format(params_cp))
-
-    model = DeepNetworkValidation(
-         settings_fn,
-         dataset_location,
-         folder=params.get('folder')
-    )
+    logger.debug('Starting evaluation on {} ...'.format(params))
 
     for val_fold in folds_set:
 
-        best = model.fit(
-            train_folds=[x for x in folds_set if x != val_fold],
-            val_folds=[val_fold],
-            **params_cp
+        best = _incremental_validation(
+            dataset, settings_fn, val_fold, **params
         )
-
-        if layerwise:
-            best.update({'switch_epochs': model._epochs})
 
         logger.debug(
             'Using validation fold {}: {}'.format(val_fold, best)
@@ -205,7 +177,7 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     avg_results = _average_results(results)
 
     logger.info(
-        'Finished cross validaton on: {} \n'.format(params_cp)
+        'Finished cross validaton on: {} \n'.format(params)
      )
 
     logger.info(
@@ -215,10 +187,121 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     return {
         'loss': avg_results['val_error'],
         'averaged': avg_results,
-        'parameters': params_cp,
+        'parameters': params,
         'all': results,
         'status': STATUS_OK
     }
+
+
+def _incremental_training(dataset,
+                          settings_fn,
+                          train_folder,
+                          train_epochs,
+                          **params):
+    dataset_location = get_data_location(dataset, folded=True)
+    prev_folder = None
+
+    for i, epochs in enumerate(train_epochs):
+
+        layer = i + 1  # Enumerate starts at 0
+
+        logger.debug('[%d] Training %d epochs' % (layer, epochs))
+
+        # Store in subfolders all trainings except from last one
+        if layer == len(train_epochs):
+            current_folder = train_folder
+        else:
+            current_folder = os.path.join(train_folder, 'layer_%d' % layer)
+
+        logger.debug(
+            '[%d] Training %d epochs in folder %s'
+            % (layer, epochs, current_folder)
+        )
+
+        model = DeepNetworkTraining(
+            settings_fn=settings_fn,
+            data_location=dataset_location,
+            folder=current_folder
+        )
+
+        training_stats = model.fit(
+            num_layers=layer,
+            max_epochs=epochs,
+            switch_epochs=None,
+            restore_folder=prev_folder,
+            layerwise=False,
+            **params
+        )
+
+    return training_stats
+
+
+def _incremental_validation(dataset, settings_fn, val_fold, **params):
+    """
+    Trains a model incrementally so a new layers is appended at the end of the
+    network only if it decreases the generalization error and returns the
+    stats for the best setting found
+    """
+    dataset_location = get_data_location(dataset, folded=True)
+    n_folds = settings_fn(dataset_location).get_fold_num()
+    folds_set = range(n_folds)
+
+    prev_err, prev_folder = float('inf'), None
+    epochs, best = [], None
+
+    tmp_folder = tempfile.mkdtemp()
+
+    for layer in range(1, params.get('max_layers')+1):
+
+        logger.debug(
+            '[%d] Starting layerwise incremental training' % layer
+        )
+
+        current_folder = os.path.join(tmp_folder, 'layer_%d' % layer)
+
+        model = DeepNetworkValidation(
+            settings_fn,
+            dataset_location,
+            folder=current_folder
+        )
+
+        best = model.fit(
+            train_folds=[x for x in folds_set if x != val_fold],
+            val_folds=[val_fold],
+            num_layers=layer,
+            restore_folder=prev_folder,
+            layerwise=False,
+            **params
+        )
+
+        logger.debug(
+            '[{}] Training got: {}'.format(layer, best)
+        )
+
+        if prev_err > best['val_error']:
+            logger.debug(
+                '[%d] Training improved. Going for next layer...' % layer
+            )
+            # We improved, let's try next layer
+            prev_err = best['val_error']
+            prev_folder = current_folder
+            epochs.append(best['epoch'])
+            best.update({'num_layer': layer})
+        else:
+            # Layer did not improve, let's keep layer - 1 layers
+            logger.debug(
+                '[%d] Training stagnated. Stopping...' % layer
+            )
+            break
+
+    del best['epoch']
+    best.update({'train_epochs': epochs})
+
+    logger.debug('Validation for fold {}:{}'.format(val_fold, best))
+
+    shutil.rmtree(tmp_folder)
+
+    return best
 
 
 def _average_results(results):
@@ -227,16 +310,16 @@ def _average_results(results):
     """
     avg = {}
     for k in results[0].keys():
-        if k == 'epoch':
+        if k == 'epoch' or k == 'layer':
             avg[k] = np.median([x[k] for x in results])
-        elif k == 'switch_epochs':
-            avg[k] = _average_layerwise_switches([x[k] for x in results])
+        elif k == 'train_epochs':
+            avg[k] = _average_layerwise_epochs([x[k] for x in results])
         else:
             avg[k] = np.mean([x[k] for x in results])
     return avg
 
 
-def _average_layerwise_switches(epochs):
+def _average_layerwise_epochs(epochs):
     longest = np.max([len(x) for x in epochs])
     medians = []
     for current in range(longest):
