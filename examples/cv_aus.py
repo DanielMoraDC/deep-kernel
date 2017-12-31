@@ -7,11 +7,14 @@ from protodata import datasets
 from validation.tuning import tune_model
 from training.policy import CyclicPolicy
 
-CV_TRIALS = 2
+CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+)
 
 
 if __name__ == '__main__':
@@ -47,7 +50,7 @@ if __name__ == '__main__':
         settings_fn=datasets.AusSettings,
         search_space=search_space,
         n_trials=CV_TRIALS,
-        cross_validate=False,
+        cross_validate=True,
         folder='aus',
         runs=SIM_RUNS,
         test_batch_size=1
