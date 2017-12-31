@@ -46,6 +46,7 @@ def tune_model(dataset,
         del params['max_epochs']
 
     params['train_epochs'] = stats['train_epochs']
+    params['num_layers'] = stats['num_layers']
 
     logger.info('Using model {} for training with results {}'
                 .format(params, stats))
@@ -75,9 +76,6 @@ def _run_setting(dataset,
         out_folder = folder
 
     total_stats = []
-
-    print(best_params)
-    print(len(best_params.get('train_epochs')))
 
     for i in range(n_runs):
 
@@ -111,7 +109,6 @@ def _run_setting(dataset,
         )
 
         test_stats = model.predict(
-            num_layers=len(best_params.get('train_epochs')),
             batch_size=test_batch_size,
             **test_params
         )
@@ -168,10 +165,6 @@ def _cross_validate(dataset, settings_fn, **params):
             dataset, settings_fn, val_fold, **params
         )
 
-        logger.debug(
-            'Using validation fold {}: {}'.format(val_fold, best)
-        )
-
         results.append(best)
 
     avg_results = _average_results(results)
@@ -196,26 +189,27 @@ def _cross_validate(dataset, settings_fn, **params):
 def _incremental_training(dataset,
                           settings_fn,
                           train_folder,
+                          num_layers,
                           train_epochs,
                           **params):
     dataset_location = get_data_location(dataset, folded=True)
     prev_folder = None
 
-    for i, epochs in enumerate(train_epochs):
+    for layer in range(1, num_layers+1):
 
-        layer = i + 1  # Enumerate starts at 0
+        epochs_layer = train_epochs[layer - 1]
 
-        logger.debug('[%d] Training %d epochs' % (layer, epochs))
+        logger.info('[%d] Training %d epochs' % (layer, epochs_layer))
 
         # Store in subfolders all trainings except from last one
-        if layer == len(train_epochs):
+        if layer == num_layers:
             current_folder = train_folder
         else:
             current_folder = os.path.join(train_folder, 'layer_%d' % layer)
 
-        logger.debug(
+        logger.info(
             '[%d] Training %d epochs in folder %s'
-            % (layer, epochs, current_folder)
+            % (layer, epochs_layer, current_folder)
         )
 
         model = DeepNetworkTraining(
@@ -226,7 +220,7 @@ def _incremental_training(dataset,
 
         training_stats = model.fit(
             num_layers=layer,
-            max_epochs=epochs,
+            max_epochs=epochs_layer,
             switch_epochs=None,
             restore_folder=prev_folder,
             layerwise=False,
@@ -253,7 +247,7 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
 
     for layer in range(1, params.get('max_layers')+1):
 
-        logger.debug(
+        logger.debuginfo(
             '[%d] Starting layerwise incremental training' % layer
         )
 
@@ -265,7 +259,7 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
             folder=current_folder
         )
 
-        best = model.fit(
+        fitted = model.fit(
             train_folds=[x for x in folds_set if x != val_fold],
             val_folds=[val_fold],
             num_layers=layer,
@@ -275,18 +269,22 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
         )
 
         logger.debug(
-            '[{}] Training got: {}'.format(layer, best)
+            '[{}] Training got: {}'.format(layer, fitted)
         )
 
-        if prev_err > best['val_error']:
+        if prev_err > fitted['val_error']:
+            # Update previous fit
+            prev_err = fitted['val_error']
+            prev_folder = current_folder
+
+            # Update best model info
+            best = fitted
+            best.update({'num_layers': layer})
+            epochs.append(best['epoch'])
+
             logger.debug(
                 '[%d] Training improved. Going for next layer...' % layer
             )
-            # We improved, let's try next layer
-            prev_err = best['val_error']
-            prev_folder = current_folder
-            epochs.append(best['epoch'])
-            best.update({'num_layer': layer})
         else:
             # Layer did not improve, let's keep layer - 1 layers
             logger.debug(
@@ -296,8 +294,6 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
 
     del best['epoch']
     best.update({'train_epochs': epochs})
-
-    logger.debug('Validation for fold {}:{}'.format(val_fold, best))
 
     shutil.rmtree(tmp_folder)
 
@@ -310,8 +306,8 @@ def _average_results(results):
     """
     avg = {}
     for k in results[0].keys():
-        if k == 'epoch' or k == 'layer':
-            avg[k] = np.median([x[k] for x in results])
+        if k == 'epoch' or k == 'num_layers':
+            avg[k] = int(np.median([x[k] for x in results]))
         elif k == 'train_epochs':
             avg[k] = _average_layerwise_epochs([x[k] for x in results])
         else:
