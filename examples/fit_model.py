@@ -46,8 +46,8 @@ if __name__ == '__main__':
         'network_fn': kernel_example_layout_fn
     }
 
-    settings = datasets.SonarSettings
-    dataset = datasets.Datasets.SONAR
+    settings = datasets.MagicSettings
+    dataset = datasets.Datasets.MAGIC
 
     if mode == 0:
 
@@ -82,7 +82,7 @@ if __name__ == '__main__':
         m.fit(train_folds=range(9), val_folds=[9], layerwise=False, **params)
 
     elif mode == 2:
-        
+
         m = DeepNetworkValidation(
             folder=folder,
             settings_fn=settings,
