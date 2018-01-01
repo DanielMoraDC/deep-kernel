@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from training.run_ops import run_training_epoch, build_run_context
 from training.predict import predict_fn
 
-from ops import create_global_step, save_model, init_kernel_ops
+from ops import save_model, init_kernel_ops, create_global_step
 from visualization import write_epoch
 
 from protodata.data_ops import DataMode
@@ -85,13 +85,13 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                self._init_session(sess, saver)
+                self._init_session(sess, saver, **params)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
                 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
-                for epoch in range(max_epochs):
+                for epoch in range(1, max_epochs+1):
                     run = run_training_epoch(
                         sess, context, self._layer_idx
                     )
