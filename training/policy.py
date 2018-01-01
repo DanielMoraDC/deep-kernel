@@ -85,7 +85,7 @@ class InverseCyclingPolicy(LayerPolicy):
 
 class RandomPolicy(LayerPolicy):
 
-    def __init__(self, num_layers, policy_seed, **params):
+    def __init__(self, num_layers, policy_seed=None, **params):
         self._count = 0
         self._seed = policy_seed
         self._state = RandomState(policy_seed)
