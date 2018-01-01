@@ -36,7 +36,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                 'Layerwise fit initialized...'
             )
         else:
-            self._layer_idx = 0
+            self._layer_idx = params.get('train_only', 0)
 
     def _init_session(self, sess, saver, **params):
         init_kernel_ops(sess)

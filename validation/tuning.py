@@ -227,6 +227,7 @@ def _incremental_training(dataset,
 
         training_stats = model.fit(
             num_layers=layer,
+            train_only=layer,
             max_epochs=epochs_layer,
             switch_epochs=None,
             restore_folder=prev_folder,
@@ -269,6 +270,7 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
             train_folds=[x for x in folds_set if x != val_fold],
             val_folds=[val_fold],
             num_layers=layer,
+            train_only=layer,
             restore_folder=prev_folder,
             layerwise=False,
             **params
