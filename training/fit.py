@@ -78,7 +78,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                 coord = tf.train.Coordinator()
                 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
-                for epoch in range(max_epochs):
+                for epoch in range(1, max_epochs+1):
                     run = run_training_epoch(
                         sess, context, self._layer_idx
                     )
