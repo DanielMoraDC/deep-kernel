@@ -44,10 +44,6 @@ def fine_tune_training(dataset,
             for i in range(1, num_layers)
         ]
 
-        print(switches)
-        print(fine_tune.epochs_per_layer * num_layers)
-        print(num_layers)
-
         return model.fit(
             num_layers=num_layers,
             max_epochs=fine_tune.epochs_per_layer * num_layers,
@@ -63,8 +59,6 @@ def fine_tune_training(dataset,
             'Traditional fine-tuning: training %d' % fine_tune.epochs
             + ' extra epochs for the whole network'
         )
-
-        print(params)
 
         return model.fit(
             num_layers=num_layers,
