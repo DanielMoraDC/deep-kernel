@@ -1,13 +1,15 @@
 import numpy as np
+from hyperopt import fmin, tpe, Trials, STATUS_OK, space_eval
+
 import os
 import time
-from hyperopt import fmin, tpe, Trials, STATUS_OK, space_eval
 import tempfile
 import shutil
 import logging
 
 from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
+from validation.fine_tuning import fine_tune_training
 
 from protodata.utils import get_data_location
 
@@ -19,7 +21,8 @@ def tune_model(dataset,
                settings_fn,
                search_space,
                n_trials,
-               cross_validate,
+               cross_validate=False,
+               fine_tune=None,
                folder=None,
                runs=10,
                test_batch_size=1):
@@ -56,7 +59,8 @@ def tune_model(dataset,
                         best_params=params,
                         n_runs=runs,
                         folder=folder,
-                        test_batch_size=test_batch_size)
+                        test_batch_size=test_batch_size,
+                        fine_tune=fine_tune)
 
 
 def _run_setting(dataset,
@@ -64,7 +68,8 @@ def _run_setting(dataset,
                  best_params,
                  folder=None,
                  n_runs=10,
-                 test_batch_size=1):
+                 test_batch_size=1,
+                 fine_tune=None):
     """
     Fits a model with the training set and evaluates it on the test
     for a given number of times. Then returns the summarized metrics
@@ -83,30 +88,34 @@ def _run_setting(dataset,
         run_folder = os.path.join(out_folder, str(_get_millis_time()))
         logger.info('Running training [{}] in {}'.format(i, run_folder))
 
-        run_stats = {}
-
         before = time.time()
         _, fit_loss, fit_error, fit_l2 = _incremental_training(
             dataset, settings_fn, run_folder, **best_params
         )
+
+        if fine_tune is not None:
+            _, fit_loss, fit_error, fit_l2 = fine_tune_training(
+                dataset, settings_fn, run_folder, fine_tune, **best_params
+            )
+
         diff = time.time() - before
 
-        run_stats.update({
+        run_stats = {
             'train_loss': fit_loss,
             'train_error': fit_error,
             'train_l2': fit_l2,
             'time(s)': diff
-        })
+        }
 
         # Evaluate test for current simulation
-        test_params = best_params.copy()
-        del test_params['batch_size']
-
         model = DeepNetworkTraining(
             folder=run_folder,
             settings_fn=settings_fn,
             data_location=get_data_location(dataset, folded=True)
         )
+
+        test_params = best_params.copy()
+        del test_params['batch_size']
 
         test_stats = model.predict(
             batch_size=test_batch_size,
@@ -199,8 +208,6 @@ def _incremental_training(dataset,
 
         epochs_layer = train_epochs[layer - 1]
 
-        logger.info('[%d] Training %d epochs' % (layer, epochs_layer))
-
         # Store in subfolders all trainings except from last one
         if layer == num_layers:
             current_folder = train_folder
@@ -223,7 +230,6 @@ def _incremental_training(dataset,
             max_epochs=epochs_layer,
             switch_epochs=None,
             restore_folder=prev_folder,
-            layerwise=False,
             **params
         )
 
@@ -247,7 +253,7 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
 
     for layer in range(1, params.get('max_layers')+1):
 
-        logger.debuginfo(
+        logger.debug(
             '[%d] Starting layerwise incremental training' % layer
         )
 
