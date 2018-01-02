@@ -20,7 +20,6 @@ def tune_model(dataset,
                search_space,
                n_trials,
                cross_validate,
-               layerwise=True,
                folder=None,
                runs=10,
                test_batch_size=1):
@@ -32,7 +31,7 @@ def tune_model(dataset,
 
     trials = Trials()
     best = fmin(
-        fn=lambda x: validate_fn(dataset, settings_fn, layerwise, **x),
+        fn=lambda x: validate_fn(dataset, settings_fn, **x),
         algo=tpe.suggest,
         space=search_space,
         max_evals=n_trials,
@@ -46,9 +45,6 @@ def tune_model(dataset,
     if 'max_epochs' in params:
         del params['max_epochs']
     params['max_epochs'] = stats['epoch']
-
-    if layerwise:
-        params['switch_epochs'] = stats['switch_epochs']
 
     logger.info('Using model {} for training with results {}'
                 .format(params, stats))
@@ -124,17 +120,13 @@ def _run_setting(dataset,
     return total_stats
 
 
-def _simple_evaluate(dataset, settings_fn, layerwise, **params):
+def _simple_evaluate(dataset, settings_fn, **params):
     """
     Returns the metrics for a single early stopping run
     """
     data_location = get_data_location(dataset, folded=True)
     n_folds = settings_fn(data_location).get_fold_num()
     validation_fold = np.random.randint(n_folds)
-
-    params_cp = params.copy()
-    if layerwise:
-        params_cp['layerwise'] = layerwise
 
     model = DeepNetworkValidation(
          settings_fn,
@@ -145,25 +137,21 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     best = model.fit(
         train_folds=[x for x in range(n_folds) if x != validation_fold],
         val_folds=[validation_fold],
-        **params_cp
+        **params
     )
 
-    if layerwise:
-        best['switch_epochs'] = model._epochs
-
     logger.info('Finished evaluation on {}'.format(params))
-
     logger.info('Obtained results {}'.format(best))
 
     return {
         'loss': best['val_error'],
         'averaged': best,
-        'parameters': params_cp,
+        'parameters': params,
         'status': STATUS_OK
     }
 
 
-def _cross_validate(dataset, settings_fn, layerwise, **params):
+def _cross_validate(dataset, settings_fn, **params):
     """
     Returns the average metric over the folds for the
     given execution setting
@@ -173,11 +161,7 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     folds_set = range(n_folds)
     results = []
 
-    params_cp = params.copy()
-    if layerwise:
-        params_cp.update({'layerwise': layerwise})
-
-    logger.debug('Starting evaluation on {} ...'.format(params_cp))
+    logger.debug('Starting evaluation on {} ...'.format(params))
 
     model = DeepNetworkValidation(
          settings_fn,
@@ -190,11 +174,8 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
         best = model.fit(
             train_folds=[x for x in folds_set if x != val_fold],
             val_folds=[val_fold],
-            **params_cp
+            **params
         )
-
-        if layerwise:
-            best.update({'switch_epochs': model._epochs})
 
         logger.debug(
             'Using validation fold {}: {}'.format(val_fold, best)
@@ -205,7 +186,7 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     avg_results = _average_results(results)
 
     logger.info(
-        'Finished cross validaton on: {} \n'.format(params_cp)
+        'Finished cross validaton on: {} \n'.format(params)
      )
 
     logger.info(
@@ -215,7 +196,7 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     return {
         'loss': avg_results['val_error'],
         'averaged': avg_results,
-        'parameters': params_cp,
+        'parameters': params,
         'all': results,
         'status': STATUS_OK
     }
@@ -229,24 +210,9 @@ def _average_results(results):
     for k in results[0].keys():
         if k == 'epoch':
             avg[k] = np.median([x[k] for x in results])
-        elif k == 'switch_epochs':
-            avg[k] = _average_layerwise_switches([x[k] for x in results])
         else:
             avg[k] = np.mean([x[k] for x in results])
     return avg
-
-
-def _average_layerwise_switches(epochs):
-    longest = np.max([len(x) for x in epochs])
-    medians = []
-    for current in range(longest):
-        valid_values = []
-        for trial in epochs:
-            if len(trial) > current:
-                valid_values.append(trial[current])
-
-        medians.append(int(np.median(valid_values)))
-    return medians
 
 
 def _get_millis_time():

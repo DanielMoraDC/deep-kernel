@@ -27,25 +27,20 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
         self._settings_fn = settings_fn
         self._data_location = data_location
 
-    def _initialize_fit(self, is_layerwise, **params):
-        if is_layerwise:
-            switch_policy_fn = params.get('switch_policy')
-            self._policy = switch_policy_fn(**params)
-            self._layer_idx = self._policy.layer()
-            logger.debug(
-                'Layerwise fit initialized...'
-            )
-        else:
-            self._layer_idx = 0
+    def _initialize_fit(self, **params):
+        switch_policy_fn = params.get('switch_policy')
+        self._policy = switch_policy_fn(**params)
+        self._layer_idx = self._policy.layer()
+        logger.debug(
+            'Layerwise fit initialized...'
+        )
 
     def fit(self, max_epochs, **params):
 
         max_epochs = int(max_epochs)
+        epochs_per_layer = params.get('epochs_per_layer')
 
         # Parameters with default values
-        is_layerwise = params.get('switch_epochs') is not None
-        switch_epochs = params.get('switch_epochs').copy() \
-            if is_layerwise else None
         summary_epochs = params.get('summary_epochs', 1)
 
         with tf.Graph().as_default() as graph:
@@ -65,7 +60,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
             writer = tf.summary.FileWriter(self._folder, graph)
             saver = tf.train.Saver()
 
-            self._initialize_fit(is_layerwise, **params)
+            self._initialize_fit(**params)
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
@@ -79,6 +74,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
                 for epoch in range(1, max_epochs+1):
+                    
                     run = run_training_epoch(
                         sess, context, self._layer_idx
                     )
@@ -96,13 +92,11 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                             % (epoch, run.loss(), run.error(), run.l2())
                         )
 
-                    if switch_epochs is not None and len(switch_epochs) > 0 \
-                            and epoch == switch_epochs[0]:
+                    if epoch % epochs_per_layer == 0:
                         self._layer_idx = self._policy.next_layer_id()
                         logger.debug(
                             'Switching to layer %d' % self._layer_idx
                         )
-                        switch_epochs = switch_epochs[1:]
 
                 logger.debug('Finished training at step %d' % max_epochs)
                 model_path = save_model(sess, saver, self._folder, max_epochs)

@@ -42,6 +42,7 @@ if __name__ == '__main__':
         'batch_size': 16,
         'num_layers': 5,
         'max_epochs': 250,
+        'epochs_per_layer': 10,
         'switch_policy': InverseCyclingPolicy,
         'network_fn': kernel_example_layout_fn
     }
@@ -62,10 +63,7 @@ if __name__ == '__main__':
             data_location=get_data_location(dataset, folded=True)
         )
 
-        m.fit(
-            switch_epochs=[20, 40, 60],
-            **params
-        )
+        m.fit(**params)
 
     elif mode == 1:
 

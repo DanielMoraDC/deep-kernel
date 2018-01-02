@@ -1,7 +1,6 @@
 import tensorflow as tf
 import os
 import logging
-import numpy as np
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
@@ -39,37 +38,18 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         os.makedirs(val_writer_path)
         self._val_writer = tf.summary.FileWriter(val_writer_path, graph)
 
-    def _initialize_training(self, is_layerwise, **params):
-        if is_layerwise:
-            layerwise_thresh = params.get('layerwise_progress_thresh', 0.1)
-            layerwise_succ_strips = params.get('layer_successive_strips', 1)
-            switch_policy_fn = params.get('switch_policy')
-
-            self._layer_stop = EarlyStop(
-                'layerwise', layerwise_thresh, layerwise_succ_strips
-            )
-            self._epochs = []
-
-            self._policy = switch_policy_fn(**params)
-            self._layer_idx = self._policy.layer()
-
-            logger.debug(
-                'Starting layerwise fit with %s' % self._policy.name() +
-                ' policy, progress thresh %f' % layerwise_thresh +
-                ' and max fails in row of %f' % layerwise_succ_strips
-            )
-        else:
-            self._layer_idx = 0
+    def _initialize_training(self, **params):
+        switch_policy_fn = params.get('switch_policy')
+        self._epochs = []
+        self._policy = switch_policy_fn(**params)
+        self._layer_idx = self._policy.layer()
+        logger.debug('Starting layerwise fit with %s' % self._policy.name())
 
     def _should_save(self):
         return self._folder is not None
 
     def _iterate_layer(self, epoch, train_errors):
         self._layer_idx = self._policy.next_layer_id()
-        self._layer_stop.epoch_update(np.mean(train_errors))
-
-        # Append epoch where to switch and layer to switch to
-        self._epochs.append(epoch)
         logger.debug('Switching to layer %d' % self._layer_idx)
 
     def _epoch_summary(self,
@@ -99,14 +79,14 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
     def fit(self, train_folds, val_folds, max_epochs, **params):
 
         max_epochs = int(max_epochs)
+        epochs_per_layer = params.get('epochs_per_layer')
 
         # Parameters with default values
         strip_length = params.get('strip_length', 5)
         progress_thresh = params.get('progress_thresh', 0.1)
         max_successive_strips = params.get('max_successive_strips', 3)
-        is_layerwise = params.get('layerwise', False)
 
-        self._initialize_training(is_layerwise, **params)
+        self._initialize_training(**params)
 
         with tf.Graph().as_default() as graph:
 
@@ -150,7 +130,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                     )
                     early_stop.epoch_update(train_run.error())
 
-                    if epoch % strip_length == 0 and epoch != 0:
+                    if epoch % strip_length == 0:
 
                         # Track training stats
                         logger.debug(
@@ -184,21 +164,13 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                         if is_best and self._should_save():
                             save_model(sess, saver, self._folder, epoch)
 
-                        if stop and is_layerwise:
-
-                            self._iterate_layer(epoch, train_errors)
-                            early_stop.set_zero_fails()
-
-                            if self._policy.cycle_ended():
-                                _, l_stop, _ = self._layer_stop.strip_update(
-                                    train_run, val_run, epoch
-                                )
-
-                                if l_stop:
-                                    break
-
-                        elif stop and not is_layerwise:
+                        if stop:
                             break
+                    
+                    if epoch % epochs_per_layer == 0:
+                        # Change layer
+                        self._layer_idx = self._policy.next_layer_id()
+                        logger.debug('Switching to layer %d' % self._layer_idx)
 
                 best_model = early_stop.get_best()
                 logger.debug('Best model found: {}'.format(best_model))

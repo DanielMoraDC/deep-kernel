@@ -22,13 +22,13 @@ if __name__ == '__main__':
         'lr': hp.choice('lr', [1e-1, 1e-2, 1e-3]),
         'kernel_size': hp.choice('kernel_size', [32, 64, 128]),
         'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [64, 128, 256])
+        'hidden_units': hp.choice('hidden_units', [64, 128, 256]),
+        'epochs_per_layer': hp.choice('epochs_per_layer', [25, 50])
     }
 
     # Fixed parameters
     search_space.update({
         'num_layers': 1,
-        'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
@@ -47,7 +47,6 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=True,
-        layerwise=False,
         folder='sonar',
         runs=SIM_RUNS,
         test_batch_size=1
