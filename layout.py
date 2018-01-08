@@ -38,11 +38,11 @@ def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
 def fc_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     return _fully_connected(
-        x,
-        hidden_units,
-        idx,
-        tag,
-        is_training,
+        x=x,
+        outputs=hidden_units,
+        idx=idx,
+        tag=tag,
+        is_training=is_training,
     )
 
 
@@ -92,12 +92,13 @@ def kernel_block(x, idx, tag, is_training, **params):
     )
 
     hidden = _fully_connected(
-        x,
-        hidden_units,
-        idx,
-        tag,
+        x=x,
+        outputs=hidden_units,
+        idx=idx,
+        tag=tag,
         is_training=is_training,
-        activation_fn=None
+        activation_fn=None,
+        use_bias=False
     )
 
     hidden_kernel = kernel.apply_kernel(hidden, tag)
@@ -120,15 +121,18 @@ def _fully_connected(x,
                      idx,
                      tag,
                      is_training,
-                     activation_fn=tf.nn.relu):
+                     activation_fn=tf.nn.relu,
+                     use_bias=True):
 
     name = LAYER_NAME.format(layer_id=idx, layer_type='fc')
+    bias_init = tf.zeros_initializer() if use_bias else None
     fc_layer = tf.contrib.layers.fully_connected(
         x,
         outputs,
         activation_fn=activation_fn,
         weights_initializer=tf.variance_scaling_initializer,
         variables_collections=[tf.GraphKeys.WEIGHTS],
+        biases_initializer=bias_init,
         scope=name
     )
     tf.summary.histogram(name, fc_layer, [tag])
