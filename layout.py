@@ -1,7 +1,7 @@
 import tensorflow as tf
 import logging
 
-from kernels import RandomFourierFeatures
+from kernels import GaussianRFF
 
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ def kernel_block(x, idx, tag, is_training, **params):
     kernel_std = params.get('kernel_std', 32)
     feature_input_size = x.get_shape().as_list()[1]
 
-    kernel = RandomFourierFeatures(
+    kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=feature_input_size,
         std=kernel_std,
