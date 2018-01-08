@@ -66,7 +66,8 @@ class RandomFourierFeatures(KernelFunction):
 
         # We assume input is centered around 0. Since cos of 0 is 1,
         # output would be shifted to the right limit of the axes.
-        # Adding pi/2 we center the output of the cosinus around 0
+        # Adding pi/2 we center the output of the cosinus around 0,
+        # which is good if we have sigmoid or tanh activations
         matrix_mul_centeterd = matrix_mul + tf.constant(np.pi/2.0)
         tf.summary.histogram(
             self._name + '_matrix_mul_centered', matrix_mul_centeterd, [tag]
