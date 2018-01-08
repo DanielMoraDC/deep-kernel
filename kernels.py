@@ -36,7 +36,7 @@ class RandomFourierFeatures(KernelFunction):
 
         if _exists_variable(self._name):
             # Get existing variable
-            matrix = tf.get_variable(self._name)
+            w = tf.get_variable(self._name)
         else:
 
             # Create variable
