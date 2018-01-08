@@ -104,7 +104,6 @@ def kernel_block(x, idx, tag, is_training, **params):
         use_bias=False
     )
 
-    tf.summary.histogram("kernel_layer_" + idx, hidden, [tag])
     return hidden
 
 
