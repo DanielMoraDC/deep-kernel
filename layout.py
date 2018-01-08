@@ -83,16 +83,19 @@ def kernel_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
     kernel_std = params.get('kernel_std', 32)
+    feature_input_size = x.get_shape().as_list()[1]
 
     kernel = RandomFourierFeatures(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
-        input_dims=hidden_units,
+        input_dims=feature_input_size,
         std=kernel_std,
         kernel_size=kernel_size,
     )
 
+    transformed = kernel.apply_kernel(x, tag)
+
     hidden = _fully_connected(
-        x=x,
+        x=transformed,
         outputs=hidden_units,
         idx=idx,
         tag=tag,
@@ -101,9 +104,8 @@ def kernel_block(x, idx, tag, is_training, **params):
         use_bias=False
     )
 
-    hidden_kernel = kernel.apply_kernel(hidden, tag)
-    tf.summary.histogram("kernel_layer_" + idx, hidden_kernel, [tag])
-    return hidden_kernel
+    tf.summary.histogram("kernel_layer_" + idx, hidden, [tag])
+    return hidden
 
 
 def _map_classes_to_output(outputs):
