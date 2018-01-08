@@ -75,7 +75,7 @@ class RandomFourierFeatures(KernelFunction):
         # Difference from orifinal paper: empirical results show that
         # by diving by a constant at each step we make the output of each
         # progressively decrease and therefore and we get much higher error
-        cos = tf.cos(matrix_mul_centeterd)
+        cos = tf.cos(matrix_mul_centeterd) + np.sqrt(1/self._kernel_size)
         return cos
 
 
