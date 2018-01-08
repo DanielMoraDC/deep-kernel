@@ -1,7 +1,7 @@
 import tensorflow as tf
 import logging
 
-from kernels import RandomFourierFeatures
+from kernels import GaussianRFF
 
 
 logger = logging.getLogger(__name__)
@@ -38,11 +38,11 @@ def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
 def fc_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     return _fully_connected(
-        x,
-        hidden_units,
-        idx,
-        tag,
-        is_training,
+        x=x,
+        outputs=hidden_units,
+        idx=idx,
+        tag=tag,
+        is_training=is_training,
     )
 
 
@@ -83,26 +83,28 @@ def kernel_block(x, idx, tag, is_training, **params):
     hidden_units = params.get('hidden_units', 128)
     kernel_size = params.get('kernel_size', 64)
     kernel_std = params.get('kernel_std', 32)
+    feature_input_size = x.get_shape().as_list()[1]
 
-    kernel = RandomFourierFeatures(
+    kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
-        input_dims=hidden_units,
+        input_dims=feature_input_size,
         std=kernel_std,
         kernel_size=kernel_size,
     )
 
+    transformed = kernel.apply_kernel(x, tag)
+
     hidden = _fully_connected(
-        x,
-        hidden_units,
-        idx,
-        tag,
+        x=transformed,
+        outputs=hidden_units,
+        idx=idx,
+        tag=tag,
         is_training=is_training,
-        activation_fn=None
+        activation_fn=None,
+        use_bias=False
     )
 
-    hidden_kernel = kernel.apply_kernel(hidden, tag)
-    tf.summary.histogram("kernel_layer_" + idx, hidden_kernel, [tag])
-    return hidden_kernel
+    return hidden
 
 
 def _map_classes_to_output(outputs):
@@ -120,15 +122,18 @@ def _fully_connected(x,
                      idx,
                      tag,
                      is_training,
-                     activation_fn=tf.nn.relu):
+                     activation_fn=tf.nn.relu,
+                     use_bias=True):
 
     name = LAYER_NAME.format(layer_id=idx, layer_type='fc')
+    bias_init = tf.zeros_initializer() if use_bias else None
     fc_layer = tf.contrib.layers.fully_connected(
         x,
         outputs,
         activation_fn=activation_fn,
         weights_initializer=tf.variance_scaling_initializer,
         variables_collections=[tf.GraphKeys.WEIGHTS],
+        biases_initializer=bias_init,
         scope=name
     )
     tf.summary.histogram(name, fc_layer, [tag])
