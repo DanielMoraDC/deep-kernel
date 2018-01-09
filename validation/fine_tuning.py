@@ -50,6 +50,7 @@ def fine_tune_training(dataset,
             switch_epochs=switches,
             switch_policy=fine_tune.policy,
             restore_folder=run_folder,
+            restore_layers=[x for x in range(1, num_layers+1)],
             **params
         )
 
@@ -64,6 +65,7 @@ def fine_tune_training(dataset,
             num_layers=num_layers,
             max_epochs=fine_tune.epochs,
             restore_folder=run_folder,
+            restore_layers=[x for x in range(1, num_layers+1)],
             **params
         )
 
