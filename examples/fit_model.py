@@ -28,8 +28,8 @@ if __name__ == '__main__':
     folder = 'test_aux'
 
     params = {
-        'l2_ratio': 1e-2,
-        'lr': 1e-3,
+        'l2_ratio': 1e-3,
+        'lr': 1e-4,
         'lr_decay': 0.5,
         'lr_decay_epocs': 500,
         'memory_factor': 2,
@@ -39,11 +39,11 @@ if __name__ == '__main__':
         'kernel_mean': 0.0,
         'kernel_std': 0.25,
         'strip_length': 5,
-        'batch_size': 16,
+        'batch_size': 128,
         'num_layers': 5,
         'max_epochs': 250,
         'epochs_per_layer': 10,
-        'switch_policy': InverseCyclingPolicy,
+        'switch_policy': CyclicPolicy,
         'network_fn': kernel_example_layout_fn
     }
 
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             settings_fn=settings,
             data_location=get_data_location(dataset, folded=True)
         )
-        m.fit(train_folds=range(9), val_folds=[9], layerwise=False, **params)
+        m.fit(train_folds=range(9), val_folds=[9], **params)
 
     elif mode == 2:
 
