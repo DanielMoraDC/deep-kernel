@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from training.run_ops import run_training_epoch, build_run_context
 from training.predict import predict_fn
 
-from ops import create_global_step, save_model, init_kernel_ops
+from ops import get_global_step, save_model, init_kernel_ops
 from visualization import write_epoch
 
 from protodata.data_ops import DataMode
@@ -45,7 +45,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
         with tf.Graph().as_default() as graph:
 
-            step = create_global_step()
+            step = get_global_step()
 
             dataset = self._settings_fn(dataset_location=self._data_location)
             reader = DataReader(dataset)
@@ -73,11 +73,17 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                 coord = tf.train.Coordinator()
                 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
-                for epoch in range(1, max_epochs+1):
+                while(True):
+
+                    if sess.run(step) >= max_epochs:
+                        logger.debug('Max epochs %d reached' % max_epochs)
+                        break
 
                     run = run_training_epoch(
                         sess, context, self._layer_idx
                     )
+
+                    epoch = run.epoch
 
                     if epoch % summary_epochs == 0:
                         # Store histogram

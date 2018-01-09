@@ -21,18 +21,7 @@ def init_kernel_ops(sess):
     sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))
 
 
-def get_global_step(graph=None):
-    """ Loads the unique global step, if found """
-    graph = tf.get_default_graph() if graph is None else graph
-    global_step_tensors = graph.get_collection(tf.GraphKeys.GLOBAL_STEP)
-    if len(global_step_tensors) == 0:
-        raise RuntimeError('No global step stored in the collection')
-    elif len(global_step_tensors) > 1:
-        raise RuntimeError('Multiple instances found for the global step')
-    return global_step_tensors[0]
-
-
-def create_global_step():
+def get_global_step():
     """ Creates a global step in the VARIABLEs and GLOBAL_STEP collections """
     collections = [tf.GraphKeys.GLOBAL_VARIABLES, tf.GraphKeys.GLOBAL_STEP]
     return tf.get_variable('global_step', shape=[],
@@ -161,7 +150,7 @@ def loss_ops_list(logits, y, sum_collection, n_classes, num_layers, **params):
     return loss_ops
 
 
-def train_ops_list(step, lr, loss_ops, n_layers):
+def train_ops_list(lr, loss_ops, n_layers):
     """
     Builds a tensor with training ops where the ith position
     corresponds to the operation to train layer i. The zero position
@@ -170,22 +159,18 @@ def train_ops_list(step, lr, loss_ops, n_layers):
     train_ops = []
 
     # First position is for all
-    train_ops.append(
-        get_train_op(step, lr, loss_ops[0], tf.trainable_variables())
-    )
+    train_ops.append(get_train_op(lr, loss_ops[0], tf.trainable_variables()))
     logger.debug('Optimizer #{} uses {}'.format(0, tf.trainable_variables()))
 
     for i in range(1, n_layers + 1):
         opt_vars = variables_from_layers([i], True)
         logger.debug('Optimizer #{} uses {}'.format(i, opt_vars))
-        train_ops.append(
-            get_train_op(step, lr, loss_ops[i], opt_vars)
-        )
+        train_ops.append(get_train_op(lr, loss_ops[i], opt_vars))
 
     return train_ops
 
 
-def get_train_op(step, lr, loss_op, opt_var_list):
+def get_train_op(lr, loss_op, opt_var_list):
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
     # This is just a safe option if we use update ops such
@@ -193,7 +178,7 @@ def get_train_op(step, lr, loss_op, opt_var_list):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_op = optimizer.minimize(
-            loss_op, var_list=opt_var_list, global_step=step
+            loss_op, var_list=opt_var_list
         )
 
     return train_op

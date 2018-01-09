@@ -1,7 +1,7 @@
 import tensorflow as tf
 import logging
 
-from ops import create_global_step
+from ops import get_global_step
 from visualization import get_writer
 from training.run_ops import build_run_context, test_step, RunStatus
 
@@ -18,14 +18,14 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
 
     with tf.Graph().as_default() as graph:
 
-        step = create_global_step()
+        step_op = get_global_step()
 
         dataset = data_settings_fn(dataset_location=data_location)
         reader = DataReader(dataset)
 
         test_context = build_run_context(
             dataset=dataset, reader=reader, tag=DataMode.TEST,
-            folds=None, step=step, is_training=False, **params
+            folds=None, step=step_op, is_training=False, **params
         )
 
         if store_summaries:
@@ -50,6 +50,10 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
             threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
             status, finish = RunStatus(), False
+
+            logger.debug(
+                'Predicting from model trained %d epochs' % sess.run(step_op)
+            )
 
             while not finish:
 

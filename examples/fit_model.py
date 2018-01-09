@@ -30,8 +30,8 @@ if __name__ == '__main__':
     params = {
         'l2_ratio': 1e-3,
         'lr': 1e-4,
-        'lr_decay': 0.5,
-        'lr_decay_epocs': 500,
+        'lr_decay': 0.1,
+        'lr_decay_epochs': 1000,
         'memory_factor': 2,
         'hidden_units': 256,
         'n_threads': 4,
