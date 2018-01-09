@@ -9,7 +9,8 @@ from training.run_ops import eval_epoch, run_training_epoch, build_run_context
 from training.predict import predict_fn
 from validation.early_stop import EarlyStop
 
-from ops import create_global_step, save_model, init_kernel_ops
+from ops import create_global_step, save_model, init_kernel_ops, \
+                variables_from_layers
 from visualization import get_writer, write_epoch, write_scalar
 
 from protodata.data_ops import DataMode
@@ -30,6 +31,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         self._data_location = data_location
         self._train_writer, self._val_writer = None, None
         self._epochs = None
+        self._aux_saver, self._restore_vars = None, None
 
     def _init_writers(self, graph):
         self._train_writer = get_writer(
@@ -61,18 +63,36 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         else:
             self._layer_idx = params.get('train_only', 0)
 
-    def _init_session(self, sess, saver, **params):
+    def _init_session(self, sess, **params):
         init_kernel_ops(sess)
 
         # If folder provided, restore variables
         restore_folder = params.get('restore_folder')
+
         if restore_folder is not None:
             ckpt = tf.train.get_checkpoint_state(restore_folder)
             if ckpt and ckpt.model_checkpoint_path:
-                # Restores from checkpoint
-                saver.restore(sess, ckpt.model_checkpoint_path)
+                logger.debug(
+                    "Restoring {} variables from {}".format(
+                        self._restore_vars,
+                        ckpt.model_checkpoint_path
+                    )
+                )
+                self._aux_saver.restore(sess, ckpt.model_checkpoint_path)
             else:
                 raise ValueError('No model found in %s' % restore_folder)
+        else:
+            logger.debug("Training model from scratch")
+
+    def _init_savers(self, **params):
+        saver = tf.train.Saver()
+        if params.get('restore_folder', None) is not None:
+            self._restore_vars = variables_from_layers(
+                params.get('restore_layers'),
+                include_output=False
+            )
+            self._aux_saver = tf.train.Saver(self._restore_vars)
+        return saver
 
     def _should_save(self):
         return self._folder is not None
@@ -144,14 +164,14 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
             if self._should_save():
                 self._init_writers(graph)
 
-            saver = tf.train.Saver()
+            saver = self._init_savers(**params)
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                self._init_session(sess, saver)
+                self._init_session(sess, **params)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()

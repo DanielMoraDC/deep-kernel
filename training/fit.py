@@ -7,7 +7,8 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from training.run_ops import run_training_epoch, build_run_context
 from training.predict import predict_fn
 
-from ops import save_model, init_kernel_ops, create_global_step
+from ops import save_model, init_kernel_ops, create_global_step, \
+                variables_from_layers
 from visualization import write_epoch
 
 from protodata.data_ops import DataMode
@@ -26,6 +27,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
         self._folder = folder
         self._settings_fn = settings_fn
         self._data_location = data_location
+        self._aux_saver, self._restore_vars = None, None
 
     def _initialize_fit(self, is_layerwise, **params):
         if is_layerwise:
@@ -46,10 +48,27 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
         if restore_folder is not None:
             ckpt = tf.train.get_checkpoint_state(restore_folder)
             if ckpt and ckpt.model_checkpoint_path:
-                # Restores from checkpoint
-                saver.restore(sess, ckpt.model_checkpoint_path)
+                logger.debug(
+                    "Restoring {} variables from {}".format(
+                        self._restore_vars,
+                        ckpt.model_checkpoint_path
+                    )
+                )
+                self._aux_saver.restore(sess, ckpt.model_checkpoint_path)
             else:
                 raise ValueError('No model found in %s' % restore_folder)
+        else:
+            logger.debug("Starting model from scratch")
+
+    def _init_savers(self, **params):
+        saver = tf.train.Saver()
+        if params.get('restore_folder', None) is not None:
+            self._restore_vars = variables_from_layers(
+                params.get('restore_layers'),
+                include_output=False
+            )
+            self._aux_saver = tf.train.Saver(self._restore_vars)
+        return saver
 
     def fit(self, max_epochs, **params):
 
@@ -76,7 +95,8 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
             # Initialize writers and summaries
             writer = tf.summary.FileWriter(self._folder, graph)
-            saver = tf.train.Saver()
+            
+            saver = self._init_savers(**params)
 
             self._initialize_fit(is_layerwise, **params)
 

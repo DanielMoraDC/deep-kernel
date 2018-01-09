@@ -231,8 +231,11 @@ def _incremental_training(dataset,
             max_epochs=epochs_layer,
             switch_epochs=None,
             restore_folder=prev_folder,
+            restore_layers=[x for x in range(1, layer)],
             **params
         )
+
+        prev_folder = current_folder
 
     return training_stats
 
@@ -272,6 +275,7 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
             num_layers=layer,
             train_only=layer,
             restore_folder=prev_folder,
+            restore_layers=[x for x in range(1, layer)],
             layerwise=False,
             **params
         )
