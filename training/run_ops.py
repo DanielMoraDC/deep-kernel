@@ -159,8 +159,6 @@ def run_training_epoch(sess, context, layer_idx):
     epoch = sess.run(context.step_op)
     status.epoch = epoch
 
-    print('Epoch %d, LR: %f' % (epoch, sess.run(context.lr_op)))
-
     return status
 
 
