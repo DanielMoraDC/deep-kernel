@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 RunContext = collections.namedtuple(
     'RunContext',
     [
-        'logits_op', 'train_ops', 'loss_ops', 'acc_op',
+        'logits_op', 'train_ops', 'loss_ops', 'acc_op', 'step_op',
         'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op'
     ]
 )
@@ -28,6 +28,7 @@ class RunStatus(object):
         self._loss = loss if loss is not None else []
         self._acc = acc if acc is not None else []
         self._l2 = l2 if l2 is not None else []
+        self.epoch = None
 
     def update(self, loss, acc, l2):
         self._loss.append(loss)
@@ -154,6 +155,10 @@ def run_training_epoch(sess, context, layer_idx):
         )
         status.update(loss, acc, l2)
 
+    # Update epoch
+    epoch = sess.run(context.step_op)
+    status.epoch = epoch
+
     return status
 
 
@@ -192,7 +197,7 @@ def build_run_context(dataset,
                       **params):
     lr = params.get('lr', 0.01)
     lr_decay = params.get('lr_decay', 0.5)
-    lr_decay_epocs = params.get('lr_decay_epochs', 500)
+    lr_decay_epochs = params.get('lr_decay_epochs', 500)
     network_fn = params.get('network_fn', kernel_example_layout_fn)
     batch_size = params.get('batch_size')
     memory_factor = params.get('memory_factor')
@@ -202,10 +207,8 @@ def build_run_context(dataset,
     if folds is not None:
         fold_size = dataset.get_fold_size()
         steps_per_epoch = int(fold_size * len(folds) / batch_size)
-        lr_decay_steps = lr_decay_epocs * steps_per_epoch
     else:
         steps_per_epoch = None
-        lr_decay_steps = 10000  # Default value, not used
 
     data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
     features, labels = reader.read_folded_batch(
@@ -238,14 +241,24 @@ def build_run_context(dataset,
 
         if is_training:
 
-            # Decaying learning rate: lr(t)' = lr / (1 + decay * t)
-            lr_op = tf.train.inverse_time_decay(
-                lr, step, decay_steps=lr_decay_steps, decay_rate=lr_decay
+            # Increase training epoch
+            step_op = tf.assign(step, step + 1)
+
+            # Exp decaying learning rate:
+            #   lr(t)' = lr * decay^(step/decay_steps)
+            # Equivalent to multiply by 'decay' every
+            # 'decay_steps' epochs
+            lr_op = tf.train.exponential_decay(
+                lr,
+                step,
+                decay_steps=lr_decay_epochs,
+                decay_rate=lr_decay,
+                staircase=True
             )
 
-            train_ops = train_ops_list(step, lr_op, loss_ops, n_layers)
+            train_ops = train_ops_list(lr_op, loss_ops, n_layers)
         else:
-            train_ops, lr_op = None, None
+            train_ops, lr_op, step_op = None, None, None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
@@ -262,5 +275,6 @@ def build_run_context(dataset,
         acc_op=accuracy_op,
         steps_per_epoch=steps_per_epoch,
         summary_op=summary_op,
-        l2_ops=get_l2_ops_list(**params)
+        l2_ops=get_l2_ops_list(**params),
+        step_op=step_op
     )
