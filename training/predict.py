@@ -1,7 +1,7 @@
 import tensorflow as tf
 import logging
 
-from ops import create_global_step
+from ops import get_global_step
 from visualization import get_writer
 from training.run_ops import build_run_context, test_step, RunStatus
 
@@ -18,7 +18,7 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
 
     with tf.Graph().as_default() as graph:
 
-        step = create_global_step()
+        step = get_global_step()
 
         dataset = data_settings_fn(dataset_location=data_location)
         reader = DataReader(dataset)

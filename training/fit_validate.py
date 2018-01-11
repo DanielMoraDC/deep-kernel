@@ -9,7 +9,7 @@ from training.run_ops import eval_epoch, run_training_epoch, build_run_context
 from training.predict import predict_fn
 from validation.early_stop import EarlyStop
 
-from ops import create_global_step, save_model, init_kernel_ops, \
+from ops import get_global_step, save_model, init_kernel_ops, \
                 variables_from_layers
 from visualization import get_writer, write_epoch, write_scalar
 
@@ -143,7 +143,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
         with tf.Graph().as_default() as graph:
 
-            step = create_global_step()
+            step = get_global_step()
 
             dataset = self._settings_fn(dataset_location=self._data_location)
             reader = DataReader(dataset)
@@ -177,12 +177,18 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                 coord = tf.train.Coordinator()
                 threads = tf.train.start_queue_runners(coord=coord, sess=sess)
 
-                for epoch in range(1, max_epochs+1):
+                while(True):
+
+                    if sess.run(step) >= max_epochs:
+                        logger.debug('Max epochs %d reached' % max_epochs)
+                        break
 
                     train_run = run_training_epoch(
                         sess, train_context, self._layer_idx
                     )
                     early_stop.epoch_update(train_run.error())
+
+                    epoch = train_run.epoch
 
                     if epoch % strip_length == 0 and epoch != 0:
 
