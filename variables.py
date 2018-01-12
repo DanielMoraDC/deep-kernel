@@ -54,3 +54,15 @@ def get_weights_and_biases(layer_list, include_output=True):
             if include_output:
                 selected.append(var)
     return selected
+
+
+def summarize_gradients(gradients, tag):
+    for grad, var in gradients:
+        var_str_list = var.name.split('/')[1:]
+        # Lets remove the :num ids
+        var_str_list = [x.replace(':', '_') for x in var_str_list]
+        var_id = '_'.join(var_str_list)
+        tf.summary.histogram(var_id + "_gradient", grad, [tag])
+        tf.summary.histogram(
+            var_id + "_gradient_norm", tf.global_norm([grad]), [tag]    
+        )

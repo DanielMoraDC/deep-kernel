@@ -4,7 +4,8 @@ import logging
 import tensorflow as tf
 
 from kernels import KERNEL_ASSIGN_OPS
-from variables import get_model_weights, get_weights_and_biases
+from variables import get_model_weights, get_weights_and_biases, \
+                      summarize_gradients
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +119,7 @@ def loss_ops_list(logits, y, sum_collection, n_classes, num_layers, **params):
     return loss_ops
 
 
-def train_ops_list(lr, loss_ops, n_layers):
+def train_ops_list(lr, loss_ops, n_layers, tag):
     """
     Builds a tensor with training ops where the ith position
     corresponds to the operation to train layer i. The zero position
@@ -128,7 +129,7 @@ def train_ops_list(lr, loss_ops, n_layers):
 
     # First position is for all
     train_ops.append(
-        get_train_op(lr, loss_ops[0], tf.trainable_variables())
+        get_train_op(lr, loss_ops[0], tf.trainable_variables(), tag)
     )
     logger.debug('Optimizer #{} uses {}'.format(0, tf.trainable_variables()))
 
@@ -136,22 +137,22 @@ def train_ops_list(lr, loss_ops, n_layers):
         opt_vars = get_weights_and_biases([i], True)
         logger.debug('Optimizer #{} uses {}'.format(i, opt_vars))
         train_ops.append(
-            get_train_op(lr, loss_ops[i], opt_vars)
+            get_train_op(lr, loss_ops[i], opt_vars, tag)
         )
 
     return train_ops
 
 
-def get_train_op(lr, loss_op, opt_var_list):
+def get_train_op(lr, loss_op, opt_var_list, tag):
     optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
     # This is just a safe option if we use update ops such
     # as moving averages (e.g. batch norm)
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
-        train_op = optimizer.minimize(
-            loss_op, var_list=opt_var_list,
-        )
+        grads = optimizer.compute_gradients(loss_op, var_list=opt_var_list)
+        summarize_gradients(grads, tag)
+        train_op = optimizer.apply_gradients(grads)
 
     return train_op
 
