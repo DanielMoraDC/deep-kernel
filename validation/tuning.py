@@ -1,5 +1,5 @@
 import numpy as np
-from hyperopt import fmin, tpe, Trials, STATUS_OK, space_eval
+from hyperopt import fmin, rand, Trials, STATUS_OK, space_eval
 
 import os
 import time
@@ -25,7 +25,8 @@ def tune_model(dataset,
                fine_tune=None,
                folder=None,
                runs=10,
-               test_batch_size=1):
+               test_batch_size=1,
+               seed=None):
     """
     Tunes a model on training and returns stats of the model on test after
     averaging several runs.
@@ -35,10 +36,11 @@ def tune_model(dataset,
     trials = Trials()
     best = fmin(
         fn=lambda x: validate_fn(dataset, settings_fn, **x),
-        algo=tpe.suggest,
+        algo=rand.suggest,  # tpe.suggest for Tree Parzen Window search
         space=search_space,
         max_evals=n_trials,
-        trials=trials
+        trials=trials,
+        rstate=np.random.RandomState(seed)
     )
 
     params = space_eval(search_space, best)
@@ -99,6 +101,8 @@ def _run_setting(dataset,
             )
 
         diff = time.time() - before
+
+        logger.info('Running prediction [%s] from on %s' % (i, run_folder))
 
         run_stats = {
             'train_loss': fit_loss,
