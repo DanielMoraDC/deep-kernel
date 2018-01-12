@@ -41,6 +41,12 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
             ckpt = tf.train.get_checkpoint_state(folder)
             if ckpt and ckpt.model_checkpoint_path:
                 # Restores from checkpoint
+                logger.debug(
+                    'Restoring {} from {}'.format(
+                        tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES),
+                        ckpt.model_checkpoint_path
+                    )
+                )
                 saver.restore(sess, ckpt.model_checkpoint_path)
             else:
                 raise ValueError('No model found in %s' % folder)

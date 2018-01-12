@@ -3,9 +3,8 @@ import logging
 
 import tensorflow as tf
 
-from layout import get_layer_id
 from kernels import KERNEL_ASSIGN_OPS
-
+from variables import get_model_weights, get_weights_and_biases
 
 logger = logging.getLogger(__name__)
 
@@ -53,37 +52,6 @@ def _binary_activation(x):
     return tf.cast(tf.where(negative_idx, zero_tensor, one_tensor), tf.int64)
 
 
-def get_model_weights(layers, include_output=True):
-    """ Returns the list of models parameters """
-    weights = []
-    vars_layers = variables_from_layers(layers, include_output)
-    for var in vars_layers:
-        if 'bias' in var.name:
-            logger.debug('Ignoring bias %s for regularization ' % (var.name))
-        elif 'weight' in var.name:
-            weights.append(var)
-            logger.debug('Using weights %s for regularization ' % (var.name))
-        else:
-            logger.warning('Ignoring unknown parameter type %s' % (var.name))
-    return weights
-
-
-def variables_from_layers(layer_list, include_output=True):
-    selected = []
-    train_vars = tf.get_collection(tf.GraphKeys.WEIGHTS)
-    for var in train_vars:
-        try:
-            layer_name = var.name.split('/')[1]
-            layer_id = get_layer_id(layer_name)
-            if int(layer_id) in layer_list:
-                selected.append(var)
-        except Exception:
-            # If we are here we assume we have an output variable
-            if include_output:
-                selected.append(var)
-    return selected
-
-
 def get_loss_fn(logits, labels, n_classes):
     if n_classes == 2:
         return tf.nn.sigmoid_cross_entropy_with_logits(
@@ -98,19 +66,19 @@ def get_loss_fn(logits, labels, n_classes):
         raise ValueError('Number of outputs must be at least 2')
 
 
-def get_loss_op(logits, y, weights, sum_collection, n_classes, **params):
+def get_l2_op(weights, **params):
     l2_ratio = params.get('l2_ratio', None)
-
-    l2_term = l2_norm(weights) * l2_ratio \
+    return l2_norm(weights) * l2_ratio \
         if l2_ratio is not None else tf.constant(0.0)
 
+
+def get_loss_op(logits, y, weights, sum_collection, n_classes, **params):
     loss_term = tf.reduce_mean(
         get_loss_fn(
             logits, y, n_classes
         )
     )
-
-    loss_op = loss_term + l2_term
+    loss_op = loss_term + get_l2_op(weights, **params)
     return loss_op
 
 
@@ -165,7 +133,7 @@ def train_ops_list(lr, loss_ops, n_layers):
     logger.debug('Optimizer #{} uses {}'.format(0, tf.trainable_variables()))
 
     for i in range(1, n_layers + 1):
-        opt_vars = variables_from_layers([i], True)
+        opt_vars = get_weights_and_biases([i], True)
         logger.debug('Optimizer #{} uses {}'.format(i, opt_vars))
         train_ops.append(
             get_train_op(lr, loss_ops[i], opt_vars)
@@ -182,7 +150,7 @@ def get_train_op(lr, loss_op, opt_var_list):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         train_op = optimizer.minimize(
-            loss_op, var_list=opt_var_list
+            loss_op, var_list=opt_var_list,
         )
 
     return train_op
@@ -193,20 +161,14 @@ def l2_norm(weights):
 
 
 def get_l2_ops_list(**params):
-
-    l2_ratio = params.get('l2_ratio', None)
     num_layers = params.get('num_layers')
 
-    def get_l2_op(weights):
-        return l2_norm(weights) * l2_ratio \
-            if l2_ratio is not None else tf.constant(0.0)
-
     l2_list = []
-    all_weights = variables_from_layers(range(1, num_layers+1))
-    l2_list.append(get_l2_op(all_weights))
+    all_weights = get_model_weights(range(1, num_layers+1))
+    l2_list.append(get_l2_op(all_weights, **params))
 
     for i in range(1, num_layers+1):
-        current_weights = variables_from_layers([i])
-        l2_list.append(get_l2_op(current_weights))
+        current_weights = get_weights_and_biases([i])
+        l2_list.append(get_l2_op(current_weights, **params))
 
     return l2_list

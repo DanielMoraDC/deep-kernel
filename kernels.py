@@ -3,7 +3,7 @@ import abc
 import numpy as np
 import tensorflow as tf
 
-
+KERNEL_COLLECTION = 'KERNEL_VARS'
 KERNEL_ASSIGN_OPS = 'KERNEL_ASSIGN_OPS'
 
 
@@ -34,22 +34,18 @@ class RandomFourierFeatures(KernelFunction):
 
     def apply_kernel(self, x, tag):
 
-        if _exists_variable(self._name):
-            # Get existing variable
-            w = tf.get_variable(self._name)
-        else:
+        # Create variable
+        w = tf.get_variable(
+            self._name,
+            [self._input_dims, self._kernel_size],
+            trainable=False,  # Important: this is constant!
+            collections=[KERNEL_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES]
+        )
 
-            # Create variable
-            w = tf.get_variable(
-                self._name,
-                [self._input_dims, self._kernel_size],
-                trainable=False  # Important: this is constant!
-            )
+        w_value = self.draw_samples()
 
-            w_value = self.draw_samples()
-
-            assign_op = w.assign(w_value)
-            tf.add_to_collection(KERNEL_ASSIGN_OPS, assign_op)
+        assign_op = w.assign(w_value)
+        tf.add_to_collection(KERNEL_ASSIGN_OPS, assign_op)
 
         # Let's store the matrix object so we have it if needed
         self._w = w
@@ -92,14 +88,3 @@ class GaussianRFF(RandomFourierFeatures):
             self._std,
             [self._input_dims, self._kernel_size]
         )
-
-
-def _exists_variable(name):
-    """
-    Returns whether variable exists in the current scope
-    """
-    all_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
-    for var in all_vars:
-        if var == name:
-            return True
-    return False
