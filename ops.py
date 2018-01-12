@@ -21,7 +21,7 @@ def init_kernel_ops(sess):
     sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))
 
 
-def create_global_step():
+def get_global_step():
     """ Creates a global step in the VARIABLEs and GLOBAL_STEP collections """
     collections = [tf.GraphKeys.GLOBAL_VARIABLES, tf.GraphKeys.GLOBAL_STEP]
     return tf.get_variable('global_step', shape=[],

@@ -32,6 +32,8 @@ def fine_tune_training(dataset,
         folder=run_folder
     )
 
+    last_epoch = params['train_epochs'][-1]
+
     if isinstance(fine_tune, FineTuningType.ExtraLayerwise):
 
         logger.info(
@@ -40,13 +42,13 @@ def fine_tune_training(dataset,
         )
 
         switches = [
-            fine_tune.epochs_per_layer * i
+            last_epoch + fine_tune.epochs_per_layer * i
             for i in range(1, num_layers)
         ]
 
         return model.fit(
             num_layers=num_layers,
-            max_epochs=fine_tune.epochs_per_layer * num_layers,
+            max_epochs=last_epoch + fine_tune.epochs_per_layer * num_layers,
             switch_epochs=switches,
             switch_policy=fine_tune.policy,
             restore_folder=run_folder,
@@ -63,7 +65,7 @@ def fine_tune_training(dataset,
 
         return model.fit(
             num_layers=num_layers,
-            max_epochs=fine_tune.epochs,
+            max_epochs=last_epoch + fine_tune.epochs,
             restore_folder=run_folder,
             restore_layers=[x for x in range(1, num_layers+1)],
             **params

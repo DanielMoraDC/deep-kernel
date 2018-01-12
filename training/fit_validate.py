@@ -84,13 +84,14 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
         else:
             logger.debug("Training model from scratch")
 
-    def _init_savers(self, **params):
+    def _init_savers(self, step, **params):
         saver = tf.train.Saver()
         if params.get('restore_folder', None) is not None:
             self._restore_vars = variables_from_layers(
                 params.get('restore_layers'),
                 include_output=False
             )
+            self._restore_vars.append(step)
             self._aux_saver = tf.train.Saver(self._restore_vars)
         return saver
 
@@ -164,7 +165,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
             if self._should_save():
                 self._init_writers(graph)
 
-            saver = self._init_savers(**params)
+            saver = self._init_savers(step, **params)
 
             with tf.train.MonitoredTrainingSession(
                     save_checkpoint_secs=None,

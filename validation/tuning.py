@@ -215,7 +215,7 @@ def _incremental_training(dataset,
             current_folder = os.path.join(train_folder, 'layer_%d' % layer)
 
         logger.info(
-            '[%d] Training %d epochs in folder %s'
+            '[%d] Training up to epoch %d in folder %s'
             % (layer, epochs_layer, current_folder)
         )
 
