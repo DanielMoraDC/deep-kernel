@@ -9,8 +9,8 @@ from training.run_ops import eval_epoch, run_training_epoch, build_run_context
 from training.predict import predict_fn
 from validation.early_stop import EarlyStop
 
-from ops import get_global_step, save_model, init_kernel_ops, \
-                variables_from_layers
+from variables import get_all_variables
+from ops import get_global_step, save_model, init_kernel_ops
 from visualization import get_writer, write_epoch, write_scalar
 
 from protodata.data_ops import DataMode
@@ -87,7 +87,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
     def _init_savers(self, step, **params):
         saver = tf.train.Saver()
         if params.get('restore_folder', None) is not None:
-            self._restore_vars = variables_from_layers(
+            self._restore_vars = get_all_variables(
                 params.get('restore_layers'),
                 include_output=False
             )

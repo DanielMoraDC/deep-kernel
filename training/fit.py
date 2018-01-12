@@ -7,8 +7,8 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from training.run_ops import run_training_epoch, build_run_context
 from training.predict import predict_fn
 
-from ops import save_model, init_kernel_ops, get_global_step, \
-                variables_from_layers
+from variables import get_all_variables
+from ops import save_model, init_kernel_ops, get_global_step
 from visualization import write_epoch
 
 from protodata.data_ops import DataMode
@@ -63,7 +63,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
     def _init_savers(self, step, **params):
         saver = tf.train.Saver()
         if params.get('restore_folder', None) is not None:
-            self._restore_vars = variables_from_layers(
+            self._restore_vars = get_all_variables(
                 params.get('restore_layers'),
                 include_output=False
             )
