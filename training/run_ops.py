@@ -256,7 +256,7 @@ def build_run_context(dataset,
                 staircase=True
             )
 
-            train_ops = train_ops_list(lr_op, loss_ops, n_layers)
+            train_ops = train_ops_list(lr_op, loss_ops, n_layers, tag)
         else:
             train_ops, lr_op, step_op = None, None, None
 
