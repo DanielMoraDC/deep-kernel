@@ -71,7 +71,6 @@ def _get_kernel_maps(layer_list):
     kernel_maps = tf.get_collection(KERNEL_COLLECTION)
     selected = []
     for km in kernel_maps:
-        print(km.name)
         layer_name = km.name.split('/')[1]
         layer_id = get_layer_id(layer_name)
         if int(layer_id) in layer_list:
