@@ -67,13 +67,16 @@ class RandomFourierFeatures(KernelFunction):
         tf.summary.histogram(b_name, b, [tag])
 
         # Check: input to be centered around 0
-        z = tf.add(tf.matmul(x, w), b)
-        tf.summary.histogram(self._name + '_z', z, [tag])
+        dot = tf.add(tf.matmul(x, w), b)
+        tf.summary.histogram(self._name + '_dot', dot, [tag])
 
         # Difference from orifinal paper: empirical results show that
         # by diving by a constant at each step we make the output of each
         # progressively decrease and therefore and we get much higher error
-        return tf.cos(z) * np.sqrt(2/self._kernel_size)
+        z = tf.cos(dot) * np.sqrt(2/self._kernel_size)
+        tf.summary.histogram(self._name + '_z', z, [tag])
+
+        return z
 
 
 class GaussianRFF(RandomFourierFeatures):
