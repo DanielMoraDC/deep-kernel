@@ -1,4 +1,5 @@
 import abc
+import random
 
 import numpy as np
 import tensorflow as tf
@@ -34,43 +35,45 @@ class RandomFourierFeatures(KernelFunction):
 
     def apply_kernel(self, x, tag):
 
+        w_name = '_'.join([self._name, 'w'])  # Name is important, dont change
+        b_name = '_'.join([self._name, 'b'])  # Name is important, dont change
+
         # Create variable
         w = tf.get_variable(
-            self._name,
+            w_name,
             [self._input_dims, self._kernel_size],
             trainable=False,  # Important: this is constant!,
             collections=[KERNEL_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES]
         )
 
-        w_value = self.draw_samples()
+        b = tf.get_variable(
+            b_name,
+            [self._kernel_size],
+            trainable=False,
+            collections=[KERNEL_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES]
+        )
 
-        assign_op = w.assign(w_value)
-        tf.add_to_collection(KERNEL_ASSIGN_OPS, assign_op)
+        w_value, b_value = self.draw_samples()
 
-        # Let's store the matrix object so we have it if needed
+        tf.add_to_collection(KERNEL_ASSIGN_OPS, w.assign(w_value))
+        tf.add_to_collection(KERNEL_ASSIGN_OPS, b.assign(b_value))
+
+        # Let's store the RFF so we have it if needed
         self._w = w
+        self._b = b
 
         # Check: see matrix does not change with time
-        tf.summary.histogram(self._name + '_w', w, [tag])
+        tf.summary.histogram(w_name, w, [tag])
+        tf.summary.histogram(b_name, b, [tag])
 
         # Check: input to be centered around 0
-        z = tf.matmul(x, w)
+        z = tf.add(tf.matmul(x, w), b)
         tf.summary.histogram(self._name + '_z', z, [tag])
-
-        # We assume input is centered around 0. Since cos of 0 is 1,
-        # output would be shifted to the right limit of the axes.
-        # Adding pi/2 we center the output of the cosinus around 0,
-        # which is good if we have sigmoid or tanh activations
-        z_centered = z + tf.constant(np.pi/2.0)
-        tf.summary.histogram(
-            self._name + '_z_centered', z_centered, [tag]
-        )
 
         # Difference from orifinal paper: empirical results show that
         # by diving by a constant at each step we make the output of each
         # progressively decrease and therefore and we get much higher error
-        cos = tf.cos(z_centered) + np.sqrt(1/self._kernel_size)
-        return cos
+        return tf.cos(z) * np.sqrt(2/self._kernel_size)
 
 
 class GaussianRFF(RandomFourierFeatures):
@@ -83,8 +86,10 @@ class GaussianRFF(RandomFourierFeatures):
         self._std = std
 
     def draw_samples(self):
-        return np.random.normal(
+        w = np.random.normal(
             self._mean,
             self._std,
             [self._input_dims, self._kernel_size]
         )
+        b = [random.uniform(0, 2*np.pi) for _ in range(self._kernel_size)]
+        return w, b
