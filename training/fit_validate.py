@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 # Disable Tensorflow debug messages
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 
 class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
