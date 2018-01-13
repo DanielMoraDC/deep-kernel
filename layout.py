@@ -101,6 +101,27 @@ def kernel_block(x, idx, tag, is_training, **params):
     kernel_std = params.get('kernel_std', 32)
     feature_input_size = x.get_shape().as_list()[1]
 
+    '''
+    kernel = GaussianRFF(
+        name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
+        input_dims=hidden_units,
+        std=kernel_std,
+        kernel_size=kernel_size,
+    )
+
+    hidden = _fully_connected(
+        x=x,
+        outputs=hidden_units,
+        idx=idx,
+        tag=tag,
+        is_training=is_training,
+        activation_fn=None,
+        use_bias=True
+    )
+
+    transformed = kernel.apply_kernel(hidden, tag)
+    return transformed
+    '''
     kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=feature_input_size,
