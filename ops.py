@@ -4,7 +4,7 @@ import logging
 import tensorflow as tf
 
 from kernels import KERNEL_ASSIGN_OPS
-from variables import get_model_weights, get_weights_and_biases, \
+from variables import get_model_weights, get_trainable_params, \
                       summarize_gradients
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,8 @@ def loss_ops_list(logits, y, sum_collection, n_classes, num_layers, **params):
             y,
             layer_weights,
             sum_collection,
-            n_classes
+            n_classes,
+            **params
         )
         logger.debug('L2 #{} uses {}'.format(i, layer_weights))
         loss_ops.append(layer_loss)
@@ -134,7 +135,7 @@ def train_ops_list(lr, loss_ops, n_layers, tag):
     logger.debug('Optimizer #{} uses {}'.format(0, tf.trainable_variables()))
 
     for i in range(1, n_layers + 1):
-        opt_vars = get_weights_and_biases([i], True)
+        opt_vars = get_trainable_params([i], True)
         logger.debug('Optimizer #{} uses {}'.format(i, opt_vars))
         train_ops.append(
             get_train_op(lr, loss_ops[i], opt_vars, tag)
@@ -169,7 +170,8 @@ def get_l2_ops_list(**params):
     l2_list.append(get_l2_op(all_weights, **params))
 
     for i in range(1, num_layers+1):
-        current_weights = get_weights_and_biases([i])
+        current_weights = get_model_weights([i])
+        logger.debug('L2 stats vars #{}: {}'.format(i, current_weights))
         l2_list.append(get_l2_op(current_weights, **params))
 
     return l2_list
