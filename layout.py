@@ -6,6 +6,7 @@ from kernels import GaussianRFF
 
 logger = logging.getLogger(__name__)
 
+BATCH_NORM_COLLECTION = 'BATCH_NORM'
 INPUT_LAYER = 'input'
 OUTPUT_LAYER = 'output'
 LAYER_NAME = '{layer_id}_{layer_type}'
@@ -35,15 +36,31 @@ def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
     )
 
 
-def fc_block(x, idx, tag, is_training, **params):
+def fc_block(x, idx, tag, is_training, batch_norm=True, **params):
     hidden_units = params.get('hidden_units', 128)
-    return _fully_connected(
+
+    hidden = _fully_connected(
         x=x,
         outputs=hidden_units,
         idx=idx,
         tag=tag,
         is_training=is_training,
+        activation_fn=None
     )
+
+    if batch_norm:
+        # Update ops for moving average are automatically
+        # placed in tf.GraphKeys.UPDATE_OPS
+        hidden = tf.contrib.layers.batch_norm(
+            hidden,
+            center=True,
+            scale=True,
+            is_training=is_training,
+            variables_collections=[BATCH_NORM_COLLECTION],
+            scope=LAYER_NAME.format(layer_id=idx, layer_type='bn')
+        )
+
+    return tf.nn.relu(hidden)
 
 
 def kernel_example_layout_fn(x,
