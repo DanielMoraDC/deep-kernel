@@ -54,23 +54,23 @@ class RandomFourierFeatures(KernelFunction):
         tf.summary.histogram(self._name + '_w', w, [tag])
 
         # Check: input to be centered around 0
-        z = tf.matmul(x, w)
-        tf.summary.histogram(self._name + '_z', z, [tag])
+        dot = tf.matmul(x, w)
+        tf.summary.histogram(self._name + '_dot', dot, [tag])
 
         # We assume input is centered around 0. Since cos of 0 is 1,
         # output would be shifted to the right limit of the axes.
         # Adding pi/2 we center the output of the cosinus around 0,
         # which is good if we have sigmoid or tanh activations
-        z_centered = z + tf.constant(np.pi/2.0)
+        dot = dot + tf.constant(np.pi/2.0)
         tf.summary.histogram(
-            self._name + '_z_centered', z_centered, [tag]
+            self._name + '_dot_centered', dot, [tag]
         )
 
         # Difference from orifinal paper: empirical results show that
         # by diving by a constant at each step we make the output of each
         # progressively decrease and therefore and we get much higher error
-        cos = tf.cos(z_centered) + np.sqrt(1/self._kernel_size)
-        return cos
+        z = tf.cos(dot) + np.sqrt(2/self._kernel_size)
+        return z
 
 
 class GaussianRFF(RandomFourierFeatures):
