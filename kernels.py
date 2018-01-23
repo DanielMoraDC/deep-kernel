@@ -8,7 +8,7 @@ KERNEL_COLLECTION = 'KERNEL_VARS'
 KERNEL_ASSIGN_OPS = 'KERNEL_ASSIGN_OPS'
 
 
-class KernelFunction(object):
+class RandomFourierFeatures(object):
 
     __metaclass__ = abc.ABCMeta
 
@@ -16,16 +16,6 @@ class KernelFunction(object):
         self._name = name
         self._input_dims = input_dims
         self._kernel_size = kernel_size
-
-    def apply_kernel(self, x, tag):
-        """
-        Applies a kernel function on the given vector
-        """
-
-
-class RandomFourierFeatures(KernelFunction):
-
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def draw_samples(self, input_size, rff_features):
@@ -41,7 +31,7 @@ class RandomFourierFeatures(KernelFunction):
         # Create variable
         w = tf.get_variable(
             w_name,
-            [self._input_dims, self._kernel_size],
+            [self._kernel_size, self._input_dims],
             trainable=False,  # Important: this is constant!,
             collections=[KERNEL_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES]
         )
@@ -67,7 +57,7 @@ class RandomFourierFeatures(KernelFunction):
         tf.summary.histogram(b_name, b, [tag])
 
         # Check: input to be centered around 0
-        dot = tf.add(tf.matmul(x, w), b)
+        dot = tf.add(tf.matmul(x, tf.transpose(w)), b)
         tf.summary.histogram(self._name + '_dot', dot, [tag])
 
         # Difference from orifinal paper: empirical results show that
@@ -89,10 +79,18 @@ class GaussianRFF(RandomFourierFeatures):
         self._std = std
 
     def draw_samples(self):
+        # Credits to sampling to hichamjanati
+        # https://github.com/hichamjanati/srf/blob/master/RFF.py
+        w = np.sqrt(2*self._std)*np.random.normal(
+            size=[self._kernel_size, self._input_dims]
+        )
+        '''
+        # Previous
         w = np.random.normal(
             self._mean,
             self._std,
-            [self._input_dims, self._kernel_size]
+            [self._kernel_size, self._input_dims]
         )
+        '''
         b = [random.uniform(0, 2*np.pi) for _ in range(self._kernel_size)]
         return w, b
