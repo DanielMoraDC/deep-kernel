@@ -1,0 +1,118 @@
+2018-01-24 18:19:27,535 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.1, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.1, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 512}
+2018-01-24 18:19:27,535 INFO     Obtained results {'val_error': 0.31676137447357178, 'num_layers': 2, 'train_error': 0.35458433628082275, 'train_loss': 0.65185171, 'val_loss': 0.62843299, 'train_epochs': [35, 275]}
+2018-01-24 18:22:22,743 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 1024, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.1, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 128}
+2018-01-24 18:22:22,743 INFO     Obtained results {'val_error': 0.11576706171035767, 'num_layers': 2, 'train_error': 0.1396668553352356, 'train_loss': 0.34509256, 'val_loss': 0.30653179, 'train_epochs': [40, 80]}
+2018-01-24 18:25:37,819 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 1.0, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 256}
+2018-01-24 18:25:37,819 INFO     Obtained results {'val_error': 0.23721593618392944, 'num_layers': 1, 'train_error': 0.26982605457305908, 'train_loss': 0.6098069, 'val_loss': 0.60237038, 'train_epochs': [365]}
+2018-01-24 18:30:50,354 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.1, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 128}
+2018-01-24 18:30:50,354 INFO     Obtained results {'val_error': 0.34801137447357178, 'num_layers': 2, 'train_error': 0.34971994161605835, 'train_loss': 0.64821863, 'val_loss': 0.64642072, 'train_epochs': [110, 330]}
+2018-01-24 18:32:00,507 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 2048, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.25, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 512}
+2018-01-24 18:32:00,507 INFO     Obtained results {'val_error': 0.13636362552642822, 'num_layers': 1, 'train_error': 0.13045400381088257, 'train_loss': 0.31460214, 'val_loss': 0.33846518, 'train_epochs': [65]}
+2018-01-24 18:33:18,451 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 1.0, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 256}
+2018-01-24 18:33:18,451 INFO     Obtained results {'val_error': 0.22798293828964233, 'num_layers': 2, 'train_error': 0.21734964847564697, 'train_loss': 0.4658241, 'val_loss': 0.49596012, 'train_epochs': [10, 35]}
+2018-01-24 18:36:32,169 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 1024, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 64}
+2018-01-24 18:36:32,170 INFO     Obtained results {'val_error': 0.19460225105285645, 'num_layers': 2, 'train_error': 0.21351706981658936, 'train_loss': 0.46476397, 'val_loss': 0.43794337, 'train_epochs': [160, 325]}
+2018-01-24 18:37:37,807 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.01, 'memory_factor': 2, 'lr': 0.0001, 'kernel_size': 128}
+2018-01-24 18:37:37,808 INFO     Obtained results {'val_error': 0.14488637447357178, 'num_layers': 1, 'train_error': 0.16148293018341064, 'train_loss': 0.39924657, 'val_loss': 0.38452035, 'train_epochs': [90]}
+2018-01-24 18:43:43,654 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 1.0, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 64}
+2018-01-24 18:43:43,654 INFO     Obtained results {'val_error': 0.28764206171035767, 'num_layers': 2, 'train_error': 0.31463736295700073, 'train_loss': 0.5970999, 'val_loss': 0.58170342, 'train_epochs': [25, 180]}
+2018-01-24 18:47:23,926 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 2048, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.1, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.0001, 'kernel_size': 512}
+2018-01-24 18:47:23,926 INFO     Obtained results {'val_error': 0.31036931276321411, 'num_layers': 1, 'train_error': 0.35318398475646973, 'train_loss': 0.64939946, 'val_loss': 0.62333131, 'train_epochs': [170]}
+2018-01-24 18:48:53,450 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 2048, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 512}
+2018-01-24 18:48:53,451 INFO     Obtained results {'val_error': 0.17897725105285645, 'num_layers': 1, 'train_error': 0.19140625, 'train_loss': 0.58369482, 'val_loss': 0.58337331, 'train_epochs': [50]}
+2018-01-24 18:53:02,056 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.01, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 128}
+2018-01-24 18:53:02,056 INFO     Obtained results {'val_error': 0.10440343618392944, 'num_layers': 1, 'train_error': 0.15020638704299927, 'train_loss': 0.35988322, 'val_loss': 0.29320055, 'train_epochs': [70]}
+2018-01-24 18:54:14,187 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.1, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 512}
+2018-01-24 18:54:14,187 INFO     Obtained results {'val_error': 0.12571024894714355, 'num_layers': 2, 'train_error': 0.13354951143264771, 'train_loss': 0.33912683, 'val_loss': 0.32530037, 'train_epochs': [55, 115]}
+2018-01-24 18:54:52,298 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 1024, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.1, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 512}
+2018-01-24 18:54:52,298 INFO     Obtained results {'val_error': 0.32244318723678589, 'num_layers': 1, 'train_error': 0.35126769542694092, 'train_loss': 0.64835179, 'val_loss': 0.6305052, 'train_epochs': [10]}
+2018-01-24 18:58:33,337 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.01, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 512}
+2018-01-24 18:58:33,337 INFO     Obtained results {'val_error': 0.11363637447357178, 'num_layers': 1, 'train_error': 0.15013265609741211, 'train_loss': 0.35847336, 'val_loss': 0.32654926, 'train_epochs': [35]}
+2018-01-24 19:00:42,749 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.1, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 1.0, 'memory_factor': 2, 'lr': 0.0001, 'kernel_size': 256}
+2018-01-24 19:00:42,749 INFO     Obtained results {'val_error': 0.31676137447357178, 'num_layers': 2, 'train_error': 0.359375, 'train_loss': 0.65317887, 'val_loss': 0.62718374, 'train_epochs': [15, 275]}
+2018-01-24 19:01:44,334 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.0001, 'kernel_size': 512}
+2018-01-24 19:01:44,335 INFO     Obtained results {'val_error': 0.13565343618392944, 'num_layers': 2, 'train_error': 0.14239388704299927, 'train_loss': 0.3365812, 'val_loss': 0.32328603, 'train_epochs': [75, 125]}
+2018-01-24 19:04:02,755 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.1, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.25, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 512}
+2018-01-24 19:04:02,755 INFO     Obtained results {'val_error': 0.34019887447357178, 'num_layers': 2, 'train_error': 0.34603476524353027, 'train_loss': 0.64502472, 'val_loss': 0.6413551, 'train_epochs': [25, 80]}
+2018-01-24 19:05:26,621 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 2048, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.1, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 512}
+2018-01-24 19:05:26,622 INFO     Obtained results {'val_error': 0.11647725105285645, 'num_layers': 1, 'train_error': 0.13870871067047119, 'train_loss': 0.3736563, 'val_loss': 0.35250181, 'train_epochs': [115]}
+2018-01-24 19:10:14,009 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 1024, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.25, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 128}
+2018-01-24 19:10:14,009 INFO     Obtained results {'val_error': 0.13849431276321411, 'num_layers': 1, 'train_error': 0.18919515609741211, 'train_loss': 0.51372188, 'val_loss': 0.48200276, 'train_epochs': [60]}
+2018-01-24 19:12:06,496 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 1024, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.1, 'memory_factor': 2, 'lr': 0.0001, 'kernel_size': 256}
+2018-01-24 19:12:06,497 INFO     Obtained results {'val_error': 0.15838068723678589, 'num_layers': 2, 'train_error': 0.16590505838394165, 'train_loss': 0.48222712, 'val_loss': 0.47169334, 'train_epochs': [160, 205]}
+2018-01-24 19:14:51,334 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 1024, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.25, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 256}
+2018-01-24 19:14:51,334 INFO     Obtained results {'val_error': 0.16690343618392944, 'num_layers': 1, 'train_error': 0.1720961332321167, 'train_loss': 0.51962864, 'val_loss': 0.50962543, 'train_epochs': [185]}
+2018-01-24 19:16:09,085 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 2048, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 512}
+2018-01-24 19:16:09,085 INFO     Obtained results {'val_error': 0.14701706171035767, 'num_layers': 2, 'train_error': 0.14829009771347046, 'train_loss': 0.37505403, 'val_loss': 0.38737682, 'train_epochs': [30, 70]}
+2018-01-24 19:17:13,326 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 2048, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.1, 'memory_factor': 2, 'lr': 0.01, 'kernel_size': 256}
+2018-01-24 19:17:13,326 INFO     Obtained results {'val_error': 0.12073862552642822, 'num_layers': 1, 'train_error': 0.14180421829223633, 'train_loss': 0.34274498, 'val_loss': 0.34178177, 'train_epochs': [40]}
+2018-01-24 19:18:12,248 INFO     Finished evaluation on {'max_layers': 2, 'max_epochs': 10000, 'hidden_units': 512, 'lr_decay': 0.5, 'n_threads': 4, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'strip_length': 5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_mean': 0.0, 'kernel_std': 0.5, 'memory_factor': 2, 'lr': 0.001, 'kernel_size': 128}
+2018-01-24 19:18:12,248 INFO     Obtained results {'val_error': 0.20809656381607056, 'num_layers': 2, 'train_error': 0.20695751905441284, 'train_loss': 0.45515615, 'val_loss': 0.45969868, 'train_epochs': [15, 50]}
+2018-01-24 19:18:12,249 INFO     Using model {'max_layers': 2, 'train_epochs': [70], 'hidden_units': 512, 'num_layers': 1, 'l2_ratio': 0, 'batch_size': 128, 'kernel_size': 128, 'n_threads': 4, 'strip_length': 5, 'lr_decay_epocs': 250, 'progress_thresh': 0.1, 'kernel_mean': 0.0, 'kernel_std': 0.01, 'memory_factor': 2, 'lr': 0.001, 'lr_decay': 0.5} for training with results {'val_error': 0.10440343618392944, 'num_layers': 1, 'train_error': 0.15020638704299927, 'train_loss': 0.35988322, 'val_loss': 0.29320055, 'train_epochs': [70]}
+2018-01-24 19:18:12,249 INFO     Running training [0] in magic/1516817892250
+2018-01-24 19:18:12,249 INFO     [1] Training up to epoch 70 in folder magic/1516817892250
+2018-01-24 19:18:37,408 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:18:44,836 INFO     Running prediction [0] from on magic/1516817892250
+2018-01-24 19:18:47,649 INFO     Queue exhausted. Read all instances
+2018-01-24 19:18:47,658 INFO     Training [0] got results {'error': 0.13880127668380737, 'train_l2': 0.0, 'train_error': 0.14837127923965454, 'train_loss': 0.35845527, 'loss': 0.33950397, 'time(s)': 32.586251735687256, 'l2': 0.0}
+2018-01-24 19:18:47,658 INFO     Running training [1] in magic/1516817927658
+2018-01-24 19:18:47,658 INFO     [1] Training up to epoch 70 in folder magic/1516817927658
+2018-01-24 19:19:13,029 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:19:20,456 INFO     Running prediction [1] from on magic/1516817927658
+2018-01-24 19:19:23,217 INFO     Queue exhausted. Read all instances
+2018-01-24 19:19:23,221 INFO     Training [1] got results {'error': 0.15089380741119385, 'train_l2': 0.0, 'train_error': 0.1426774263381958, 'train_loss': 0.35739306, 'loss': 0.36331496, 'time(s)': 32.797905683517456, 'l2': 0.0}
+2018-01-24 19:19:23,221 INFO     Running training [2] in magic/1516817963221
+2018-01-24 19:19:23,221 INFO     [1] Training up to epoch 70 in folder magic/1516817963221
+2018-01-24 19:19:57,418 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:20:06,946 INFO     Running prediction [2] from on magic/1516817963221
+2018-01-24 19:20:09,819 INFO     Queue exhausted. Read all instances
+2018-01-24 19:20:09,822 INFO     Training [2] got results {'error': 0.14984226226806641, 'train_l2': 0.0, 'train_error': 0.14539194107055664, 'train_loss': 0.35533786, 'loss': 0.36284849, 'time(s)': 43.72498059272766, 'l2': 0.0}
+2018-01-24 19:20:09,823 INFO     Running training [3] in magic/1516818009823
+2018-01-24 19:20:09,823 INFO     [1] Training up to epoch 70 in folder magic/1516818009823
+2018-01-24 19:20:35,159 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:20:42,636 INFO     Running prediction [3] from on magic/1516818009823
+2018-01-24 19:20:45,437 INFO     Queue exhausted. Read all instances
+2018-01-24 19:20:45,445 INFO     Training [3] got results {'error': 0.13880127668380737, 'train_l2': 0.0, 'train_error': 0.15207892656326294, 'train_loss': 0.36546811, 'loss': 0.33502623, 'time(s)': 32.81375050544739, 'l2': 0.0}
+2018-01-24 19:20:45,445 INFO     Running training [4] in magic/1516818045445
+2018-01-24 19:20:45,445 INFO     [1] Training up to epoch 70 in folder magic/1516818045445
+2018-01-24 19:21:11,246 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:21:18,818 INFO     Running prediction [4] from on magic/1516818045445
+2018-01-24 19:21:21,620 INFO     Queue exhausted. Read all instances
+2018-01-24 19:21:21,624 INFO     Training [4] got results {'error': 0.14826500415802002, 'train_l2': 0.0, 'train_error': 0.15015888214111328, 'train_loss': 0.35814306, 'loss': 0.35424376, 'time(s)': 33.37251138687134, 'l2': 0.0}
+2018-01-24 19:21:21,624 INFO     Running training [5] in magic/1516818081624
+2018-01-24 19:21:21,624 INFO     [1] Training up to epoch 70 in folder magic/1516818081624
+2018-01-24 19:21:47,248 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:21:54,754 INFO     Running prediction [5] from on magic/1516818081624
+2018-01-24 19:21:57,547 INFO     Queue exhausted. Read all instances
+2018-01-24 19:21:57,555 INFO     Training [5] got results {'error': 0.1414300799369812, 'train_l2': 0.0, 'train_error': 0.14400160312652588, 'train_loss': 0.35246611, 'loss': 0.34945226, 'time(s)': 33.130391359329224, 'l2': 0.0}
+2018-01-24 19:21:57,555 INFO     Running training [6] in magic/1516818117555
+2018-01-24 19:21:57,555 INFO     [1] Training up to epoch 70 in folder magic/1516818117555
+2018-01-24 19:22:23,625 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:22:33,279 INFO     Running prediction [6] from on magic/1516818117555
+2018-01-24 19:22:38,912 INFO     Queue exhausted. Read all instances
+2018-01-24 19:22:38,921 INFO     Training [6] got results {'error': 0.1351209282875061, 'train_l2': 0.0, 'train_error': 0.14618641138076782, 'train_loss': 0.35640615, 'loss': 0.34339908, 'time(s)': 35.72403621673584, 'l2': 0.0}
+2018-01-24 19:22:38,921 INFO     Running training [7] in magic/1516818158921
+2018-01-24 19:22:38,921 INFO     [1] Training up to epoch 70 in folder magic/1516818158921
+2018-01-24 19:23:12,605 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:23:20,207 INFO     Running prediction [7] from on magic/1516818158921
+2018-01-24 19:23:22,953 INFO     Queue exhausted. Read all instances
+2018-01-24 19:23:22,957 INFO     Training [7] got results {'error': 0.14195585250854492, 'train_l2': 0.0, 'train_error': 0.14320707321166992, 'train_loss': 0.3567349, 'loss': 0.35244334, 'time(s)': 41.28652286529541, 'l2': 0.0}
+2018-01-24 19:23:22,957 INFO     Running training [8] in magic/1516818202957
+2018-01-24 19:23:22,957 INFO     [1] Training up to epoch 70 in folder magic/1516818202957
+2018-01-24 19:23:49,176 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:23:56,722 INFO     Running prediction [8] from on magic/1516818202957
+2018-01-24 19:23:59,535 INFO     Queue exhausted. Read all instances
+2018-01-24 19:23:59,543 INFO     Training [8] got results {'error': 0.14721345901489258, 'train_l2': 0.0, 'train_error': 0.14592158794403076, 'train_loss': 0.35290211, 'loss': 0.35223189, 'time(s)': 33.764907121658325, 'l2': 0.0}
+2018-01-24 19:23:59,543 INFO     Running training [9] in magic/1516818239544
+2018-01-24 19:23:59,543 INFO     [1] Training up to epoch 70 in folder magic/1516818239544
+2018-01-24 19:24:25,452 INFO     Traditional fine-tuning: training 20 extra epochs for the whole network
+2018-01-24 19:24:32,933 INFO     Running prediction [9] from on magic/1516818239544
+2018-01-24 19:24:35,816 INFO     Queue exhausted. Read all instances
+2018-01-24 19:24:35,824 INFO     Training [9] got results {'error': 0.14090430736541748, 'train_l2': 0.0, 'train_error': 0.14519333839416504, 'train_loss': 0.35628897, 'loss': 0.34860489, 'time(s)': 33.389275789260864, 'l2': 0.0}
+2018-01-24 19:24:35,825 INFO     error: 0.143323 +- 0.005088
+2018-01-24 19:24:35,825 INFO     train_l2: 0.000000 +- 0.000000
+2018-01-24 19:24:35,825 INFO     train_error: 0.146319 +- 0.002877
+2018-01-24 19:24:35,825 INFO     train_loss: 0.356960 +- 0.003410
+2018-01-24 19:24:35,825 INFO     loss: 0.350107 +- 0.008668
+2018-01-24 19:24:35,825 INFO     time(s): 35.259053 +- 3.757897
+2018-01-24 19:24:35,825 INFO     l2: 0.000000 +- 0.000000
