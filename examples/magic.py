@@ -11,7 +11,10 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+        filename='magic_ciclyc_3l_ciclyc.log',
+        level=logging.INFO
+)
 
 
 if __name__ == '__main__':
@@ -27,7 +30,7 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 1,
+        'num_layers': 3,
         'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
@@ -47,7 +50,7 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=False,
-        layerwise=False,
+        layerwise=True,
         folder='magic',
         runs=SIM_RUNS,
         test_batch_size=1
@@ -56,4 +59,4 @@ if __name__ == '__main__':
     metrics = stats[0].keys()
     for m in metrics:
         values = [x[m] for x in stats]
-        print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
+        logger.info('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
