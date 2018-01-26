@@ -11,7 +11,13 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-logging.basicConfig(level=logging.INFO)
+n_layers = 4
+
+logging.basicConfig(
+        level=logging.INFO,
+        filename='magic_alternate_%d.log' % n_layers
+)
+logger = logging.getLogger(__name__)
 
 
 if __name__ == '__main__':
@@ -23,12 +29,12 @@ if __name__ == '__main__':
         'kernel_size': hp.choice('kernel_size', [64, 128, 256, 512]),
         'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
         'hidden_units': hp.choice('hidden_units', [512, 1024, 2048]),
-        'epochs_per_layer': hp.choice('epochs_per_layer', [25, 50])
+        'epochs_per_layer': hp.choice('epochs_per_layer', [10, 25, 50, 100])
     }
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 1,
+        'num_layers': n_layers,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
@@ -55,4 +61,4 @@ if __name__ == '__main__':
     metrics = stats[0].keys()
     for m in metrics:
         values = [x[m] for x in stats]
-        print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
+        logger.info('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
