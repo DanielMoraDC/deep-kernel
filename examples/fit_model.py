@@ -37,16 +37,16 @@ if __name__ == '__main__':
         'n_threads': 4,
         'kernel_size': 128,
         'kernel_mean': 0.0,
-        'kernel_std': 0.25,
+        'kernel_std': 0.50,
         'strip_length': 5,
         'batch_size': 128,
-        'num_layers': 5,
+        'num_layers': 3,
         'max_epochs': 250,
-        'network_fn': kernel_example_layout_fn
+        'network_fn': example_layout_fn
     }
 
-    settings = datasets.MagicSettings
-    dataset = datasets.Datasets.MAGIC
+    settings = datasets.MotorSettings
+    dataset = datasets.Datasets.MOTOR
 
     if mode == 0:
 
