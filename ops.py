@@ -56,7 +56,7 @@ def _binary_activation(x):
 def get_loss_fn(logits, labels, n_classes):
     if n_classes == 2:
         return tf.nn.sigmoid_cross_entropy_with_logits(
-            labels=tf.cast(labels, tf.float32), logits=logits
+            labels=tf.cast(labels, tf.float32), logits=tf.nn.sigmoid(logits)
         )
     elif n_classes > 2:
         return tf.nn.softmax_cross_entropy_with_logits(
