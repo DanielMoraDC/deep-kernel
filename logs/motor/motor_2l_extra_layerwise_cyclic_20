@@ -1,0 +1,154 @@
+2018-01-26 15:37:35,985 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.01, 'kernel_mean': 0.0, 'lr': 0.0001, 'hidden_units': 1024, 'kernel_std': 0.01, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 64, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 15:37:35,985 INFO     Obtained results {'train_error': 0.54699373245239258, 'num_layers': 1, 'train_loss': 14.704725, 'train_epochs': [20], 'val_loss': 15.476103, 'val_error': 0.515625}
+2018-01-26 15:40:24,042 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.0001, 'kernel_mean': 0.0, 'lr': 0.001, 'hidden_units': 512, 'kernel_std': 0.01, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 512, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 15:40:24,042 INFO     Obtained results {'train_error': 0.25921350717544556, 'num_layers': 2, 'train_loss': 57.707279, 'train_epochs': [10, 35], 'val_loss': 59.893784, 'val_error': 0.2595486044883728}
+2018-01-26 15:50:05,962 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.001, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 1024, 'kernel_std': 1.0, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 512, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 15:50:05,963 INFO     Obtained results {'train_error': 0.90665368735790253, 'num_layers': 1, 'train_loss': 2.1898794, 'train_epochs': [90], 'val_loss': 2.1847556, 'val_error': 0.8958333358168602}
+2018-01-26 15:52:16,102 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.001, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 2048, 'kernel_std': 0.25, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 64, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 15:52:16,102 INFO     Obtained results {'train_error': 0.88468845188617706, 'num_layers': 1, 'train_loss': 463.03091, 'train_epochs': [25], 'val_loss': 471.05725, 'val_error': 0.8684895783662796}
+2018-01-26 16:01:29,505 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.0001, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 2048, 'kernel_std': 0.1, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 512, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:01:29,505 INFO     Obtained results {'train_error': 0.63601824641227722, 'num_layers': 1, 'train_loss': 130162.62, 'train_epochs': [40], 'val_loss': 133011.84, 'val_error': 0.5381944477558136}
+2018-01-26 16:04:19,301 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 512, 'kernel_std': 0.01, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 256, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:04:19,301 INFO     Obtained results {'train_error': 0.73107427358627319, 'num_layers': 1, 'train_loss': 520.71069, 'train_epochs': [25], 'val_loss': 644.41339, 'val_error': 0.6662326455116272}
+2018-01-26 16:06:09,782 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.001, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 1024, 'kernel_std': 0.1, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 256, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:06:09,783 INFO     Obtained results {'train_error': 0.70839664340019226, 'num_layers': 1, 'train_loss': 2331.2651, 'train_epochs': [10], 'val_loss': 2544.8555, 'val_error': 0.6794704794883728}
+2018-01-26 16:19:52,779 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.1, 'kernel_mean': 0.0, 'lr': 0.0001, 'hidden_units': 1024, 'kernel_std': 0.25, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 128, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:19:52,780 INFO     Obtained results {'train_error': 0.86742496490478516, 'num_layers': 1, 'train_loss': 3.5422752, 'train_epochs': [5], 'val_loss': 3.02299, 'val_error': 0.888671875}
+2018-01-26 16:26:42,558 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.001, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 512, 'kernel_std': 0.25, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 512, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:26:42,558 INFO     Obtained results {'train_error': 0.72839096188545227, 'num_layers': 1, 'train_loss': 956.03052, 'train_epochs': [20], 'val_loss': 979.13062, 'val_error': 0.6853298544883728}
+2018-01-26 16:34:50,047 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0, 'kernel_mean': 0.0, 'lr': 0.01, 'hidden_units': 1024, 'kernel_std': 0.1, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 64, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:34:50,047 INFO     Obtained results {'train_error': 0.83463145792484283, 'num_layers': 1, 'train_loss': 173.18187, 'train_epochs': [70], 'val_loss': 189.63979, 'val_error': 0.8009982705116272}
+2018-01-26 16:45:21,421 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.0001, 'kernel_mean': 0.0, 'lr': 0.001, 'hidden_units': 512, 'kernel_std': 1.0, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 256, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:45:21,421 INFO     Obtained results {'train_error': 0.87291033565998077, 'num_layers': 1, 'train_loss': 7.5732913, 'train_epochs': [80], 'val_loss': 7.6852169, 'val_error': 0.8882378488779068}
+2018-01-26 16:51:25,000 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0.0001, 'kernel_mean': 0.0, 'lr': 0.001, 'hidden_units': 1024, 'kernel_std': 0.25, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 64, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:51:25,001 INFO     Obtained results {'train_error': 0.83275550603866577, 'num_layers': 1, 'train_loss': 3.1317091, 'train_epochs': [10], 'val_loss': 3.3210936, 'val_error': 0.8287760466337204}
+2018-01-26 16:52:59,663 INFO     Finished evaluation on {'n_threads': 4, 'l2_ratio': 0, 'kernel_mean': 0.0, 'lr': 0.001, 'hidden_units': 512, 'kernel_std': 0.25, 'progress_thresh': 0.1, 'max_epochs': 10000, 'lr_decay': 0.5, 'lr_decay_epocs': 250, 'batch_size': 128, 'kernel_size': 64, 'strip_length': 5, 'max_layers': 2, 'memory_factor': 2}
+2018-01-26 16:52:59,663 INFO     Obtained results {'train_error': 0.83733852207660675, 'num_layers': 1, 'train_loss': 2.0510278, 'train_epochs': [10], 'val_loss': 2.0752015, 'val_error': 0.8402777761220932}
+2018-01-26 17:18:10,825 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.25, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.001, 'memory_factor': 2, 'kernel_size': 1024}
+2018-01-26 17:18:10,825 INFO     Obtained results {'val_loss': 506.98138, 'train_error': 0.91078552603721619, 'val_error': 0.900390625, 'train_epochs': [150, 175], 'num_layers': 2, 'train_loss': 480.8562}
+2018-01-26 17:25:32,297 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 17:25:32,298 INFO     Obtained results {'val_loss': 2.0543392, 'train_error': 0.76420022547245026, 'val_error': 0.7964409738779068, 'train_epochs': [130, 170], 'num_layers': 2, 'train_loss': 1.982257}
+2018-01-26 17:30:02,363 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 1024, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 17:30:02,363 INFO     Obtained results {'val_loss': 2.0308089, 'train_error': 0.59873670339584351, 'val_error': 0.6911892294883728, 'train_epochs': [80], 'num_layers': 1, 'train_loss': 1.8654028}
+2018-01-26 17:35:05,890 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 1024, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 17:35:05,890 INFO     Obtained results {'val_loss': 3.0054641, 'train_error': 0.76244300603866577, 'val_error': 0.853515625, 'train_epochs': [10], 'num_layers': 1, 'train_loss': 2.6256645}
+2018-01-26 17:42:45,882 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 17:42:45,882 INFO     Obtained results {'val_loss': 2.0456305, 'train_error': 0.76320289075374603, 'val_error': 0.7840711772441864, 'train_epochs': [210], 'num_layers': 1, 'train_loss': 2.012938}
+2018-01-26 17:46:11,942 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 17:46:11,942 INFO     Obtained results {'val_loss': 138.34331, 'train_error': 0.90890957415103912, 'val_error': 0.9001736119389534, 'train_epochs': [75, 85], 'num_layers': 2, 'train_loss': 134.02605}
+2018-01-26 17:54:59,157 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 17:54:59,157 INFO     Obtained results {'val_loss': 7.5543995, 'train_error': 0.75023746490478516, 'val_error': 0.7860243022441864, 'train_epochs': [135], 'num_layers': 1, 'train_loss': 7.4227691}
+2018-01-26 17:58:18,074 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.01, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 17:58:18,074 INFO     Obtained results {'val_loss': 10.758149, 'train_error': 0.21879750490188599, 'val_error': 0.22178816795349121, 'train_epochs': [45, 100], 'num_layers': 2, 'train_loss': 10.526522}
+2018-01-26 18:09:02,690 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 18:09:02,690 INFO     Obtained results {'val_loss': 3.5516207, 'train_error': 0.82306705415248871, 'val_error': 0.87109375, 'train_epochs': [325, 490], 'num_layers': 2, 'train_loss': 3.4449511}
+2018-01-26 18:13:26,982 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 0.25, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 18:13:26,982 INFO     Obtained results {'val_loss': 2.3025379, 'train_error': 0.60920876264572144, 'val_error': 0.6315104067325592, 'train_epochs': [40], 'num_layers': 1, 'train_loss': 2.2508469}
+2018-01-26 18:21:48,361 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 18:21:48,361 INFO     Obtained results {'val_loss': 2.2404325, 'train_error': 0.73076558113098145, 'val_error': 0.8430989533662796, 'train_epochs': [10], 'num_layers': 1, 'train_loss': 1.9526311}
+2018-01-26 18:27:29,534 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 1024, 'kernel_std': 0.01, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 18:27:29,534 INFO     Obtained results {'val_loss': 4966.0288, 'train_error': 0.66589096188545227, 'val_error': 0.505859375, 'train_epochs': [50], 'num_layers': 1, 'train_loss': 4879.9946}
+2018-01-26 18:31:07,418 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 18:31:07,418 INFO     Obtained results {'val_loss': 2.3434789, 'train_error': 0.8275550901889801, 'val_error': 0.8821614608168602, 'train_epochs': [85], 'num_layers': 1, 'train_loss': 2.267035}
+2018-01-26 18:45:24,239 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 1024, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 18:45:24,239 INFO     Obtained results {'val_loss': 2936.2048, 'train_error': 0.90774600952863693, 'val_error': 0.8971354141831398, 'train_epochs': [10, 380], 'num_layers': 2, 'train_loss': 2929.1975}
+2018-01-26 18:53:05,925 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.5, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 1024}
+2018-01-26 18:53:05,926 INFO     Obtained results {'val_loss': 9.157733, 'train_error': 0.69761589169502258, 'val_error': 0.7428385317325592, 'train_epochs': [150, 245], 'num_layers': 2, 'train_loss': 8.9820328}
+2018-01-26 18:57:22,506 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 1024}
+2018-01-26 18:57:22,506 INFO     Obtained results {'val_loss': 2.233067, 'train_error': 0.90812595188617706, 'val_error': 0.9016927108168602, 'train_epochs': [15, 30], 'num_layers': 2, 'train_loss': 2.2632589}
+2018-01-26 19:17:23,347 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.01, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 19:17:23,347 INFO     Obtained results {'val_loss': 20.99214, 'train_error': 0.23591852188110352, 'val_error': 0.22699654102325439, 'train_epochs': [475], 'num_layers': 1, 'train_loss': 20.93961}
+2018-01-26 19:28:17,125 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.1, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 19:28:17,125 INFO     Obtained results {'val_loss': 1.952453, 'train_error': 0.5641859769821167, 'val_error': 0.5401475727558136, 'train_epochs': [75], 'num_layers': 1, 'train_loss': 1.9649762}
+2018-01-26 19:33:46,108 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.25, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 19:33:46,109 INFO     Obtained results {'val_loss': 2.1940176, 'train_error': 0.59923538565635681, 'val_error': 0.6161024272441864, 'train_epochs': [15], 'num_layers': 1, 'train_loss': 2.1940057}
+2018-01-26 19:39:12,945 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.001, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 19:39:12,945 INFO     Obtained results {'val_loss': 6654.542, 'train_error': 0.90921827405691147, 'val_error': 0.8956163227558136, 'train_epochs': [10, 195], 'num_layers': 2, 'train_loss': 6670.563}
+2018-01-26 19:40:14,415 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.25, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 19:40:14,416 INFO     Obtained results {'val_loss': 2.2924855, 'train_error': 0.59595838189125061, 'val_error': 0.6067708432674408, 'train_epochs': [10], 'num_layers': 1, 'train_loss': 2.3006349}
+2018-01-26 19:50:02,104 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 1024, 'kernel_std': 1.0, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.0001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 19:50:02,104 INFO     Obtained results {'val_loss': 9.553916, 'train_error': 0.71326461434364319, 'val_error': 0.8322482705116272, 'train_epochs': [235], 'num_layers': 1, 'train_loss': 9.1347942}
+2018-01-26 20:01:30,175 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 1024, 'kernel_std': 0.1, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 512}
+2018-01-26 20:01:30,175 INFO     Obtained results {'val_loss': 1.8725027, 'train_error': 0.37462007999420166, 'val_error': 0.38411456346511841, 'train_epochs': [145], 'num_layers': 1, 'train_loss': 1.8110602}
+2018-01-26 20:16:55,911 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 0.1, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 1e-05, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 20:16:55,911 INFO     Obtained results {'val_loss': 22.451248, 'train_error': 0.1924629807472229, 'val_error': 0.24479168653488159, 'train_epochs': [310], 'num_layers': 1, 'train_loss': 22.266365}
+2018-01-26 20:27:11,357 INFO     Finished evaluation on {'lr_decay_epocs': 250, 'max_epochs': 10000, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 2048, 'kernel_std': 0.25, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.01, 'batch_size': 128, 'lr_decay': 0.5, 'lr': 0.001, 'memory_factor': 2, 'kernel_size': 2048}
+2018-01-26 20:27:11,357 INFO     Obtained results {'val_loss': 2.1052685, 'train_error': 0.9085058867931366, 'val_error': 0.8765190988779068, 'train_epochs': [55], 'num_layers': 1, 'train_loss': 2.0931602}
+2018-01-26 20:27:11,360 INFO     Using model {'lr_decay_epocs': 250, 'kernel_mean': 0.0, 'strip_length': 5, 'hidden_units': 512, 'kernel_std': 0.01, 'kernel_size': 2048, 'n_threads': 4, 'max_layers': 2, 'progress_thresh': 0.1, 'l2_ratio': 0.0001, 'batch_size': 128, 'lr_decay': 0.5, 'train_epochs': [45, 100], 'num_layers': 2, 'lr': 0.0001, 'memory_factor': 2} for training with results {'val_loss': 10.758149, 'train_error': 0.21879750490188599, 'val_error': 0.22178816795349121, 'train_epochs': [45, 100], 'num_layers': 2, 'train_loss': 10.526522}
+2018-01-26 20:27:11,360 INFO     Running training [0] in motor/1516994831360
+2018-01-26 20:27:11,360 INFO     [1] Training up to epoch 45 in folder motor/1516994831360/layer_1
+2018-01-26 20:28:15,819 INFO     [2] Training up to epoch 100 in folder motor/1516994831360
+2018-01-26 20:29:32,381 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 20:30:28,903 INFO     Running prediction [0] from on motor/1516994831360
+2018-01-26 20:34:40,284 INFO     Queue exhausted. Read all instances
+2018-01-26 20:34:40,292 INFO     Training [0] got results {'l2': 120.30213, 'error': 0.43394291400909424, 'train_error': 0.42093324661254883, 'loss': 121.40562, 'train_loss': 23.079073, 'time(s)': 197.54348587989807, 'train_l2': 21.982811}
+2018-01-26 20:34:40,292 INFO     Running training [1] in motor/1516995280293
+2018-01-26 20:34:40,292 INFO     [1] Training up to epoch 45 in folder motor/1516995280293/layer_1
+2018-01-26 20:35:48,980 INFO     [2] Training up to epoch 100 in folder motor/1516995280293
+2018-01-26 20:37:09,223 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 20:38:07,175 INFO     Running prediction [1] from on motor/1516995280293
+2018-01-26 20:42:18,218 INFO     Queue exhausted. Read all instances
+2018-01-26 20:42:18,227 INFO     Training [1] got results {'l2': 120.18641, 'error': 0.38437873125076294, 'train_error': 0.37285959720611572, 'loss': 121.21564, 'train_loss': 23.214523, 'time(s)': 206.882479429245, 'train_l2': 22.190319}
+2018-01-26 20:42:18,227 INFO     Running training [2] in motor/1516995738228
+2018-01-26 20:42:18,227 INFO     [1] Training up to epoch 45 in folder motor/1516995738228/layer_1
+2018-01-26 20:43:27,609 INFO     [2] Training up to epoch 100 in folder motor/1516995738228
+2018-01-26 20:44:49,389 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 20:45:53,476 INFO     Running prediction [2] from on motor/1516995738228
+2018-01-26 20:50:04,749 INFO     Queue exhausted. Read all instances
+2018-01-26 20:50:04,758 INFO     Training [2] got results {'l2': 120.97618, 'error': 0.4248846173286438, 'train_error': 0.43266266584396362, 'loss': 122.09898, 'train_loss': 24.177183, 'time(s)': 215.24891829490662, 'train_l2': 23.042484}
+2018-01-26 20:50:04,758 INFO     Running training [3] in motor/1516996204759
+2018-01-26 20:50:04,758 INFO     [1] Training up to epoch 45 in folder motor/1516996204759/layer_1
+2018-01-26 20:51:22,528 INFO     [2] Training up to epoch 100 in folder motor/1516996204759
+2018-01-26 20:52:48,524 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 20:53:46,152 INFO     Running prediction [3] from on motor/1516996204759
+2018-01-26 20:57:57,351 INFO     Queue exhausted. Read all instances
+2018-01-26 20:57:57,360 INFO     Training [3] got results {'l2': 125.9051, 'error': 0.45855408906936646, 'train_error': 0.46397686004638672, 'loss': 127.18206, 'train_loss': 28.279806, 'time(s)': 221.3936004638672, 'train_l2': 26.990248}
+2018-01-26 20:57:57,360 INFO     Running training [4] in motor/1516996677361
+2018-01-26 20:57:57,360 INFO     [1] Training up to epoch 45 in folder motor/1516996677361/layer_1
+2018-01-26 20:59:03,278 INFO     [2] Training up to epoch 100 in folder motor/1516996677361
+2018-01-26 21:00:18,112 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 21:01:17,377 INFO     Running prediction [4] from on motor/1516996677361
+2018-01-26 21:05:28,506 INFO     Queue exhausted. Read all instances
+2018-01-26 21:05:28,515 INFO     Training [4] got results {'l2': 126.0649, 'error': 0.44607758522033691, 'train_error': 0.43955481052398682, 'loss': 127.32217, 'train_loss': 27.919436, 'time(s)': 200.01674938201904, 'train_l2': 26.664845}
+2018-01-26 21:05:28,515 INFO     Running training [5] in motor/1516997128515
+2018-01-26 21:05:28,515 INFO     [1] Training up to epoch 45 in folder motor/1516997128515/layer_1
+2018-01-26 21:06:43,725 INFO     [2] Training up to epoch 100 in folder motor/1516997128515
+2018-01-26 21:08:06,088 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 21:09:05,136 INFO     Running prediction [5] from on motor/1516997128515
+2018-01-26 21:13:16,601 INFO     Queue exhausted. Read all instances
+2018-01-26 21:13:16,609 INFO     Training [5] got results {'l2': 119.94999, 'error': 0.44761580228805542, 'train_error': 0.45316779613494873, 'loss': 121.16508, 'train_loss': 23.018476, 'time(s)': 216.62087178230286, 'train_l2': 21.802063}
+2018-01-26 21:13:16,609 INFO     Running training [6] in motor/1516997596610
+2018-01-26 21:13:16,609 INFO     [1] Training up to epoch 45 in folder motor/1516997596610/layer_1
+2018-01-26 21:14:21,688 INFO     [2] Training up to epoch 100 in folder motor/1516997596610
+2018-01-26 21:15:39,148 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 21:16:42,638 INFO     Running prediction [6] from on motor/1516997596610
+2018-01-26 21:20:53,820 INFO     Queue exhausted. Read all instances
+2018-01-26 21:20:53,829 INFO     Training [6] got results {'l2': 118.82745, 'error': 0.47649973630905151, 'train_error': 0.45997428894042969, 'loss': 120.09248, 'train_loss': 23.725824, 'time(s)': 206.02832221984863, 'train_l2': 22.472969}
+2018-01-26 21:20:53,829 INFO     Running training [7] in motor/1516998053829
+2018-01-26 21:20:53,829 INFO     [1] Training up to epoch 45 in folder motor/1516998053829/layer_1
+2018-01-26 21:22:11,390 INFO     [2] Training up to epoch 100 in folder motor/1516998053829
+2018-01-26 21:23:32,013 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 21:24:29,250 INFO     Running prediction [7] from on motor/1516998053829
+2018-01-26 21:28:40,289 INFO     Queue exhausted. Read all instances
+2018-01-26 21:28:40,297 INFO     Training [7] got results {'l2': 127.57638, 'error': 0.40522986650466919, 'train_error': 0.41235017776489258, 'loss': 128.69739, 'train_loss': 28.316019, 'time(s)': 215.42125511169434, 'train_l2': 27.204712}
+2018-01-26 21:28:40,297 INFO     Running training [8] in motor/1516998520298
+2018-01-26 21:28:40,297 INFO     [1] Training up to epoch 45 in folder motor/1516998520298/layer_1
+2018-01-26 21:29:57,353 INFO     [2] Training up to epoch 100 in folder motor/1516998520298
+2018-01-26 21:31:13,327 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 21:32:13,780 INFO     Running prediction [8] from on motor/1516998520298
+2018-01-26 21:36:24,737 INFO     Queue exhausted. Read all instances
+2018-01-26 21:36:24,746 INFO     Training [8] got results {'l2': 125.89457, 'error': 0.41873186826705933, 'train_error': 0.40954625606536865, 'loss': 127.024, 'train_loss': 27.056175, 'time(s)': 213.48300409317017, 'train_l2': 25.931355}
+2018-01-26 21:36:24,746 INFO     Running training [9] in motor/1516998984746
+2018-01-26 21:36:24,746 INFO     [1] Training up to epoch 45 in folder motor/1516998984746/layer_1
+2018-01-26 21:37:32,688 INFO     [2] Training up to epoch 100 in folder motor/1516998984746
+2018-01-26 21:38:51,467 INFO     Layerwise fine-tuning: training 20 epochs per layer using <class 'training.policy.CyclicPolicy'> policy
+2018-01-26 21:39:50,719 INFO     Running prediction [9] from on motor/1516998984746
+2018-01-26 21:44:02,139 INFO     Queue exhausted. Read all instances
+2018-01-26 21:44:02,148 INFO     Training [9] got results {'l2': 125.0396, 'error': 0.4057425856590271, 'train_error': 0.40954625606536865, 'loss': 126.21292, 'train_loss': 26.995495, 'time(s)': 205.97285223007202, 'train_l2': 25.827541}
+2018-01-26 21:44:02,150 INFO     l2: 123.072266 +- 3.118752
+2018-01-26 21:44:02,150 INFO     error: 0.430166 +- 0.026454
+2018-01-26 21:44:02,150 INFO     train_error: 0.427457 +- 0.026681
+2018-01-26 21:44:02,150 INFO     loss: 124.241623 +- 3.131906
+2018-01-26 21:44:02,150 INFO     train_loss: 25.578199 +- 2.196538
+2018-01-26 21:44:02,150 INFO     time(s): 209.861154 +- 7.342145
+2018-01-26 21:44:02,151 INFO     train_l2: 24.410934 +- 2.170671
