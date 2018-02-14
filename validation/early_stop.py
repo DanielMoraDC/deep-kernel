@@ -69,8 +69,9 @@ class EarlyStop(object):
 
         return best_found, stop, train_errors
 
-    def set_zero_fails(self):
+    def restart_errors(self):
         self._succ_fails = 0
+        self._prev_val_error = float('inf')
 
     def get_best(self):
         return self._best
