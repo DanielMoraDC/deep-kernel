@@ -31,7 +31,7 @@ if __name__ == '__main__':
         'l2_ratio': 1e-2,
         'lr': 1e-3,
         'lr_decay': 0.5,
-        'lr_decay_epocs': 500,
+        'lr_decay_epochs': 500,
         'memory_factor': 2,
         'hidden_units': 256,
         'n_threads': 4,
