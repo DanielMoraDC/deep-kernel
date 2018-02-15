@@ -38,7 +38,6 @@ class KernelDropoutTestCase(unittest.TestCase):
 
             # Make sure they do not overlap
             self.assertTrue(np.array_equal(np.ones(mask.shape), mask+mask_inv))
-            self.assertFalse(True)
 
     def _dropout_test(self, x, x_sample):
         pl = tf.placeholder(dtype=tf.float32, shape=(x.shape))
@@ -69,8 +68,6 @@ class KernelDropoutTestCase(unittest.TestCase):
             self.assertTrue(
                 x_rows_set.union(sample_rows_set) == set(range(x.shape[0]))
             )
-
-            self.assertFalse(True)
 
     def test_mask_gen_w(self):
         self._mask_test(W)

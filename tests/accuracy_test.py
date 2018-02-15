@@ -1,5 +1,5 @@
 import tensorflow as tf
-from training import get_accuracy_op
+from training.run_ops import get_accuracy_op
 
 import unittest
 
