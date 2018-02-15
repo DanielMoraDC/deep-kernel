@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from kernels import RandomFourierFeatures, KERNEL_ASSIGN_OPS
+from kernels import GaussianRFF, KERNEL_ASSIGN_OPS
 
 import unittest
 import logging
@@ -13,15 +13,17 @@ class KernelTestCase(unittest.TestCase):
 
     def test_rff(self):
         n, inp_dim, kernel_size = 5, 3, 6
+        kernel_mean = 0.0
         kernel_std = 0.1
 
         x = np.random.random((n, inp_dim))
         inputs = tf.placeholder(shape=[None, inp_dim], dtype=tf.float32)
 
-        kernel = RandomFourierFeatures(
+        kernel = GaussianRFF(
             name='layer_kernel',
             input_dims=inp_dim,
-            std=kernel_std,
+            kernel_mean=kernel_mean,
+            kernel_std=kernel_std,
             kernel_size=kernel_size,
         )
 

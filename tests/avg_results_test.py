@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from model_validation import _average_results
+from validation.tuning import _average_results
 
 TOLERANCE = 0.05  # 5% tolerance
 
@@ -11,21 +11,21 @@ LAYERWISE_DATA = [
         'val_loss': 0.40,
         'train_error': 0.05,
         'val_error': 0.10,
-        'switch_epochs': [25, 60, 120, 200]
+        'train_epochs': [25, 60, 120, 200]
     },
     {
         'train_loss': 0.50,
         'val_loss': 0.600,
         'train_error': 0.10,
         'val_error': 0.15,
-        'switch_epochs': [100, 120, 190]
+        'train_epochs': [100, 120, 190]
     },
     {
         'train_loss': 0.20,
         'val_loss': 0.40,
         'train_error': 0.05,
         'val_error': 0.10,
-        'switch_epochs': [50, 70]
+        'train_epochs': [50, 70]
     }
 ]
 
@@ -34,7 +34,7 @@ LAYERWISE_GROUNDTRUTH = {
     'val_loss': 0.4666,
     'train_error': 0.0666,
     'val_error': 0.1166,
-    'switch_epochs': [50.0, 70.0, 155.0, 200.0]
+    'train_epochs': [50.0, 70.0, 155.0, 200.0]
 }
 
 BASE_DATA = [
