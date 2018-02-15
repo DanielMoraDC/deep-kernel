@@ -160,29 +160,6 @@ def run_training_epoch(sess, context, layer_idx):
 
         status.update(loss, acc, l2)
 
-    # DEBUG
-    '''
-    kernel_op_w = tf.get_collection('KERNEL_VARS')[0]
-    kernel_op_b = tf.get_collection('KERNEL_VARS')[1]
-
-    _, loss, acc, l2, aux_w, aux_b = sess.run(
-        [
-            context.train_ops[layer_idx],
-            context.loss_ops[layer_idx],
-            context.acc_op,
-            context.l2_ops[layer_idx],
-            kernel_op_w,
-            kernel_op_b
-        ]
-    )
-    '''
-
-    # DEBUG
-    '''
-    print('{}: {}'.format(kernel_op_w, aux_w))
-    print('{}: {}'.format(kernel_op_b, aux_b))
-    '''
-
     # Update epoch
     epoch = sess.run(context.step_op)
     status.epoch = epoch
@@ -223,9 +200,9 @@ def build_run_context(dataset,
                       reuse=False,
                       is_training=True,
                       **params):
-    lr = params.get('lr', 0.01)
-    lr_decay = params.get('lr_decay', 0.5)
-    lr_decay_epochs = params.get('lr_decay_epochs', 500)
+    lr = params.get('lr')
+    lr_decay = params.get('lr_decay')
+    lr_decay_epochs = params.get('lr_decay_epochs')
     network_fn = params.get('network_fn', kernel_example_layout_fn)
     batch_size = params.get('batch_size')
     memory_factor = params.get('memory_factor')
@@ -253,8 +230,7 @@ def build_run_context(dataset,
     with tf.variable_scope("network", **scope_params):
 
         logits = network_fn(features,
-                            columns=dataset.get_wide_columns(),
-                            outputs=dataset.get_num_classes(),
+                            dataset,
                             tag=tag,
                             is_training=is_training,
                             **params)

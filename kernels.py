@@ -59,7 +59,8 @@ class RandomFourierFeatures(object):
         tf.summary.histogram(w_name, w, [tag])
         tf.summary.histogram(b_name, b, [tag])
 
-        dot = tf.add(tf.matmul(x, tf.transpose(w)), b)
+        dot = tf.add(tf.tensordot(x, tf.transpose(w), axes=1), b)
+        dot.set_shape(x.get_shape().as_list()[:-1] + [self._kernel_size])
         tf.summary.histogram(self._name + '_dot', dot, [tag])
 
         z = tf.cos(dot) * np.sqrt(2/self._kernel_size)
@@ -114,14 +115,6 @@ def sample_w(kernel_fn, var, **params):
     return kernel.draw_w()
 
 
-def sample_b(kernel_fn, var, **params):
-    input_dims = 128  # This is arbitrary
-    kernel = kernel_fn(
-        '', input_dims=input_dims, **params
-    )
-    return kernel.draw_b()
-
-
 def _generate_w_mask(x, keep_ratio=0.50):
     """
     Returns two masks:
@@ -139,22 +132,6 @@ def _generate_w_mask(x, keep_ratio=0.50):
     # Get mask so we can use it to replace only the selected rows
     lengths = to_keep * height
     mask = tf.sequence_mask(lengths, width, dtype=tf.float32)
-
-    return mask, tf.subtract(1.0, mask)
-
-
-def _generate_b_masks(x, keep_ratio=0.50):
-    """
-    Returns two masks:
-        - A binary mask indicating the values to keep from the input vector
-        - Inverse of the previous mask
-    """
-    length = x.get_shape().as_list()[0]
-
-    # Draw numbers in [0,1] and check if x < keep_ratio
-    rands = tf.random_uniform(shape=[length], dtype=tf.float32)
-    to_keep = tf.less(rands, tf.ones(tf.shape(rands)) * keep_ratio)
-    mask = tf.cast(to_keep, tf.int32)
 
     return mask, tf.subtract(1.0, mask)
 
