@@ -2,7 +2,7 @@ import unittest
 import tensorflow as tf
 import numpy as np
 
-from training import l2_norm
+from ops import l2_norm
 
 N_ROWS = 10
 N_COLS = 5
