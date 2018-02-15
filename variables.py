@@ -3,16 +3,9 @@ import logging
 import tensorflow as tf
 
 from layout import get_layer_id, BATCH_NORM_COLLECTION
-from kernels import KERNEL_COLLECTION
+from kernels import KERNEL_COLLECTION, is_w
 
 logger = logging.getLogger(__name__)
-
-
-def get_all_variables(layers, include_output=True):
-    ws_and_bs = _get_weights_and_biases(layers, include_output=include_output)
-    kernels = _get_kernel_maps(layers)
-    bns = _get_bn_vars(layers)
-    return ws_and_bs + kernels + bns
 
 
 def get_trainable_params(layers, include_output=True):
@@ -67,17 +60,6 @@ def _get_bn_vars(layers):
     return selected
 
 
-def _get_kernel_maps(layer_list):
-    kernel_maps = tf.get_collection(KERNEL_COLLECTION)
-    selected = []
-    for km in kernel_maps:
-        layer_name = km.name.split('/')[1]
-        layer_id = get_layer_id(layer_name)
-        if int(layer_id) in layer_list:
-            selected.append(km)
-    return selected
-
-
 def _get_weights_and_biases(layer_list, include_output=True):
     selected = []
     ws_and_bs = tf.get_collection(tf.GraphKeys.WEIGHTS)
@@ -92,3 +74,40 @@ def _get_weights_and_biases(layer_list, include_output=True):
             if include_output:
                 selected.append(var)
     return selected
+
+
+def _get_kernel_maps(layer_list):
+    kernel_maps = tf.get_collection(KERNEL_COLLECTION)
+    selected = []
+    for km in kernel_maps:
+        layer_name = km.name.split('/')[1]
+        layer_id = get_layer_id(layer_name)
+        if int(layer_id) in layer_list:
+            selected.append(km)
+    return selected
+
+
+def get_kernel_vars_dict(layers):
+    """
+    Returns a dictionary where, for each input layer id, we get
+    the corresponding w and b of the RFF
+    """
+    var_dict = {}
+    for l in layers:
+        var_dict[l] = {}
+        layer_kernel_vars = _get_kernel_maps([l])
+        print(layer_kernel_vars)
+        assert len(layer_kernel_vars) == 2
+
+        if is_w(layer_kernel_vars[0].name):
+            var_dict[l] = {
+                'w': layer_kernel_vars[0],
+                'b': layer_kernel_vars[1]
+            }
+        else:
+            var_dict[l] = {
+                'w': layer_kernel_vars[1],
+                'b': layer_kernel_vars[0]
+            }
+
+    return var_dict

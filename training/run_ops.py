@@ -6,7 +6,7 @@ import collections
 
 from layout import kernel_example_layout_fn
 from ops import get_model_weights, loss_ops_list, get_accuracy_op, \
-                train_ops_list, get_l2_ops_list
+                train_ops_list, get_l2_ops_list, get_kernel_assign_ops_list
 
 from protodata.data_ops import DataMode
 
@@ -17,7 +17,8 @@ RunContext = collections.namedtuple(
     'RunContext',
     [
         'logits_op', 'train_ops', 'loss_ops', 'acc_op', 'step_op',
-        'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op'
+        'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op',
+        'kernel_assign_ops'
     ]
 )
 
@@ -150,10 +151,37 @@ def run_training_epoch(sess, context, layer_idx):
                 context.train_ops[layer_idx],
                 context.loss_ops[layer_idx],
                 context.acc_op,
-                context.l2_ops[layer_idx]
+                context.l2_ops[layer_idx],
             ]
         )
+
+        if context.kernel_assign_ops is not None:
+            sess.run(context.kernel_assign_ops[layer_idx])
+
         status.update(loss, acc, l2)
+
+    # DEBUG
+    '''
+    kernel_op_w = tf.get_collection('KERNEL_VARS')[0]
+    kernel_op_b = tf.get_collection('KERNEL_VARS')[1]
+
+    _, loss, acc, l2, aux_w, aux_b = sess.run(
+        [
+            context.train_ops[layer_idx],
+            context.loss_ops[layer_idx],
+            context.acc_op,
+            context.l2_ops[layer_idx],
+            kernel_op_w,
+            kernel_op_b
+        ]
+    )
+    '''
+
+    # DEBUG
+    '''
+    print('{}: {}'.format(kernel_op_w, aux_w))
+    print('{}: {}'.format(kernel_op_b, aux_b))
+    '''
 
     # Update epoch
     epoch = sess.run(context.step_op)
@@ -257,8 +285,12 @@ def build_run_context(dataset,
             )
 
             train_ops = train_ops_list(lr_op, loss_ops, n_layers, tag)
+            kernel_assign_ops = get_kernel_assign_ops_list(**params) \
+                if params.get('kernel_dropout_rate', None) is not None \
+                else None
         else:
             train_ops, lr_op, step_op = None, None, None
+            kernel_assign_ops = None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
@@ -276,5 +308,6 @@ def build_run_context(dataset,
         steps_per_epoch=steps_per_epoch,
         summary_op=summary_op,
         l2_ops=get_l2_ops_list(**params),
-        step_op=step_op
+        step_op=step_op,
+        kernel_assign_ops=kernel_assign_ops
     )
