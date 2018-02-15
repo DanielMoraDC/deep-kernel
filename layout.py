@@ -36,8 +36,8 @@ def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
     )
 
 
-def fc_block(x, idx, tag, is_training, batch_norm=True, **params):
-    hidden_units = params.get('hidden_units', 128)
+def fc_block(x, idx, tag, is_training, batch_norm=False, **params):
+    hidden_units = params.get('hidden_units')
 
     hidden = _fully_connected(
         x=x,
@@ -97,15 +97,18 @@ def kernel_example_layout_fn(x,
 
 def kernel_block(x, idx, tag, is_training, **params):
 
-    hidden_units = params.get('hidden_units', 128)
-    kernel_size = params.get('kernel_size', 64)
-    kernel_std = params.get('kernel_std', 32)
-    feature_input_size = x.get_shape().as_list()[1]
+    hidden_units = params.get('hidden_units')
+    kernel_size = params.get('kernel_size')
+    kernel_mean = params.get('kernel_mean')
+    kernel_std = params.get('kernel_std')
 
+    '''
+    feature_input_size = x.get_shape().as_list()[1]
     kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=feature_input_size,
-        std=kernel_std,
+        kernel_mean=kernel_mean,
+        kernel_std=kernel_std,
         kernel_size=kernel_size,
     )
 
@@ -120,7 +123,27 @@ def kernel_block(x, idx, tag, is_training, **params):
         activation_fn=None,
         use_bias=False
     )
+    '''
 
+    hidden = _fully_connected(
+        x=x,
+        outputs=hidden_units,
+        idx=idx,
+        tag=tag,
+        is_training=is_training,
+        activation_fn=None,
+        use_bias=False
+    )
+
+    kernel = GaussianRFF(
+        name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
+        input_dims=hidden_units,
+        kernel_mean=kernel_mean,
+        kernel_std=kernel_std,
+        kernel_size=kernel_size,
+    )
+
+    hidden = kernel.apply_kernel(hidden, tag)
     return hidden
 
 
