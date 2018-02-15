@@ -38,7 +38,7 @@ def example_layout_fn(x, outputs, tag, is_training, num_layers=1, **params):
 
 def fc_block(x, idx, tag, is_training, batch_norm=False, **params):
     hidden_units = params.get('hidden_units')
-    
+
     hidden = _fully_connected(
         x=x,
         outputs=hidden_units,
@@ -101,7 +101,6 @@ def kernel_block(x, idx, tag, is_training, **params):
     kernel_size = params.get('kernel_size')
     kernel_mean = params.get('kernel_mean')
     kernel_std = params.get('kernel_std')
-    feature_input_size = x.get_shape().as_list()[1]
 
     '''
     feature_input_size = x.get_shape().as_list()[1]
@@ -120,7 +119,6 @@ def kernel_block(x, idx, tag, is_training, **params):
         tag=tag,
         is_training=is_training,
         activation_fn=None,
-        use_bias=False
     )
     '''
 
@@ -130,8 +128,7 @@ def kernel_block(x, idx, tag, is_training, **params):
         idx=idx,
         tag=tag,
         is_training=is_training,
-        activation_fn=None,
-        use_bias=False
+        activation_fn=None
     )
 
     kernel = GaussianRFF(
@@ -161,18 +158,15 @@ def _fully_connected(x,
                      idx,
                      tag,
                      is_training,
-                     activation_fn=tf.nn.relu,
-                     use_bias=True):
+                     activation_fn=tf.nn.relu):
 
     name = LAYER_NAME.format(layer_id=idx, layer_type='fc')
-    bias_init = tf.zeros_initializer() if use_bias else None
     fc_layer = tf.contrib.layers.fully_connected(
         x,
         outputs,
         activation_fn=activation_fn,
         weights_initializer=tf.variance_scaling_initializer,
         variables_collections=[tf.GraphKeys.WEIGHTS],
-        biases_initializer=bias_init,
         scope=name
     )
     tf.summary.histogram(name, fc_layer, [tag])
