@@ -228,7 +228,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                         if stop and is_layerwise:
 
                             self._iterate_layer(epoch, train_errors)
-                            early_stop.set_zero_fails()
+                            early_stop.restart_errors()
 
                             if self._policy.cycle_ended():
                                 _, l_stop, _ = self._layer_stop.strip_update(
