@@ -8,6 +8,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# This determines the output
+tf.set_random_seed(5)
+np.random.seed(5)
+
+OUTPUT = [
+    [-0.44675037, -0.17351803, -0.41444075, -0.07870556, 0.42621043, 0.16777448],  # noqa
+    [-0.42824644, -0.14773776, -0.43319535, -0.16983406, 0.36229837, 0.26625177],  # noqa
+    [-0.425477, -0.145722, -0.43250215, -0.12907934, 0.38341963, 0.23422249],  # noqa
+    [-0.45321611, -0.16537929, -0.41523665, -0.02559332, 0.37586978, 0.29390526],  # noqa
+    [-0.44895834, -0.16232243, -0.41991386, -0.08237243, 0.36106935, 0.30424154],  # noqa
+]
+
 
 class KernelTestCase(unittest.TestCase):
 
@@ -35,7 +47,7 @@ class KernelTestCase(unittest.TestCase):
             sess.run(tf.get_collection(KERNEL_ASSIGN_OPS))
 
             kernel_out, kernel_mat = sess.run(
-                [kernel_op, kernel._matrix],
+                [kernel_op, kernel._w],
                 feed_dict={inputs: x}
             )
 
@@ -52,8 +64,8 @@ class KernelTestCase(unittest.TestCase):
             # Check size is correct
             self.assertTrue(kernel_out.shape == (n, kernel_size))
 
-            # Check is around 0
-            self.assertTrue(np.all(np.isclose(kernel_out, 0.0, atol=2.0)))
+            # Check values are correct
+            self.assertTrue(np.all(np.isclose(kernel_out, OUTPUT, rtol=0.05)))
 
 
 if __name__ == '__main__':
