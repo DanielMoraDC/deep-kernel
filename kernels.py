@@ -1,5 +1,4 @@
 import abc
-import random
 
 import numpy as np
 import tensorflow as tf
@@ -18,9 +17,15 @@ class RandomFourierFeatures(object):
         self._kernel_size = kernel_size
 
     @abc.abstractmethod
-    def draw_samples(self, input_size, rff_features):
+    def draw_w(self):
         """
-        Draws samples according to the corresponding Fourier distribution
+        Draws w samples according to the corresponding Fourier distribution
+        """
+
+    @abc.abstractmethod
+    def draw_b(self):
+        """
+        Draws v samples according to the corresponding Fourier distribution
         """
 
     def apply_kernel(self, x, tag):
@@ -28,22 +33,21 @@ class RandomFourierFeatures(object):
         w_name = '_'.join([self._name, 'w'])  # Name is important, dont change
         b_name = '_'.join([self._name, 'b'])  # Name is important, dont change
 
-        # Create variable
         w = tf.get_variable(
             w_name,
             [self._kernel_size, self._input_dims],
-            trainable=False,  # Important: this is constant!,
+            trainable=False,  # Important: this is constant!
             collections=[KERNEL_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES]
         )
 
         b = tf.get_variable(
             b_name,
             [self._kernel_size],
-            trainable=False,
+            trainable=False,  # Important: this is constant!
             collections=[KERNEL_COLLECTION, tf.GraphKeys.GLOBAL_VARIABLES]
         )
 
-        w_value, b_value = self.draw_samples()
+        w_value, b_value = self.draw_w(), self.draw_b()
 
         tf.add_to_collection(KERNEL_ASSIGN_OPS, w.assign(w_value))
         tf.add_to_collection(KERNEL_ASSIGN_OPS, b.assign(b_value))
@@ -52,17 +56,12 @@ class RandomFourierFeatures(object):
         self._w = w
         self._b = b
 
-        # Check: see matrix does not change with time
         tf.summary.histogram(w_name, w, [tag])
         tf.summary.histogram(b_name, b, [tag])
 
-        # Check: input to be centered around 0
         dot = tf.add(tf.matmul(x, tf.transpose(w)), b)
         tf.summary.histogram(self._name + '_dot', dot, [tag])
 
-        # Difference from orifinal paper: empirical results show that
-        # by diving by a constant at each step we make the output of each
-        # progressively decrease and therefore and we get much higher error
         z = tf.cos(dot) * np.sqrt(2/self._kernel_size)
         tf.summary.histogram(self._name + '_z', z, [tag])
 
@@ -71,26 +70,101 @@ class RandomFourierFeatures(object):
 
 class GaussianRFF(RandomFourierFeatures):
 
-    def __init__(self, name, input_dims, kernel_size=32, mean=0.0, std=1.0):
+    def __init__(self,
+                 name,
+                 input_dims,
+                 kernel_size,
+                 kernel_mean,
+                 kernel_std,
+                 **params):
         super(GaussianRFF, self).__init__(
             name, input_dims, kernel_size
         )
-        self._mean = mean
-        self._std = std
+        self._mean = kernel_mean
+        self._std = kernel_std
 
-    def draw_samples(self):
-        # Credits to sampling to hichamjanati
-        # https://github.com/hichamjanati/srf/blob/master/RFF.py
-        w = np.sqrt(2*self._std)*np.random.normal(
-            size=[self._kernel_size, self._input_dims]
+    def draw_w(self):
+        return tf.random_normal(
+            mean=self._mean,
+            stddev=self._std,
+            shape=[self._kernel_size, self._input_dims]
         )
-        '''
-        # Previous
-        w = np.random.normal(
-            self._mean,
-            self._std,
-            [self._kernel_size, self._input_dims]
+
+    def draw_b(self):
+        return tf.random_uniform(
+            shape=[self._kernel_size], minval=0, maxval=2*np.pi
         )
-        '''
-        b = [random.uniform(0, 2*np.pi) for _ in range(self._kernel_size)]
-        return w, b
+
+
+def is_w(name):
+    suffix = name.split(':')[0].split('_')[-1]
+    if suffix == 'w':
+        return True
+    elif suffix == 'b':
+        return False
+    else:
+        raise ValueError('Unexpected variable name')
+
+
+def sample_w(kernel_fn, var, **params):
+    _, input_dims = var.get_shape().as_list()
+    kernel = kernel_fn(
+        '', input_dims=input_dims, **params
+    )
+    return kernel.draw_w()
+
+
+def sample_b(kernel_fn, var, **params):
+    input_dims = 128  # This is arbitrary
+    kernel = kernel_fn(
+        '', input_dims=input_dims, **params
+    )
+    return kernel.draw_b()
+
+
+def _generate_w_mask(x, keep_ratio=0.50):
+    """
+    Returns two masks:
+        - A binary mask indicating the values to keep from the input matrix
+        - Inverse of the previous mask
+    """
+    x_shape = x.get_shape().as_list()
+    height, width = x_shape
+
+    # Draw numbers in [0,1] and check if x < keep_ratio
+    rands = tf.random_uniform(shape=[height], dtype=tf.float32)
+    to_keep = tf.less(rands, tf.ones(tf.shape(rands)) * keep_ratio)
+    to_keep = tf.cast(to_keep, tf.int32)
+
+    # Get mask so we can use it to replace only the selected rows
+    lengths = to_keep * height
+    mask = tf.sequence_mask(lengths, width, dtype=tf.float32)
+
+    return mask, tf.subtract(1.0, mask)
+
+
+def _generate_b_masks(x, keep_ratio=0.50):
+    """
+    Returns two masks:
+        - A binary mask indicating the values to keep from the input vector
+        - Inverse of the previous mask
+    """
+    length = x.get_shape().as_list()[0]
+
+    # Draw numbers in [0,1] and check if x < keep_ratio
+    rands = tf.random_uniform(shape=[length], dtype=tf.float32)
+    to_keep = tf.less(rands, tf.ones(tf.shape(rands)) * keep_ratio)
+    mask = tf.cast(to_keep, tf.int32)
+
+    return mask, tf.subtract(1.0, mask)
+
+
+def kernel_dropout(var, new_sample, keep_ratio):
+    """
+    Returns the matrix resulting from replacing some rows from the
+    new sample according to the given probability ratio
+    """
+    mask, mask_inv = _generate_w_mask(var, keep_ratio)
+    kept = tf.multiply(mask, var)
+    sampled = tf.multiply(mask_inv, new_sample)
+    return tf.add(kept, sampled)

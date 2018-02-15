@@ -6,7 +6,7 @@ import collections
 
 from layout import kernel_example_layout_fn
 from ops import get_model_weights, loss_ops_list, get_accuracy_op, \
-                train_ops_list, get_l2_ops_list
+                train_ops_list, get_l2_ops_list, get_kernel_assign_ops_list
 
 from protodata.data_ops import DataMode
 
@@ -17,7 +17,8 @@ RunContext = collections.namedtuple(
     'RunContext',
     [
         'logits_op', 'train_ops', 'loss_ops', 'acc_op', 'step_op',
-        'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op'
+        'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op',
+        'kernel_assign_ops'
     ]
 )
 
@@ -155,6 +156,9 @@ def run_training_epoch(sess, context, layer_idx):
         )
         status.update(loss, acc, l2)
 
+        if context.kernel_assign_ops is not None:
+            sess.run(context.kernel_assign_ops[layer_idx])
+
     # Update epoch
     epoch = sess.run(context.step_op)
     status.epoch = epoch
@@ -257,8 +261,12 @@ def build_run_context(dataset,
             )
 
             train_ops = train_ops_list(lr_op, loss_ops, n_layers, tag)
+            kernel_assign_ops = get_kernel_assign_ops_list(**params) \
+                if params.get('kernel_dropout_rate', None) is not None \
+                else None
         else:
             train_ops, lr_op, step_op = None, None, None
+            kernel_assign_ops = None
 
         # Evaluate model
         accuracy_op = get_accuracy_op(
@@ -276,5 +284,6 @@ def build_run_context(dataset,
         steps_per_epoch=steps_per_epoch,
         summary_op=summary_op,
         l2_ops=get_l2_ops_list(**params),
-        step_op=step_op
+        step_op=step_op,
+        kernel_assign_ops=kernel_assign_ops
     )
