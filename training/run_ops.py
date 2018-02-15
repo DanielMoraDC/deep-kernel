@@ -199,9 +199,9 @@ def build_run_context(dataset,
                       reuse=False,
                       is_training=True,
                       **params):
-    lr = params.get('lr', 0.01)
-    lr_decay = params.get('lr_decay', 0.5)
-    lr_decay_epochs = params.get('lr_decay_epochs', 500)
+    lr = params.get('lr')
+    lr_decay = params.get('lr_decay')
+    lr_decay_epochs = params.get('lr_decay_epochs')
     network_fn = params.get('network_fn', kernel_example_layout_fn)
     batch_size = params.get('batch_size')
     memory_factor = params.get('memory_factor')
@@ -229,8 +229,7 @@ def build_run_context(dataset,
     with tf.variable_scope("network", **scope_params):
 
         logits = network_fn(features,
-                            columns=dataset.get_wide_columns(),
-                            outputs=dataset.get_num_classes(),
+                            dataset,
                             tag=tag,
                             is_training=is_training,
                             **params)

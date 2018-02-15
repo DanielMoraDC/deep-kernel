@@ -92,7 +92,10 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
             step = get_global_step()
 
-            dataset = self._settings_fn(dataset_location=self._data_location)
+            dataset = self._settings_fn(
+                dataset_location=self._data_location,
+                image_specs=params.get('image_specs', None)
+            )
             reader = DataReader(dataset)
 
             # Get training operations
