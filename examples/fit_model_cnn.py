@@ -55,6 +55,7 @@ if __name__ == '__main__':
         'kernel_dropout_rate': None,
         'batch_size': 128,
         'num_layers': 3,
+        'epochs_per_layer': 2,
         'max_epochs': 250,
         'switch_policy': CyclicPolicy,
         'network_fn': cnn_kernel_example_layout_fn,
