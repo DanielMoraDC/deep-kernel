@@ -3,9 +3,11 @@ import logging
 
 import tensorflow as tf
 
-from kernels import KERNEL_ASSIGN_OPS, GaussianRFF, sample_w, kernel_dropout
+from kernels import KERNEL_ASSIGN_OPS, GaussianRFF, sample_w, \
+                    is_w, kernel_dropout
 from variables import get_model_weights, get_trainable_params, \
-                    summarize_gradients, get_kernel_vars_dict
+                    summarize_gradients, get_kernel_vars, get_variable_name
+from layout.base import get_layer_id
 
 logger = logging.getLogger(__name__)
 
@@ -178,24 +180,27 @@ def get_l2_ops_list(**params):
     return l2_list
 
 
-def get_kernel_assign_ops(kernel_dict, layers, kernel_dropout_rate, **params):
+def get_kernel_assign_ops(layers, kernel_dropout_rate, **params):
 
     if kernel_dropout_rate < 0.0 or kernel_dropout_rate > 1.0:
         raise ValueError('Persist ratio must be in interval [0,1]')
 
     ops = []
-    for l in layers:
+    kernel_vars = get_kernel_vars(layers, include_fc=True)
+    for var in kernel_vars:
 
-        layer_kernel_vars = kernel_dict[l]
+        if not is_w(var.name):
+            continue
 
-        w_var = layer_kernel_vars['w']
-        w_sample = sample_w(GaussianRFF, w_var, **params)
+        w_sample = sample_w(GaussianRFF, var, **params)
 
         # Construct a new matrix with some rows updated (new RFF features)
-        new_w = kernel_dropout(w_var, w_sample, kernel_dropout_rate)
+        new_w = kernel_dropout(var, w_sample, kernel_dropout_rate)
 
         # Append assign operation for current layer kernel matrix
-        assign_w_op = tf.assign(w_var, new_w, name='assign_%d_w' % l)
+        var_name = var.name.split('/')[1]
+        var_id = str(get_variable_name(var_name))
+        assign_w_op = tf.assign(var, new_w, name='assign_%s' % var_id)
         ops.append(assign_w_op)
 
     return ops
@@ -203,17 +208,16 @@ def get_kernel_assign_ops(kernel_dict, layers, kernel_dropout_rate, **params):
 
 def get_kernel_assign_ops_list(num_layers, **params):
     ops = []
-    kernel_dict = get_kernel_vars_dict(range(1, num_layers+1))
 
     # For entry 0, we get all assign ops
     ops.append(
-        get_kernel_assign_ops(kernel_dict, range(1, num_layers+1), **params)
+        get_kernel_assign_ops(range(1, num_layers+1), **params)
     )
     logger.debug('Kernel ops for #0: {}'.format(ops[0]))
 
     # Then we get assign ops for each separate layer
     for l in range(1, num_layers+1):
-        layer_kernel_ops = get_kernel_assign_ops(kernel_dict, [l], **params)
+        layer_kernel_ops = get_kernel_assign_ops([l], **params)
         logger.debug('Kernel ops for #{}: {}'.format(l, layer_kernel_ops))
         ops.append(layer_kernel_ops)
 
