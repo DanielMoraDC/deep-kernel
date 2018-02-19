@@ -87,6 +87,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
     def _init_savers(self, step, **params):
         saver = tf.train.Saver()
         if params.get('restore_folder', None) is not None:
+            # Note that output layer is randomly initialized, not restored
             self._restore_vars = get_all_variables(
                 params.get('restore_layers'),
                 include_output=False
