@@ -17,13 +17,12 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [128, 256]),
-        'l2_ratio': hp.choice('l2_ratio', [1e-3, 1e-4, 1e-5]),
-        'lr': hp.choice('lr', [1e-3, 1e-4, 1e-5]),
-        # LR bigger or equal than 1e-3 seem to be too high
-        'kernel_size': hp.choice('kernel_size', [256, 512, 1024]),
-        'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [512, 1024, 2048])
+        'batch_size': 2 ** (7 + hp.uniform('batch_size_log2', 2)),
+        'l2_ratio': 10 ** hp.uniform('l2_log10', -5, -3),
+        'lr': 10 ** hp.uniform('l2_log10', -5, -3),
+        'kernel_size': 2 ** (8 + hp.randint('kernel_size_log2', 3)),
+        'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
+        'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3))
     }
 
     # Fixed parameters

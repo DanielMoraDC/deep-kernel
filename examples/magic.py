@@ -21,12 +21,12 @@ logging.basicConfig(
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [128]),
-        'l2_ratio': hp.choice('l2_ratio', [0, 1e-1, 1e-2, 1e-3, 1e-4]),
-        'lr': hp.choice('lr', [1e-2, 1e-3, 1e-4]),
-        'kernel_size': hp.choice('kernel_size', [64, 128, 256, 512]),
-        'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [512, 1024, 2048])
+        'batch_size': 2 ** hp.choice('batch_size_log2', [7]),
+        'l2_ratio': 10 ** hp.uniform('l2_log10', -4, 0),
+        'lr': 10 ** hp.uniform('l2_log10', -4, -2),
+        'kernel_size': 2 ** (6 + hp.randint('kernel_size_log2', 4)),
+        'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
+        'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3))
     }
 
     # Fixed parameters
