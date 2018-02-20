@@ -11,9 +11,10 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
+logger = logging.getLogger(__name__)
 logging.basicConfig(
-        filename='magic_ciclyc_3l_ciclyc.log',
-        level=logging.INFO
+    filename='magic_baseline.log',
+    level=logging.INFO
 )
 
 
@@ -30,10 +31,10 @@ if __name__ == '__main__':
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 3,
+        'num_layers': 1,
         'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
-        'lr_decay_epocs': 250,
+        'lr_decay_epochs': 250,
         'n_threads': 4,
         'memory_factor': 2,
         'max_epochs': MAX_EPOCHS,
@@ -50,7 +51,7 @@ if __name__ == '__main__':
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=False,
-        layerwise=True,
+        layerwise=False,
         folder='magic',
         runs=SIM_RUNS,
         test_batch_size=1

@@ -11,7 +11,11 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename='titanic_baseline.log',
+    level=logging.INFO
+)
 
 
 if __name__ == '__main__':
@@ -30,7 +34,7 @@ if __name__ == '__main__':
         'num_layers': 1,
         'layerwise_progress_thresh': 0.1,
         'lr_decay': 0.5,
-        'lr_decay_epocs': 250,
+        'lr_decay_epochs': 250,
         'n_threads': 4,
         'strip_length': 5,
         'memory_factor': 1,
@@ -56,4 +60,4 @@ if __name__ == '__main__':
     metrics = stats[0].keys()
     for m in metrics:
         values = [x[m] for x in stats]
-        print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
+        logger.info('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
