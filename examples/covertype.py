@@ -11,25 +11,31 @@ CV_TRIALS = 5
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-logging.basicConfig(level=logging.INFO)
+n_layers = 1
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename='covertype_alternate_%d.log' % n_layers,
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+)
 
 
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [128, 256]),
-        'l2_ratio': hp.choice('l2_ratio', [1e-3, 1e-4, 1e-5]),
-        'lr': hp.choice('lr', [1e-3, 1e-4, 1e-5]),
-        # LR bigger or equal than 1e-3 seem to be too high
-        'kernel_size': hp.choice('kernel_size', [256, 512, 1024]),
-        'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [512, 1024, 2048]),
-        'epochs_per_layer': hp.choice('epochs_per_layer', [25, 50])
+        'batch_size': 2 ** (7 + hp.uniform('batch_size_log2', 2)),
+        'l2_ratio': 10 ** hp.uniform('l2_log10', -5, -3),
+        'lr': 10 ** hp.uniform('l2_log10', -5, -3),
+        'kernel_size': 2 ** (8 + hp.randint('kernel_size_log2', 3)),
+        'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
+        'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),
+        'epochs_per_layer': 25 + hp.randint('epochs_per_layer', 25)
     }
 
     # Fixed parameters
     search_space.update({
-        'num_layers': 3,
+        'num_layers': n_layers,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
@@ -56,4 +62,4 @@ if __name__ == '__main__':
     metrics = stats[0].keys()
     for m in metrics:
         values = [x[m] for x in stats]
-        print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
+        logger.info('%s: %f +- %f' % (m, np.mean(values), np.std(values)))

@@ -1,3 +1,4 @@
+
 from hyperopt import hp
 import numpy as np
 import logging
@@ -6,6 +7,7 @@ from protodata import datasets
 
 from validation.tuning import tune_model
 from training.policy import CyclicPolicy
+from layout import kernel_example_layout_fn
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -13,20 +15,20 @@ MAX_EPOCHS = 10000
 
 n_layers = 1
 
-logging.basicConfig(
-        level=logging.INFO,
-        filename='magic_alternate_%d.log' % n_layers
-)
 logger = logging.getLogger(__name__)
-
+logging.basicConfig(
+    filename='motor_alternate_%d.log' % n_layers,
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+)
 
 if __name__ == '__main__':
 
     search_space = {
         'batch_size': 2 ** hp.choice('batch_size_log2', [7]),
-        'l2_ratio': 10 ** hp.uniform('l2_log10', -4, 0),
-        'lr': 10 ** hp.uniform('l2_log10', -4, -2),
-        'kernel_size': 2 ** (6 + hp.randint('kernel_size_log2', 4)),
+        'l2_ratio': 10 ** hp.uniform('l2_log10', -4, -2),
+        'lr': 10 ** hp.uniform('l2_log10', -5, -3),
+        'kernel_size': 2 ** (9 + hp.randint('kernel_size_log2', 3)),
         'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
         'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),
         'epochs_per_layer': 10 + hp.randint('epochs_per_layer', 75)
@@ -44,18 +46,18 @@ if __name__ == '__main__':
         'progress_thresh': 0.1,
         'kernel_mean': 0.0,
         'switch_policy': CyclicPolicy,
-        'policy_seed': np.random.randint(1, 1000)
+        'network_fn': kernel_example_layout_fn
     })
 
     stats = tune_model(
-        dataset=datasets.Datasets.MAGIC,
-        settings_fn=datasets.MagicSettings,
+        dataset=datasets.Datasets.MOTOR,
+        settings_fn=datasets.MotorSettings,
         search_space=search_space,
         n_trials=CV_TRIALS,
         cross_validate=False,
-        folder='magic',
+        folder='motor',
         runs=SIM_RUNS,
-        test_batch_size=1
+        test_batch_size=1,
     )
 
     metrics = stats[0].keys()
