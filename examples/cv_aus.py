@@ -12,8 +12,11 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
+n_layers = 2
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(
+    filename='aus_%dl' % n_layers,
     level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
 )
@@ -22,17 +25,17 @@ logging.basicConfig(
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [16, 32]),
-        'l2_ratio': hp.choice('l2_ratio', [1e-2, 1e-3, 1e-4]),
-        'lr': hp.choice('lr', [1e-3, 1e-4, 1e-5]),
-        'kernel_size': hp.choice('kernel_size', [32, 64]),
-        'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [32, 64])
+        'batch_size': 2 ** (4 + hp.randint('batch_size_log2', 2)),
+        'l2_ratio': 10 ** hp.uniform('l2_log10', -4, -2),
+        'lr': 10 ** hp.uniform('l2_log10', -5, -3),
+        'kernel_size': 2 ** (5 + hp.randint('kernel_size_log2', 2)),
+        'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
+        'hidden_units': 2 ** (5 + hp.randint('hidden_units_log2', 2))
     }
 
     # Fixed parameters
     search_space.update({
-        'max_layers': 4,
+        'max_layers': n_layers,
         'lr_decay': 0.5,
         'lr_decay_epocs': 250,
         'n_threads': 4,
