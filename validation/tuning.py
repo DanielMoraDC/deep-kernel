@@ -50,6 +50,8 @@ def tune_model(dataset,
     params['max_epochs'] = stats['epoch']
 
     if layerwise:
+        params.update(params['policy'])
+        del params['policy']
         params['switch_epochs'] = stats['switch_epochs']
 
     logger.info('Using model {} for training with results {}'
@@ -136,6 +138,8 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
 
     params_cp = params.copy()
     if layerwise:
+        params_cp.update(params_cp['policy'])
+        del params_cp['policy']
         params_cp['layerwise'] = layerwise
 
     model = DeepNetworkValidation(
@@ -177,6 +181,8 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
 
     params_cp = params.copy()
     if layerwise:
+        params_cp.update(params_cp['policy'])
+        del params_cp['policy']
         params_cp.update({'layerwise': layerwise})
 
     logger.debug('Starting evaluation on {} ...'.format(params_cp))
