@@ -1,0 +1,238 @@
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 290.1821514335852, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.9625429762159158, 'n_threads': 4, 'kernel_std': 0.5100630998558277, 'l2_ratio': 0.0004771144953978456, 'lr': 0.004128328873088487, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0062500000000000003, 'epoch': 15.0, 'train_error': 0.029605257511138915, 'val_loss': 0.26423118, 'train_loss': 0.24875605} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 488.2460146633698, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.382285182839761, 'n_threads': 4, 'kernel_std': 0.9385324533863603, 'l2_ratio': 0.0003971483821333759, 'lr': 0.0022771587822265427, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.034375000000000003, 'epoch': 22.5, 'train_error': 0.022039467096328737, 'val_loss': 0.37386841, 'train_loss': 0.31094894} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 706.5200431689342, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.5653599439160601, 'n_threads': 4, 'kernel_std': 0.17092123423694533, 'l2_ratio': 0.0011407311717810456, 'lr': 0.0048260734794295206, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 12.5, 'train_error': 0.024671047925949097, 'val_loss': 0.20865235, 'train_loss': 0.23225757} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 585.8789062682326, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.36832950059470826, 'n_threads': 4, 'kernel_std': 0.9644127868136767, 'l2_ratio': 0.0015492614029668098, 'lr': 0.0039330168367765145, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.021874999999999999, 'epoch': 15.0, 'train_error': 0.016447365283966064, 'val_loss': 0.39400652, 'train_loss': 0.34025341} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 430.08284982740344, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.8473073532310715, 'n_threads': 4, 'kernel_std': 0.5622723884757508, 'l2_ratio': 0.00013524189225847812, 'lr': 0.00704595423598075, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 12.5, 'train_error': 0.024999994039535522, 'val_loss': 0.2939108, 'train_loss': 0.27909383} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 131.87747251157157, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.9410685225898752, 'n_threads': 4, 'kernel_std': 0.1778754575132576, 'l2_ratio': 0.00046491428556706574, 'lr': 0.009611608851929264, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 10.0, 'train_error': 0.034210526943206788, 'val_loss': 0.14965345, 'train_loss': 0.19346} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 900.3283697606809, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.698991746134919, 'n_threads': 4, 'kernel_std': 0.4003713214231731, 'l2_ratio': 0.00013260955962482172, 'lr': 0.00027507497857549043, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.053124999999999999, 'epoch': 50.0, 'train_error': 0.075328946113586426, 'val_loss': 0.51619524, 'train_loss': 0.49154973} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 965.7625256413176, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.3710334147179595, 'n_threads': 4, 'kernel_std': 0.4742985505583722, 'l2_ratio': 0.005094185016419071, 'lr': 0.0003194574750300639, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.021874999999999999, 'epoch': 72.5, 'train_error': 0.051315796375274655, 'val_loss': 0.617118, 'train_loss': 0.58899224} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 533.5010216221126, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.5904092691484558, 'n_threads': 4, 'kernel_std': 0.031241346202447548, 'l2_ratio': 0.009880126183149325, 'lr': 0.009057425901153953, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.081250000000000003, 'epoch': 47.5, 'train_error': 0.18585526943206787, 'val_loss': 0.44415396, 'train_loss': 0.51850188} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 732.3924323110913, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.2974066114899303, 'n_threads': 4, 'kernel_std': 0.041937872625158884, 'l2_ratio': 0.0022758297384862574, 'lr': 0.00033726601315052496, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.09375, 'epoch': 77.5, 'train_error': 0.21677631139755249, 'val_loss': 0.49910012, 'train_loss': 0.55798256} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 528.8492861380143, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.6005828058217464, 'n_threads': 4, 'kernel_std': 0.5885646776033029, 'l2_ratio': 0.00118724098423123, 'lr': 0.00013500410132029431, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.050000000000000003, 'epoch': 125.0, 'train_error': 0.088815796375274661, 'val_loss': 0.60681617, 'train_loss': 0.56770712} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 746.4162367572982, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.8776669221878705, 'n_threads': 4, 'kernel_std': 0.5248007431523826, 'l2_ratio': 0.0028561158531115165, 'lr': 0.0038544280090719823, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.015625, 'epoch': 15.0, 'train_error': 0.01710526943206787, 'val_loss': 0.44379839, 'train_loss': 0.41196352} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 694.1336449369319, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.3900289698469773, 'n_threads': 4, 'kernel_std': 0.7936191285747073, 'l2_ratio': 0.00017229173638889648, 'lr': 0.0036443703375230213, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.018749999999999999, 'epoch': 15.0, 'train_error': 0.013815778493881225, 'val_loss': 0.34894204, 'train_loss': 0.30628937} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 823.3761631610595, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.30411154991816575, 'n_threads': 4, 'kernel_std': 0.1997278985640143, 'l2_ratio': 0.0002118216624219227, 'lr': 0.0004899459665408694, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 55.0, 'train_error': 0.045394736528396609, 'val_loss': 0.30943468, 'train_loss': 0.3248966} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 690.4379355052017, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.8159042925005316, 'n_threads': 4, 'kernel_std': 0.2767203652977665, 'l2_ratio': 0.0005563336346318693, 'lr': 0.0018662394274286372, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0062500000000000003, 'epoch': 20.0, 'train_error': 0.034868413209915163, 'val_loss': 0.28861564, 'train_loss': 0.28765661} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 411.5879278303961, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.7521993433954886, 'n_threads': 4, 'kernel_std': 0.40508119872731924, 'l2_ratio': 0.0005699695310332012, 'lr': 0.006564183894113647, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 15.0, 'train_error': 0.014144736528396606, 'val_loss': 0.28826651, 'train_loss': 0.25505438} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 727.5201960294224, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.5239931521741361, 'n_threads': 4, 'kernel_std': 0.2936591704738808, 'l2_ratio': 0.0015391529601125036, 'lr': 0.00017840676593832162, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 112.5, 'train_error': 0.037171053886413577, 'val_loss': 0.53907621, 'train_loss': 0.51506162} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 779.9832401593051, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.19270792198842174, 'n_threads': 4, 'kernel_std': 0.02472524368506337, 'l2_ratio': 0.000129939085439326, 'lr': 0.0012612924444315781, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.046875, 'epoch': 120.0, 'train_error': 0.13519737124443054, 'val_loss': 0.29385525, 'train_loss': 0.33539158} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 708.1820703896842, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.9012432236016825, 'n_threads': 4, 'kernel_std': 0.796144378876749, 'l2_ratio': 0.00020334389679146236, 'lr': 0.0002918512145476471, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.028125000000000001, 'epoch': 110.0, 'train_error': 0.051315790414810179, 'val_loss': 0.45492372, 'train_loss': 0.40077177} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 912.9373533950121, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.19474246820679852, 'n_threads': 4, 'kernel_std': 0.4671413765611331, 'l2_ratio': 0.00018867605009312754, 'lr': 0.0006412569215170683, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 50.0, 'train_error': 0.038815778493881223, 'val_loss': 0.36617756, 'train_loss': 0.35726425} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 560.0991262961923, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.46449934010251837, 'n_threads': 4, 'kernel_std': 0.9837366172082139, 'l2_ratio': 0.00010805635130975093, 'lr': 0.006041445306057537, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.050000000000000003, 'epoch': 10.0, 'train_error': 0.016776317358016969, 'val_loss': 0.38610333, 'train_loss': 0.33315963} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 340.93046036376114, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.6905716928122012, 'n_threads': 4, 'kernel_std': 0.7058679897704999, 'l2_ratio': 0.003907087161637002, 'lr': 0.0003187063215329522, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0062500000000000003, 'epoch': 70.0, 'train_error': 0.030263161659240721, 'val_loss': 0.57320082, 'train_loss': 0.54125512} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 620.4655961923805, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.9099531836044471, 'n_threads': 4, 'kernel_std': 0.6444832362351921, 'l2_ratio': 0.0002347263441531108, 'lr': 0.0019983144318455343, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.025000000000000001, 'epoch': 22.5, 'train_error': 0.015789473056793214, 'val_loss': 0.3790884, 'train_loss': 0.31409493} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 194.0316248679309, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.8111929010647655, 'n_threads': 4, 'kernel_std': 0.6092605074204839, 'l2_ratio': 0.00012568459034397947, 'lr': 0.00034078386788088044, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0062500000000000003, 'epoch': 100.0, 'train_error': 0.038486838340759277, 'val_loss': 0.44996113, 'train_loss': 0.41657591} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 551.1126902449759, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.4111324733045537, 'n_threads': 4, 'kernel_std': 0.5335043402314218, 'l2_ratio': 0.0006440037596591477, 'lr': 0.0018914082449938898, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.015625, 'epoch': 25.0, 'train_error': 0.029605251550674439, 'val_loss': 0.38445643, 'train_loss': 0.36021546} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 769.3717899074803, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.5169648969136686, 'n_threads': 4, 'kernel_std': 0.7617121452642942, 'l2_ratio': 0.0015285325501133845, 'lr': 0.00822338439100051, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.015625, 'epoch': 20.0, 'train_error': 0.075986838340759283, 'val_loss': 0.41027647, 'train_loss': 0.42461413} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 476.28017590264153, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.25779182194796196, 'n_threads': 4, 'kernel_std': 0.9485920091054945, 'l2_ratio': 0.003778995546406621, 'lr': 0.0020062089671439086, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.018749999999999999, 'epoch': 20.0, 'train_error': 0.027302628755569457, 'val_loss': 0.50852692, 'train_loss': 0.46181026} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 994.7694600609489, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.525686216972297, 'n_threads': 4, 'kernel_std': 0.30617377216646674, 'l2_ratio': 0.00042498716862731804, 'lr': 0.001456727851405229, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 15.0, 'train_error': 0.044736844301223752, 'val_loss': 0.42967802, 'train_loss': 0.42044806} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 692.640149388027, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.16715170494813353, 'n_threads': 4, 'kernel_std': 0.22360230461146738, 'l2_ratio': 0.0019012659483441047, 'lr': 0.00536682105384884, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0062500000000000003, 'epoch': 12.5, 'train_error': 0.025000000000000001, 'val_loss': 0.34896103, 'train_loss': 0.3582764} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 136.14174833656688, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.4237453544334192, 'n_threads': 4, 'kernel_std': 0.5116550246081779, 'l2_ratio': 0.0003438917834018425, 'lr': 0.00927959669595245, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 15.0, 'train_error': 0.019407892227172853, 'val_loss': 0.19921979, 'train_loss': 0.18457566} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 843.3808023855605, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.32401098898746944, 'n_threads': 4, 'kernel_std': 0.6938514727985383, 'l2_ratio': 0.006060736904580742, 'lr': 0.0013502797057469693, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0062500000000000003, 'epoch': 35.0, 'train_error': 0.044736844301223752, 'val_loss': 0.47289172, 'train_loss': 0.45139971} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 923.8748108655348, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.25632111479236813, 'n_threads': 4, 'kernel_std': 0.2677923453365416, 'l2_ratio': 0.00940779339140476, 'lr': 0.009628789703016644, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 10.0, 'train_error': 0.030921065807342531, 'val_loss': 0.29574639, 'train_loss': 0.32622963} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 853.9504781628177, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.8468324274027803, 'n_threads': 4, 'kernel_std': 0.3455464547872641, 'l2_ratio': 0.00022462783056391485, 'lr': 0.00014009100523856865, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.018749999999999999, 'epoch': 132.5, 'train_error': 0.043092101812362671, 'val_loss': 0.49966389, 'train_loss': 0.47096449} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 508.5953585931747, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.5969290494407721, 'n_threads': 4, 'kernel_std': 0.39098895975498543, 'l2_ratio': 0.0007878371013602177, 'lr': 0.0011230489201832377, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 30.0, 'train_error': 0.035197371244430543, 'val_loss': 0.43293962, 'train_loss': 0.40615788} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 122.2953939619808, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.6415910759809098, 'n_threads': 4, 'kernel_std': 0.7489205673438545, 'l2_ratio': 0.00039475376667808356, 'lr': 0.0074021766186836225, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.015625, 'epoch': 10.0, 'train_error': 0.015789473056793214, 'val_loss': 0.2583316, 'train_loss': 0.2264473} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 800.3921657261711, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.8715621281637246, 'n_threads': 4, 'kernel_std': 0.9382976621299874, 'l2_ratio': 0.0003165387327348776, 'lr': 0.0003232194866160643, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.043749999999999997, 'epoch': 45.0, 'train_error': 0.024671059846878052, 'val_loss': 0.56665909, 'train_loss': 0.51766682} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 109.42386717070822, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.5713321045256665, 'n_threads': 4, 'kernel_std': 0.5646332477310001, 'l2_ratio': 0.003095640915801738, 'lr': 0.00020438204335914716, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.037499999999999999, 'epoch': 95.0, 'train_error': 0.050986826419830322, 'val_loss': 0.65797472, 'train_loss': 0.62011659} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 666.2735718116207, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.8036264378687263, 'n_threads': 4, 'kernel_std': 0.6102824699832776, 'l2_ratio': 0.0019360758780596439, 'lr': 0.0059286632395997045, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 15.0, 'train_error': 0.022697359323501587, 'val_loss': 0.28499639, 'train_loss': 0.28043121} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 839.4213362077236, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.7016440107579659, 'n_threads': 4, 'kernel_std': 0.18949347216059428, 'l2_ratio': 0.00015527943995113537, 'lr': 0.009967347532817038, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 10.0, 'train_error': 0.020723682641983033, 'val_loss': 0.144877, 'train_loss': 0.15995304} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 813.1705536303208, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.3098674231782106, 'n_threads': 4, 'kernel_std': 0.23729603302099192, 'l2_ratio': 0.001784017407117258, 'lr': 0.0014624195380103023, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0031250000000000002, 'epoch': 22.5, 'train_error': 0.028289467096328735, 'val_loss': 0.40737152, 'train_loss': 0.3935256} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 154.2323051635419, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.3564168912096506, 'n_threads': 4, 'kernel_std': 0.058767412673457246, 'l2_ratio': 0.007827923116275268, 'lr': 0.000667163897533138, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.059374999999999997, 'epoch': 102.5, 'train_error': 0.16381580233573914, 'val_loss': 0.5255245, 'train_loss': 0.5812065} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 400.4511315657655, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.8274455895484616, 'n_threads': 4, 'kernel_std': 0.5965272740047803, 'l2_ratio': 0.008988201158940896, 'lr': 0.00301745864133108, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 17.5, 'train_error': 0.020394730567932128, 'val_loss': 0.66115844, 'train_loss': 0.64108276} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 853.2439640538157, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.15671033418109473, 'n_threads': 4, 'kernel_std': 0.9729031020073704, 'l2_ratio': 0.00019272174249386213, 'lr': 0.0006286901910818759, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.043749999999999997, 'epoch': 47.5, 'train_error': 0.03453947305679321, 'val_loss': 0.40068927, 'train_loss': 0.3461743} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 303.33026991634677, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.2832787900010981, 'n_threads': 4, 'kernel_std': 0.8276586772147143, 'l2_ratio': 0.0012360571353988656, 'lr': 0.0017503305418917728, 'hidden_units': 256, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.015625, 'epoch': 25.0, 'train_error': 0.021052622795104982, 'val_loss': 0.46380845, 'train_loss': 0.41604894} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 951.9465887209676, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.6715159477749905, 'n_threads': 4, 'kernel_std': 0.506920805961652, 'l2_ratio': 0.0006322087447983336, 'lr': 0.00012007250423849873, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.046875, 'epoch': 170.0, 'train_error': 0.083881586790084839, 'val_loss': 0.52667129, 'train_loss': 0.50954711} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 632.9542441570518, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.32831290254277, 'n_threads': 4, 'kernel_std': 0.44670448887937186, 'l2_ratio': 0.00027440694256509866, 'lr': 0.0005842511603016582, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.034375000000000003, 'epoch': 75.0, 'train_error': 0.042434215545654297, 'val_loss': 0.43620557, 'train_loss': 0.38154417} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 723.433265358163, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.4136379744588221, 'n_threads': 4, 'kernel_std': 0.25606615553142414, 'l2_ratio': 0.0002310242277244742, 'lr': 0.0012384647770614105, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0, 'epoch': 22.5, 'train_error': 0.054605269432067872, 'val_loss': 0.34858429, 'train_loss': 0.37423462} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 536.4648967929589, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.3457919057369432, 'n_threads': 4, 'kernel_std': 0.7066422532475061, 'l2_ratio': 0.0005116502686272117, 'lr': 0.0007278001876456277, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.034375000000000003, 'epoch': 57.5, 'train_error': 0.030263155698776245, 'val_loss': 0.45348611, 'train_loss': 0.39199477} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 348.51260216370946, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 128, 'lr_decay': 0.9032029774786475, 'n_threads': 4, 'kernel_std': 0.10275259243330481, 'l2_ratio': 0.004891753663359873, 'lr': 0.0004449032729979128, 'hidden_units': 64, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.0093749999999999997, 'epoch': 162.5, 'train_error': 0.10065789222717285, 'val_loss': 0.34398007, 'train_loss': 0.42111722} 
+
+INFO:validation.tuning:Finished cross validaton on: {'layerwise_progress_thresh': 0.1, 'max_epochs': 10000, 'batch_size': 16, 'lr_decay_epochs': 411.68531405316304, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 64, 'lr_decay': 0.5467136842183293, 'n_threads': 4, 'kernel_std': 0.9519742181240629, 'l2_ratio': 0.00019887134521802654, 'lr': 0.004115327516244951, 'hidden_units': 128, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'kernel_mean': 0.0, 'memory_factor': 1} 
+
+INFO:validation.tuning:Results: {'val_error': 0.012500000000000001, 'epoch': 15.0, 'train_error': 0.012500000000000001, 'val_loss': 0.29201347, 'train_loss': 0.24693517} 
+
+INFO:validation.tuning:Using model {'layerwise_progress_thresh': 0.1, 'max_epochs': 12.5, 'network_fn': <function kernel_example_layout_fn at 0x7f8c26587f28>, 'lr_decay_epochs': 706.5200431689342, 'num_layers': 1, 'strip_length': 5, 'progress_thresh': 0.1, 'kernel_size': 32, 'lr_decay': 0.5653599439160601, 'n_threads': 4, 'kernel_std': 0.17092123423694533, 'l2_ratio': 0.0011407311717810456, 'lr': 0.0048260734794295206, 'hidden_units': 128, 'batch_size': 16, 'kernel_mean': 0.0, 'memory_factor': 1} for training with results {'val_error': 0.0, 'epoch': 12.5, 'train_error': 0.024671047925949097, 'val_loss': 0.20865235, 'train_loss': 0.23225757}
+INFO:validation.tuning:Running training [0] in monk/1519231690717
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [0] got results {'l2': 0.039945245, 'train_l2': 0.040029339, 'train_error': 0.038690447807312012, 'error': 0.022727251052856445, 'loss': 0.18506473, 'time(s)': 1.1967170238494873, 'train_loss': 0.21103776}
+INFO:validation.tuning:Running training [1] in monk/1519231692337
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [1] got results {'l2': 0.044896696, 'train_l2': 0.045078799, 'train_error': 0.026785731315612793, 'error': 0.022727251052856445, 'loss': 0.22930364, 'time(s)': 1.478055477142334, 'train_loss': 0.21142614}
+INFO:validation.tuning:Running training [2] in monk/1519231694158
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [2] got results {'l2': 0.040900305, 'train_l2': 0.040923979, 'train_error': 0.023809552192687988, 'error': 0.022727251052856445, 'loss': 0.22060418, 'time(s)': 1.3383264541625977, 'train_loss': 0.21011603}
+INFO:validation.tuning:Running training [3] in monk/1519231695844
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [3] got results {'l2': 0.040117238, 'train_l2': 0.040202916, 'train_error': 0.029761910438537598, 'error': 0.022727251052856445, 'loss': 0.20441419, 'time(s)': 1.2472574710845947, 'train_loss': 0.21157862}
+INFO:validation.tuning:Running training [4] in monk/1519231697443
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [4] got results {'l2': 0.04319486, 'train_l2': 0.043018475, 'train_error': 0.020833313465118408, 'error': 0.022727251052856445, 'loss': 0.16636156, 'time(s)': 1.1088371276855469, 'train_loss': 0.18594797}
+INFO:validation.tuning:Running training [5] in monk/1519231698874
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [5] got results {'l2': 0.043688487, 'train_l2': 0.043593507, 'train_error': 0.044642865657806396, 'error': 0.022727251052856445, 'loss': 0.19259487, 'time(s)': 1.2968158721923828, 'train_loss': 0.22167324}
+INFO:validation.tuning:Running training [6] in monk/1519231700495
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [6] got results {'l2': 0.041252561, 'train_l2': 0.041375279, 'train_error': 0.032738089561462402, 'error': 0.0, 'loss': 0.19596888, 'time(s)': 1.3163466453552246, 'train_loss': 0.20029476}
+INFO:validation.tuning:Running training [7] in monk/1519231702172
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [7] got results {'l2': 0.043182369, 'train_l2': 0.043343455, 'train_error': 0.023809552192687988, 'error': 0.0, 'loss': 0.17238317, 'time(s)': 1.3643379211425781, 'train_loss': 0.1919765}
+INFO:validation.tuning:Running training [8] in monk/1519231703909
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [8] got results {'l2': 0.045625065, 'train_l2': 0.045718674, 'train_error': 0.023809552192687988, 'error': 0.022727251052856445, 'loss': 0.19631438, 'time(s)': 1.3214120864868164, 'train_loss': 0.18690006}
+INFO:validation.tuning:Running training [9] in monk/1519231705601
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [9] got results {'l2': 0.043398049, 'train_l2': 0.043341689, 'train_error': 0.050595223903656006, 'error': 0.0, 'loss': 0.20962459, 'time(s)': 1.1573078632354736, 'train_loss': 0.22992493}
+INFO:__main__:l2: 0.042620 +- 0.001867
+INFO:__main__:train_l2: 0.042663 +- 0.001864
+INFO:__main__:train_error: 0.031548 +- 0.009524
+INFO:__main__:error: 0.015909 +- 0.010415
+INFO:__main__:loss: 0.197263 +- 0.018768
+INFO:__main__:time(s): 1.282541 +- 0.102642
+INFO:__main__:train_loss: 0.206088 +- 0.013845
