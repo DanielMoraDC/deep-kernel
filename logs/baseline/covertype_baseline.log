@@ -7,3 +7,43 @@ INFO:validation.tuning:Finished evaluation on {'lr_decay': 0.6496323454646379, '
 INFO:validation.tuning:Obtained results {'train_error': 0.082040786743164062, 'train_loss': 0.24932048, 'epoch': 420, 'val_error': 0.085678517818450928, 'val_loss': 0.25709322}
 INFO:validation.tuning:Finished evaluation on {'lr_decay': 0.48685317540963247, 'network_fn': <function kernel_example_layout_fn at 0x7f41adc46f28>, 'kernel_std': 0.5025449829110034, 'progress_thresh': 0.1, 'batch_size': 256, 'layerwise_progress_thresh': 0.1, 'lr_decay_epochs': 312.2959668353942, 'n_threads': 4, 'kernel_mean': 0.0, 'kernel_size': 1024, 'num_layers': 1, 'strip_length': 5, 'memory_factor': 2, 'l2_ratio': 7.229297057896116e-05, 'max_epochs': 10000, 'lr': 0.0005843888525382262, 'hidden_units': 2048}
 INFO:validation.tuning:Obtained results {'train_error': 0.11284375190734863, 'train_loss': 0.49169603, 'epoch': 60, 'val_error': 0.11608684062957764, 'val_loss': 0.50725484}
+INFO:validation.tuning:Finished evaluation on {'lr_decay': 0.34157106373194407, 'network_fn': <function kernel_example_layout_fn at 0x7f41adc46f28>, 'kernel_std': 0.33996157894302487, 'progress_thresh': 0.1, 'batch_size': 128, 'layerwise_progress_thresh': 0.1, 'lr_decay_epochs': 258.2989151716961, 'n_threads': 4, 'kernel_mean': 0.0, 'kernel_size': 512, 'num_layers': 1, 'strip_length': 5, 'memory_factor': 2, 'l2_ratio': 3.087118778877532e-05, 'max_epochs': 10000, 'lr': 0.0001174865974960896, 'hidden_units': 1024}
+INFO:validation.tuning:Obtained results {'train_error': 0.055811107158660889, 'train_loss': 0.22801679, 'epoch': 545, 'val_error': 0.06557762622833252, 'val_loss': 0.24843448}
+INFO:validation.tuning:Using model {'progress_thresh': 0.1, 'kernel_mean': 0.0, 'n_threads': 4, 'strip_length': 5, 'memory_factor': 2, 'l2_ratio': 3.087118778877532e-05, 'lr': 0.0001174865974960896, 'hidden_units': 1024, 'lr_decay': 0.34157106373194407, 'layerwise_progress_thresh': 0.1, 'lr_decay_epochs': 258.2989151716961, 'kernel_size': 512, 'kernel_std': 0.33996157894302487, 'num_layers': 1, 'network_fn': <function kernel_example_layout_fn at 0x7f41adc46f28>, 'max_epochs': 545, 'batch_size': 128} for training with results {'train_error': 0.055811107158660889, 'train_loss': 0.22801679, 'epoch': 545, 'val_error': 0.06557762622833252, 'val_loss': 0.24843448}
+INFO:validation.tuning:Running training [0] in cover/1519332362167
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [0] got results {'train_error': 0.056070983409881592, 'l2': 0.063096277, 'train_loss': 0.2273398, 'time(s)': 7467.739664316177, 'train_l2': 0.063092656, 'loss': 0.2443123, 'error': 0.065350592136383057}
+INFO:validation.tuning:Running training [1] in cover/1519341121696
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [1] got results {'train_error': 0.055053293704986572, 'l2': 0.063376844, 'train_loss': 0.22587322, 'time(s)': 7729.091333866119, 'train_l2': 0.063373789, 'loss': 0.24171092, 'error': 0.063491761684417725}
+INFO:validation.tuning:Running training [2] in cover/1519350142055
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [2] got results {'train_error': 0.05516517162322998, 'l2': 0.063416772, 'train_loss': 0.2264448, 'time(s)': 7494.591478347778, 'train_l2': 0.063416444, 'loss': 0.24280554, 'error': 0.06426626443862915}
+INFO:validation.tuning:Running training [3] in cover/1519358928575
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [3] got results {'train_error': 0.05606454610824585, 'l2': 0.063208394, 'train_loss': 0.22723138, 'time(s)': 7274.707100391388, 'train_l2': 0.063206583, 'loss': 0.24427225, 'error': 0.065471053123474121}
+INFO:validation.tuning:Running training [4] in cover/1519367496300
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [4] got results {'train_error': 0.056630432605743408, 'l2': 0.062997945, 'train_loss': 0.22929044, 'time(s)': 7515.685000896454, 'train_l2': 0.062996313, 'loss': 0.24571571, 'error': 0.065608739852905273}
+INFO:validation.tuning:Running training [5] in cover/1519376306067
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [5] got results {'train_error': 0.055929005146026611, 'l2': 0.063249059, 'train_loss': 0.22773831, 'time(s)': 7623.816307544708, 'train_l2': 0.063247718, 'loss': 0.2432577, 'error': 0.063956499099731445}
+INFO:validation.tuning:Running training [6] in cover/1519385223136
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [6] got results {'train_error': 0.056494832038879395, 'l2': 0.063391499, 'train_loss': 0.22924854, 'time(s)': 7690.971936225891, 'train_l2': 0.06339293, 'loss': 0.24606635, 'error': 0.064903080463409424}
+INFO:validation.tuning:Running training [7] in cover/1519394207972
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [7] got results {'train_error': 0.055543839931488037, 'l2': 0.063040011, 'train_loss': 0.22683713, 'time(s)': 8709.807828187943, 'train_l2': 0.063038804, 'loss': 0.24685246, 'error': 0.064713776111602783}
+INFO:validation.tuning:Running training [8] in cover/1519404257764
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [8] got results {'train_error': 0.055795550346374512, 'l2': 0.063221209, 'train_loss': 0.22749038, 'time(s)': 8974.738857507706, 'train_l2': 0.063217983, 'loss': 0.24539055, 'error': 0.065212905406951904}
+INFO:validation.tuning:Running training [9] in cover/1519414545449
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [9] got results {'train_error': 0.056185007095336914, 'l2': 0.063196532, 'train_loss': 0.22880411, 'time(s)': 7784.2245280742645, 'train_l2': 0.063193873, 'loss': 0.24307516, 'error': 0.064971923828125}
+INFO:__main__:train_error: 0.055893 +- 0.000492
+INFO:__main__:l2: 0.063219 +- 0.000138
+INFO:__main__:train_loss: 0.227630 +- 0.001102
+INFO:__main__:time(s): 7826.537404 +- 530.034243
+INFO:__main__:train_l2: 0.063218 +- 0.000139
+INFO:__main__:loss: 0.244346 +- 0.001560
+INFO:__main__:error: 0.064795 +- 0.000658
