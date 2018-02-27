@@ -8,7 +8,7 @@ from validation.tuning import tune_model
 from training.policy import CyclicPolicy, InverseCyclingPolicy, RandomPolicy
 from layout import kernel_example_layout_fn
 
-CV_TRIALS = 5
+CV_TRIALS = 50
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
@@ -30,20 +30,23 @@ if __name__ == '__main__':
         'hidden_units': 2 ** (6 + hp.randint('hidden_units_log2', 3)),
         'lr_decay': hp.uniform('lr_decay', 0.1, 1.0),
         'lr_decay_epochs': hp.uniform('lr_decay_epochs', 100, 1000),
-        # Comment next lines for non-layerwise training
-        'policy': hp.choice('policy', [
-            {
-                'switch_policy': CyclicPolicy
-            },
-            {
-                'switch_policy': InverseCyclingPolicy
-            },
-            {
-                'switch_policy': RandomPolicy,
-                'policy_seed': hp.randint('seed', 10000)
-            }
-        ])
     }
+
+    '''
+    # Comment next lines for non-layerwise training
+    'policy': hp.choice('policy', [
+        {
+            'switch_policy': CyclicPolicy
+        },
+        {
+            'switch_policy': InverseCyclingPolicy
+        },
+        {
+            'switch_policy': RandomPolicy,
+            'policy_seed': hp.randint('seed', 10000)
+        }
+    ])
+    '''
 
     # Fixed parameters
     search_space.update({

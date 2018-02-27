@@ -12,13 +12,17 @@ CV_TRIALS = 5
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename='covertype_baseline.log',
+    level=logging.INFO
+)
 
 
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': 2 ** (7 + hp.uniform('batch_size_log2', 2)),
+        'batch_size': 2 ** (7 + hp.randint('batch_size_log2', 2)),
         'l2_ratio': 10 ** hp.uniform('l2_log10', -5, -3),
         'lr': 10 ** hp.uniform('lr_log10', -5, -3),
         'kernel_size': 2 ** (8 + hp.randint('kernel_size_log2', 3)),
@@ -26,20 +30,23 @@ if __name__ == '__main__':
         'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),
         'lr_decay': hp.uniform('lr_decay', 0.1, 1.0),
         'lr_decay_epochs': hp.uniform('lr_decay_epochs', 100, 1000),
-        # Comment next lines for non-layerwise training
-        'policy': hp.choice('policy', [
-            {
-                'switch_policy': CyclicPolicy
-            },
-            {
-                'switch_policy': InverseCyclingPolicy
-            },
-            {
-                'switch_policy': RandomPolicy,
-                'policy_seed': hp.randint('seed', 10000)
-            }
-        ])
     }
+
+    '''
+    # Comment next lines for non-layerwise training
+    'policy': hp.choice('policy', [
+        {
+            'switch_policy': CyclicPolicy
+        },
+        {
+            'switch_policy': InverseCyclingPolicy
+        },
+        {
+            'switch_policy': RandomPolicy,
+            'policy_seed': hp.randint('seed', 10000)
+        }
+    ])
+    '''
 
     # Fixed parameters
     search_space.update({
@@ -63,10 +70,10 @@ if __name__ == '__main__':
         layerwise=False,
         folder='cover',
         runs=SIM_RUNS,
-        test_batch_size=1
+        test_batch_size=1,
     )
 
     metrics = stats[0].keys()
     for m in metrics:
         values = [x[m] for x in stats]
-        print('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
+        logger.info('%s: %f +- %f' % (m, np.mean(values), np.std(values)))
