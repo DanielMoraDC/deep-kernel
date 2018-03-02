@@ -71,7 +71,7 @@ def _map_classes_to_output(outputs):
         raise ValueError('Number of outputs must be at least 2')
 
 
-def kernel_block(x, idx, tag, is_training, **params):
+def kernel_block(x, idx, tag, is_training, batch_norm=False, **params):
 
     hidden_units = params.get('hidden_units')
     kernel_size = params.get('kernel_size')
@@ -86,6 +86,18 @@ def kernel_block(x, idx, tag, is_training, **params):
         is_training=is_training,
         activation_fn=None
     )
+
+    if batch_norm:
+        # Update ops for moving average are automatically
+        # placed in tf.GraphKeys.UPDATE_OPS
+        hidden = tf.contrib.layers.batch_norm(
+            hidden,
+            center=True,
+            scale=True,
+            is_training=is_training,
+            variables_collections=[BATCH_NORM_COLLECTION],
+            scope=LAYER_NAME.format(layer_id=idx, layer_type='bn')
+        )
 
     kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
