@@ -26,7 +26,7 @@ if __name__ == '__main__':
     search_space = {
         'batch_size': 2 ** (7 + hp.uniform('batch_size_log2', 2)),
         'l2_ratio': 10 ** hp.uniform('l2_log10', -5, -3),
-        'lr': 10 ** hp.uniform('l2_log10', -5, -3),
+        'lr': 10 ** hp.uniform('lr_log10', -5, -3),
         'kernel_size': 2 ** (8 + hp.randint('kernel_size_log2', 3)),
         'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
         'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),

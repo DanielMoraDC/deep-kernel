@@ -23,12 +23,12 @@ logging.basicConfig(
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': hp.choice('batch_size', [16]),
-        'l2_ratio': hp.choice('l2_ratio', [0, 1e-1, 1e-2, 1e-3]),
-        'lr': hp.choice('lr', [1e-1, 1e-2, 1e-3]),
-        'kernel_size': hp.choice('kernel_size', [32, 64, 128]),
-        'kernel_std': hp.choice('kernel_std', [1e-2, 0.1, 0.25, 0.5, 1.0]),
-        'hidden_units': hp.choice('hidden_units', [64, 128, 256]),
+        'batch_size': 2 ** hp.choice('batch_size_log2', [4]),
+        'l2_ratio': 10 ** hp.uniform('l2_log10', -3, -0.1),
+        'lr': 10 ** hp.uniform('lr_log10', -3, -1),
+        'kernel_size': 2 ** (5 + hp.randint('kernel_size_log2', 3)),
+        'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
+        'hidden_units': 2 ** (6 + hp.randint('hidden_units_log2', 3)),
         'epochs_per_layer': 25 + hp.randint('epochs_per_layer', 25),
         'lr_decay': hp.uniform('lr_decay', 0.1, 1.0),
         'lr_decay_epochs': hp.uniform('lr_decay_epochs', 100, 1000),
