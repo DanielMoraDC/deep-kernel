@@ -35,7 +35,7 @@ def _fully_connected(x,
     return fc_layer
 
 
-def fc_block(x, idx, tag, is_training, batch_norm=True, **params):
+def fc_block(x, idx, tag, is_training, batch_norm=False, **params):
     hidden_units = params.get('hidden_units')
     hidden = _fully_connected(
         x=x,
@@ -90,7 +90,6 @@ def kernel_block(x, idx, tag, is_training, batch_norm=False, **params):
     if batch_norm:
         # Update ops for moving average are automatically
         # placed in tf.GraphKeys.UPDATE_OPS
-        print('ENTRO')
         hidden = tf.contrib.layers.batch_norm(
             hidden,
             center=True,
