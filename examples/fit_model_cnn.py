@@ -52,6 +52,7 @@ if __name__ == '__main__':
         'kernel_mean': 0.0,
         'kernel_std': 0.50,
         'strip_length': 2,
+        'batch_norm': True,
         'kernel_dropout_rate': None,
         'batch_size': 128,
         'num_layers': 3,

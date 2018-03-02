@@ -5,7 +5,7 @@ import logging
 from protodata import datasets
 
 from validation.tuning import tune_model
-from training.policy import CyclicPolicy
+from training.policy import CyclicPolicy, InverseCyclingPolicy, RandomPolicy
 
 CV_TRIALS = 25
 SIM_RUNS = 10
@@ -30,22 +30,34 @@ if __name__ == '__main__':
         'kernel_size': 2 ** (5 + hp.randint('kernel_size_log2', 3)),
         'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
         'hidden_units': 2 ** (6 + hp.randint('hidden_units_log2', 3)),
-        'epochs_per_layer': 25 + hp.randint('epochs_per_layer', 25)
+        'epochs_per_layer': 25 + hp.randint('epochs_per_layer', 25),
+        'lr_decay': hp.uniform('lr_decay', 0.1, 1.0),
+        'lr_decay_epochs': hp.uniform('lr_decay_epochs', 100, 1000),
+        # Comment next lines for non-layerwise training
+        'policy': hp.choice('policy', [
+            {
+                'switch_policy': CyclicPolicy
+            },
+            {
+                'switch_policy': InverseCyclingPolicy
+            },
+            {
+                'switch_policy': RandomPolicy,
+                'policy_seed': hp.randint('seed', 10000)
+            }
+        ])
     }
 
     # Fixed parameters
     search_space.update({
         'num_layers': n_layers,
-        'lr_decay': 0.5,
-        'lr_decay_epocs': 250,
         'n_threads': 4,
         'strip_length': 5,
         'memory_factor': 1,
+        'batch_norm': False,
         'max_epochs': MAX_EPOCHS,
         'progress_thresh': 0.1,
         'kernel_mean': 0.0,
-        'switch_policy': CyclicPolicy,
-        'policy_seed': np.random.randint(1, 1000)
     })
 
     stats = tune_model(

@@ -42,6 +42,7 @@ if __name__ == '__main__':
         'batch_size': 128,
         'num_layers': 5,
         'max_epochs': 250,
+        'batch_norm': True,
         'epochs_per_layer': 10,
         'switch_policy': CyclicPolicy,
         'network_fn': kernel_example_layout_fn
