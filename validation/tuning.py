@@ -48,6 +48,10 @@ def tune_model(dataset,
         del params['max_epochs']
     params['max_epochs'] = stats['epoch']
 
+    # Prepare policy properly
+    params.update(params['policy'])
+    del params['policy']
+
     logger.info('Using model {} for training with results {}'
                 .format(params, stats))
 
@@ -130,6 +134,9 @@ def _simple_evaluate(dataset, settings_fn, **params):
     n_folds = settings_fn(data_location).get_fold_num()
     validation_fold = np.random.randint(n_folds)
 
+    params.update(params['policy'])
+    del params['policy']
+
     model = DeepNetworkValidation(
          settings_fn,
          data_location,
@@ -164,6 +171,9 @@ def _cross_validate(dataset, settings_fn, **params):
     results = []
 
     logger.debug('Starting evaluation on {} ...'.format(params))
+
+    params.update(params['policy'])
+    del params['policy']
 
     model = DeepNetworkValidation(
          settings_fn,
