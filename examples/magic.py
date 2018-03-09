@@ -12,7 +12,7 @@ CV_TRIALS = 25
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
-n_layers = 2
+n_layers = 4
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     search_space = {
         'batch_size': 2 ** hp.choice('batch_size_log2', [7]),
         'l2_ratio': 10 ** hp.uniform('l2_log10', -4, 0),
-        'lr': 10 ** hp.uniform('l2_log10', -4, -2),
+        'lr': 10 ** hp.uniform('lr_log10', -4, -2),
         'kernel_size': 2 ** (6 + hp.randint('kernel_size_log2', 4)),
         'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
         'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),
@@ -55,9 +55,9 @@ if __name__ == '__main__':
         folder='magic',
         runs=SIM_RUNS,
         test_batch_size=1,
-        fine_tune=FineTuningType.ExtraLayerwise(
-            epochs_per_layer=20, policy=CyclicPolicy
-        )
+        #fine_tune=FineTuningType.ExtraLayerwise(
+        #    epochs_per_layer=20, policy=CyclicPolicy
+        #)
     )
 
     metrics = stats[0].keys()
