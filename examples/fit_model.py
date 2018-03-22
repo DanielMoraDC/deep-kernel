@@ -12,6 +12,8 @@ from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
 from training.policy import CyclicPolicy, InverseCyclingPolicy
 
+from validation.tuning import _run_setting
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -25,24 +27,24 @@ if __name__ == '__main__':
 
     mode = int(sys.argv[1])
     # folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb01/walle/aus'
-    folder = 'test_aux'
+    folder = 'incremental_4l'
 
     params = {
-        'l2_ratio': 1e-2,
-        'lr': 1e-3,
-        'lr_decay': 0.5,
-        'lr_decay_epocs': 500,
+        'l2_ratio': 0.00342859,
+        'lr': 0.000932367,
+        'lr_decay': 0.322196,
+        'lr_decay_epochs': 500,
         'memory_factor': 2,
-        'hidden_units': 256,
+        'hidden_units': 2048,
         'n_threads': 4,
-        'kernel_size': 128,
+        'kernel_size': 512,
         'kernel_mean': 0.0,
-        'kernel_std': 0.50,
+        'kernel_std': 0.81609644,
         'strip_length': 5,
         'batch_size': 128,
         'num_layers': 3,
-        'max_epochs': 250,
-        'network_fn': example_layout_fn
+        'train_epochs': [525, 790, 2185],
+        'network_fn': kernel_example_layout_fn
     }
 
     settings = datasets.MotorSettings
@@ -62,7 +64,6 @@ if __name__ == '__main__':
         )
 
         m.fit(
-            switch_epochs=[20, 40, 60],
             **params
         )
 
@@ -81,6 +82,8 @@ if __name__ == '__main__':
         m.fit(train_folds=range(9), val_folds=[9], layerwise=False, **params)
 
     elif mode == 2:
+        
+        logger.info('Running prediction ...')
 
         m = DeepNetworkValidation(
             folder=folder,
@@ -93,6 +96,20 @@ if __name__ == '__main__':
         )
 
         logger.info('Got results {} for prediction'.format(res))
+
+    elif mode == 3:
+        
+        logger.info('Running incremental training...')
+
+        _run_setting(
+                dataset,
+                settings,
+                params,
+                folder='incremental_motor_4l',
+                n_runs=1,
+                test_batch_size=128,
+                fine_tune=None
+        )
 
     else:
 
