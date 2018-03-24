@@ -3,7 +3,8 @@ import logging
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
-from training.run_ops import run_training_epoch, build_run_context
+from training.run_ops import run_training_epoch, build_run_context, \
+                             image_spec_from_params
 from training.predict import predict_fn
 
 from ops import get_global_step, save_model, init_kernel_ops
@@ -48,7 +49,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
             dataset = self._settings_fn(
                 dataset_location=self._data_location,
-                image_specs=params.get('image_specs', None)
+                image_specs=image_spec_from_params(**params)
             )
             reader = DataReader(dataset)
 
