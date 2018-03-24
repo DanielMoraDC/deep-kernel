@@ -101,7 +101,7 @@ def cnn_block(x, idx, is_training, **params):
         x,
         activation_fn=None,
         num_outputs=params.get('map_size'),
-        kernel_size=params.get('cnn_kernel_size'),
+        kernel_size=params.get('cnn_filter_size'),
         variables_collections=[tf.GraphKeys.WEIGHTS],
         stride=params.get('stride', 2),
         padding=params.get('padding', 'VALID'),
@@ -144,9 +144,9 @@ def cnn_block(x, idx, is_training, **params):
 
 def cnn_kernel_block(x, idx, tag, is_training, **params):
 
+    cnn_filter_size = params.get('cnn_filter_size')
     cnn_kernel_size = params.get('cnn_kernel_size')
     map_size = params.get('map_size')
-    kernel_size = params.get('kernel_size')
     kernel_mean = params.get('kernel_mean')
     kernel_std = params.get('kernel_std')
 
@@ -154,7 +154,7 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
         x,
         activation_fn=None,
         num_outputs=map_size,
-        kernel_size=cnn_kernel_size,
+        kernel_size=cnn_filter_size,
         stride=params.get('stride', 2),
         padding=params.get('padding', 'VALID'),
         variables_collections=[tf.GraphKeys.WEIGHTS],
@@ -168,7 +168,7 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
         input_dims=map_size,
         kernel_mean=kernel_mean,
         kernel_std=kernel_std,
-        kernel_size=kernel_size,
+        kernel_size=cnn_kernel_size,
     )
 
     hidden = kernel.apply_kernel(hidden, tag)

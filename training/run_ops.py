@@ -9,6 +9,7 @@ from ops import get_model_weights, loss_ops_list, get_accuracy_op, \
                 train_ops_list, get_l2_ops_list, get_kernel_assign_ops_list
 
 from protodata.data_ops import DataMode
+from protodata.image_ops import DataSpec
 
 logger = logging.getLogger(__name__)
 
@@ -287,3 +288,12 @@ def build_run_context(dataset,
         step_op=step_op,
         kernel_assign_ops=kernel_assign_ops
     )
+
+
+def image_spec_from_params(**params):
+    if 'image_specs' not in params:
+        return None
+    else:
+        img_specs = params['image_specs']
+        img_specs.update({'batch_size': params['batch_size']})
+        return DataSpec(**img_specs)
