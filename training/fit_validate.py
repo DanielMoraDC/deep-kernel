@@ -5,7 +5,8 @@ import numpy as np
 
 from sklearn.base import BaseEstimator, ClassifierMixin
 
-from training.run_ops import eval_epoch, run_training_epoch, build_run_context
+from training.run_ops import eval_epoch, run_training_epoch, build_run_context, \
+                             image_spec_from_params
 from training.predict import predict_fn
 from validation.early_stop import EarlyStop
 
@@ -149,7 +150,7 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
             dataset = self._settings_fn(
                 dataset_location=self._data_location,
-                image_specs=params.get('image_specs', None)
+                image_specs=image_spec_from_params(**params)
             )
             reader = DataReader(dataset)
 
