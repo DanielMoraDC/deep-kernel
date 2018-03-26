@@ -22,6 +22,7 @@ logging.getLogger().addHandler(logging.FileHandler('file.log'))
 
 logger = logging.getLogger(__name__)
 
+BATCH_SIZE = 64
 
 if __name__ == '__main__':
 
@@ -29,35 +30,36 @@ if __name__ == '__main__':
     # folder = '/media/walle/815d08cd-6bee-4a13-b6fd-87ebc1de2bb01/walle/aus'
     folder = 'test_aux'
 
-    image_specs = DataSpec(
-        batch_size=128,
-        scale_size=28,
-        crop_size=28,
-        isotropic=False,
-        mean=[0.0, 0.0, 0.0],
-        random_crop=False
-    )
-
     params = {
-        'l2_ratio': 0,
-        'lr': 1e-3,
+        'image_specs': {
+            'batch_size': BATCH_SIZE,
+            'crop_size': 28,
+            'scale_size': 28,
+            'isotropic': False,
+            'mean': [0.0, 0.0, 0.0],
+            'random_crop': False
+        },
+        'l2_ratio': 1e-4,
+        'lr': 1e-5,
         'lr_decay': 0.5,
         'lr_decay_epochs': 500,
         'memory_factor': 2,
-        'hidden_units': 512,
+        'hidden_units': 256,
         'n_threads': 4,
         'map_size': 64,
         'cnn_filter_size': 3,
         'cnn_kernel_size': 64,
-        'kernel_size': 1024,
-        'kernel_std': 0.50,
+        'kernel_size': 256,
+        'kernel_std': 0.20,
         'strip_length': 2,
+        'batch_norm': True,
+        'cnn_batch_norm': False,
         'kernel_dropout_rate': None,
-        'batch_size': 128,
+        'batch_size': BATCH_SIZE,
         'num_layers': 3,
         'max_epochs': 250,
-        'switch_policy': CyclicPolicy,
-        'network_fn': cnn_kernel_example_layout_fn,
+        'switch_policy': {'policy': CyclicPolicy},
+        'network_fn': cnn_example_layout_fn,
     }
 
     settings = datasets.FashionMnistSettings
