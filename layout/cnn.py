@@ -147,7 +147,6 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
     cnn_filter_size = params.get('cnn_filter_size')
     cnn_kernel_size = params.get('cnn_kernel_size')
     map_size = params.get('map_size')
-    kernel_mean = params.get('kernel_mean')
     kernel_std = params.get('kernel_std')
 
     hidden = tf.contrib.layers.conv2d(
@@ -166,10 +165,28 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
     kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=map_size,
-        kernel_mean=kernel_mean,
         kernel_std=kernel_std,
         kernel_size=cnn_kernel_size,
     )
+
+    if params.get('cnn_batch_norm', False):
+
+        # Update ops for moving average are automatically
+        # placed in tf.GraphKeys.UPDATE_OPS
+        hidden = tf.contrib.layers.batch_norm(
+            hidden,
+            center=True,
+            scale=True,
+            is_training=is_training,
+            variables_collections=[BATCH_NORM_COLLECTION],
+            scope=LAYER_NAME.format(
+                layer_type='conv_batch_norm', layer_id=str(idx)
+            )
+        )
+
+        tf.summary.histogram(
+            '_'.join(['batched_conv_', str(idx)]), hidden
+        )
 
     hidden = kernel.apply_kernel(hidden, tag)
 
