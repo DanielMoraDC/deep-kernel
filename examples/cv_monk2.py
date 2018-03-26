@@ -56,8 +56,7 @@ if __name__ == '__main__':
         'memory_factor': 1,
         'batch_norm': False,
         'max_epochs': MAX_EPOCHS,
-        'progress_thresh': 0.1,
-        'kernel_mean': 0.0,
+        'progress_thresh': 0.1
     })
 
     stats = tune_model(

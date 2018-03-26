@@ -1,7 +1,6 @@
 
 from protodata import datasets
 from protodata.utils import get_data_location
-from protodata.image_ops import DataSpec
 
 import sys
 import shutil
@@ -12,7 +11,7 @@ from layout import cnn_kernel_example_layout_fn, cnn_example_layout_fn
 
 from training.fit_validate import DeepNetworkValidation
 from training.fit import DeepNetworkTraining
-from training.policy import CyclicPolicy, InverseCyclingPolicy
+from training.policy import CyclicPolicy
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -21,6 +20,8 @@ logging.basicConfig(
 logging.getLogger().addHandler(logging.FileHandler('file.log'))
 
 logger = logging.getLogger(__name__)
+
+BATCH_SIZE = 32
 
 
 if __name__ == '__main__':
@@ -31,34 +32,36 @@ if __name__ == '__main__':
 
     params = {
         'image_specs': {
-            'batch_size': 128,
+            'batch_size': BATCH_SIZE,
             'crop_size': 28,
             'scale_size': 28,
             'isotropic': False,
             'mean': [0.0, 0.0, 0.0],
             'random_crop': False
         },
-        'l2_ratio': 0,
-        'lr': 1e-3,
+        'l2_ratio': 1e-3,
+        'lr': 1e-5,
         'lr_decay': 0.5,
-        'lr_decay_epochs': 500,
+        'lr_decay_epochs': 50,
         'memory_factor': 2,
         'hidden_units': 512,
         'n_threads': 4,
-        'map_size': 64,
-        'cnn_filter_size': 3,
-        'cnn_kernel_size': 64,
-        'kernel_size': 1024,
-        'kernel_mean': 0.0,
-        'kernel_std': 0.50,
+        'map_size': 256,
+        'cnn_filter_size': 5,
+        'cnn_kernel_size': 256,
+        'kernel_size': 512,
+        'kernel_std': 0.1,
         'strip_length': 2,
+        'cnn_batch_norm': False,
         'batch_norm': True,
+        'padding': 'VALID',
         'kernel_dropout_rate': None,
-        'batch_size': 128,
-        'num_layers': 3,
-        'epochs_per_layer': 2,
+        'batch_size': BATCH_SIZE,
+        'num_layers': 2,
+        'epochs_per_layer': 5,
         'max_epochs': 250,
         'switch_policy': CyclicPolicy,
+        'max_successive_strips': 3,
         'network_fn': cnn_kernel_example_layout_fn,
     }
 
@@ -78,10 +81,7 @@ if __name__ == '__main__':
             data_location=get_data_location(dataset, folded=True)
         )
 
-        m.fit(
-            switch_epochs=[20, 40, 60],
-            **params
-        )
+        m.fit(**params)
 
     elif mode == 1:
 

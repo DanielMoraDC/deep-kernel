@@ -36,7 +36,6 @@ if __name__ == '__main__':
         'hidden_units': 256,
         'n_threads': 4,
         'kernel_size': 128,
-        'kernel_mean': 0.0,
         'kernel_std': 0.25,
         'strip_length': 5,
         'batch_size': 128,

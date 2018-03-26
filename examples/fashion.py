@@ -9,7 +9,7 @@ from validation.tuning import tune_model
 from training.policy import CyclicPolicy
 from layout import cnn_kernel_example_layout_fn
 
-CV_TRIALS = 5
+CV_TRIALS = 10
 SIM_RUNS = 10
 MAX_EPOCHS = 10000
 
@@ -18,7 +18,7 @@ n_layers = 3
 logger = logging.getLogger(__name__)
 logging.basicConfig(
     filename='mnist_%dl' % n_layers,
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
 )
 
@@ -27,12 +27,12 @@ if __name__ == '__main__':
     search_space = {
         # CNN params
         'cnn_filter_size': hp.choice('cnn_filter_size', [3, 5, 7]),
-        'map_size': 2 ** hp.choice('map_size', [7, 9]),
-        'stride': hp.choice('stride', [1, 2]),
+        'map_size': 2 ** hp.choice('map_size', [5, 7, 9]),
+        'stride': 1,
         # CNN kernel params
-        'cnn_kernel_size': 2 ** (6 + hp.randint('cnn_kernel_size_log2', 3)),
+        'cnn_kernel_size': 2 ** (5 + hp.randint('cnn_kernel_size_log2', 3)),
         # Shared kernel params
-        'kernel_size': 2 ** (9 + hp.randint('kernel_size_log2', 3)),
+        'kernel_size': 2 ** (5 + hp.randint('kernel_size_log2', 3)),
         'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
         'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),
         # Training params
@@ -59,13 +59,11 @@ if __name__ == '__main__':
         'batch_norm': True,
         'padding': 'VALID',
         'num_layers': n_layers,  # These are cnn layers here
-        'layerwise_progress_thresh': 0.1,
+        'progress_thresh': 0.1,
         'n_threads': 4,
         'memory_factor': 2,
         'max_epochs': MAX_EPOCHS,
         'strip_length': 5,
-        'progress_thresh': 0.1,
-        'kernel_mean': 0.0,
         'network_fn': cnn_kernel_example_layout_fn,
         'policy': {'switch_policy': CyclicPolicy},
         'fc_layers': 2

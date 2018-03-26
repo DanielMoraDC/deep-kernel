@@ -56,7 +56,6 @@ if __name__ == '__main__':
         'batch_norm': False,
         'max_epochs': MAX_EPOCHS,
         'progress_thresh': 0.1,
-        'kernel_mean': 0.0,
     })
 
     stats = tune_model(
