@@ -147,7 +147,6 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
     cnn_filter_size = params.get('cnn_filter_size')
     cnn_kernel_size = params.get('cnn_kernel_size')
     map_size = params.get('map_size')
-    kernel_mean = params.get('kernel_mean')
     kernel_std = params.get('kernel_std')
 
     hidden = tf.contrib.layers.conv2d(
@@ -166,7 +165,6 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
     kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=map_size,
-        kernel_mean=kernel_mean,
         kernel_std=kernel_std,
         kernel_size=cnn_kernel_size,
     )

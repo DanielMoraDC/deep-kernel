@@ -75,7 +75,6 @@ def kernel_block(x, idx, tag, is_training, batch_norm=False, **params):
 
     hidden_units = params.get('hidden_units')
     kernel_size = params.get('kernel_size')
-    kernel_mean = params.get('kernel_mean')
     kernel_std = params.get('kernel_std')
 
     hidden = _fully_connected(
@@ -102,7 +101,6 @@ def kernel_block(x, idx, tag, is_training, batch_norm=False, **params):
     kernel = GaussianRFF(
         name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
         input_dims=hidden_units,
-        kernel_mean=kernel_mean,
         kernel_std=kernel_std,
         kernel_size=kernel_size,
     )
