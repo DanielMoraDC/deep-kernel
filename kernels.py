@@ -85,7 +85,6 @@ class GaussianRFF(RandomFourierFeatures):
 
     def draw_w(self):
         return tf.random_normal(
-            mean=self._mean,
             stddev=self._std,
             shape=[self._kernel_size, self._input_dims]
         )
