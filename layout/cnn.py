@@ -171,6 +171,21 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
         kernel_size=cnn_kernel_size,
     )
 
+    if params.get('cnn_batch_norm', False):
+
+        # Update ops for moving average are automatically
+        # placed in tf.GraphKeys.UPDATE_OPS
+        hidden = tf.contrib.layers.batch_norm(
+            hidden,
+            center=True,
+            scale=True,
+            is_training=is_training,
+            variables_collections=[BATCH_NORM_COLLECTION],
+            scope=LAYER_NAME.format(
+                layer_type='conv_batch_norm', layer_id=str(idx)
+            )
+        )
+
     hidden = kernel.apply_kernel(hidden, tag)
 
     tf.summary.histogram(
