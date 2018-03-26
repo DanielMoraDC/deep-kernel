@@ -50,7 +50,6 @@ if __name__ == '__main__':
         'cnn_filter_size': 3,
         'cnn_kernel_size': 64,
         'kernel_size': 1024,
-        'kernel_mean': 0.0,
         'kernel_std': 0.50,
         'strip_length': 2,
         'kernel_dropout_rate': None,

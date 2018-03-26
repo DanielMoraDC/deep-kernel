@@ -37,7 +37,6 @@ class KernelTestCase(unittest.TestCase):
 
     def test_rff(self):
         n, inp_dim, kernel_size = 5, 3, 6
-        kernel_mean = 0.0
         kernel_std = 0.1
 
         x = np.random.random((n, inp_dim))
@@ -46,7 +45,6 @@ class KernelTestCase(unittest.TestCase):
         kernel = GaussianRFF(
             name='layer_kernel',
             input_dims=inp_dim,
-            kernel_mean=kernel_mean,
             kernel_std=kernel_std,
             kernel_size=kernel_size,
         )
