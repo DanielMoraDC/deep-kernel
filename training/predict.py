@@ -3,8 +3,8 @@ import logging
 
 from ops import get_global_step
 from visualization import get_writer
-from training.run_ops import build_run_context, test_step, RunStatus
-
+from training.run_ops import build_run_context, test_step, RunStatus, \
+                              image_spec_from_params
 from protodata.data_ops import DataMode
 from protodata.reading_ops import DataReader
 
@@ -20,7 +20,10 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
 
         step_op = get_global_step()
 
-        dataset = data_settings_fn(dataset_location=data_location)
+        dataset = data_settings_fn(
+                dataset_location=data_location,
+                image_specs=image_spec_from_params(**params)
+        )
         reader = DataReader(dataset)
 
         test_context = build_run_context(
