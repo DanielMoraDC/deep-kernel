@@ -129,7 +129,14 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
 
             # Get validation operations
             val_context = build_run_context(
-                dataset, reader, DataMode.VALIDATION, val_folds, step, True, **params  # noqa
+                dataset,
+                reader,
+                DataMode.VALIDATION,
+                val_folds,
+                step,
+                reuse=True,
+                is_training=False,
+                **params  # noqa
             )
 
             if self._should_save():
