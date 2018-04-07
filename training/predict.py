@@ -27,8 +27,13 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
         reader = DataReader(dataset)
 
         test_context = build_run_context(
-            dataset=dataset, reader=reader, tag=DataMode.TEST,
-            folds=None, step=step, is_training=False, **params
+            dataset=dataset,
+            reader=reader,
+            tag=DataMode.TEST,
+            folds=None,
+            step=step,
+            is_training=False,
+            **params
         )
 
         if store_summaries:
