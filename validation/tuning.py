@@ -135,6 +135,8 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
     data_location = get_data_location(dataset, folded=True)
     n_folds = settings_fn(data_location).get_fold_num()
     validation_fold = np.random.randint(n_folds)
+    folder = None if params.get('tune_folder', None) is None \
+        else os.path.join(params.get('tune_folder'), str(_get_millis_time()))
 
     params_cp = params.copy()
     if layerwise:
@@ -142,11 +144,7 @@ def _simple_evaluate(dataset, settings_fn, layerwise, **params):
         del params_cp['policy']
         params_cp['layerwise'] = layerwise
 
-    model = DeepNetworkValidation(
-         settings_fn,
-         data_location,
-         folder=params.get('folder')
-    )
+    model = DeepNetworkValidation(settings_fn, data_location, folder=folder)
 
     best = model.fit(
         train_folds=[x for x in range(n_folds) if x != validation_fold],
@@ -177,6 +175,8 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
     dataset_location = get_data_location(dataset, folded=True)
     n_folds = settings_fn(dataset_location).get_fold_num()
     folds_set = range(n_folds)
+    folder = None if params.get('tune_folder', None) is None \
+        else os.path.join(params.get('tune_folder'), str(_get_millis_time()))
     results = []
 
     params_cp = params.copy()
@@ -187,11 +187,7 @@ def _cross_validate(dataset, settings_fn, layerwise, **params):
 
     logger.debug('Starting evaluation on {} ...'.format(params_cp))
 
-    model = DeepNetworkValidation(
-         settings_fn,
-         dataset_location,
-         folder=params.get('folder')
-    )
+    model = DeepNetworkValidation(settings_fn, dataset_location, folder=folder)
 
     for val_fold in folds_set:
 
