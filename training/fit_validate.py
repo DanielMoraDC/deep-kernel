@@ -81,8 +81,14 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                        val_run,
                        epoch):
         # Write histograms
-        sum_str = sess.run(train_context.summary_op)
-        sum_str_val = sess.run(val_context.summary_op)
+        sum_str = sess.run(
+            train_context.summary_op,
+            feed_dict={train_context.is_training_op: True}
+        )
+        sum_str_val = sess.run(
+            val_context.summary_op,
+            feed_dict={val_context.is_training_op: False}
+        )
 
         self._train_writer.add_summary(sum_str, epoch)
         self._val_writer.add_summary(sum_str_val, epoch)
@@ -135,7 +141,6 @@ class DeepNetworkValidation(BaseEstimator, ClassifierMixin):
                 val_folds,
                 step,
                 reuse=True,
-                is_training=False,
                 **params  # noqa
             )
 
