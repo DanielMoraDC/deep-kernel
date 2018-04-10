@@ -4,10 +4,9 @@ import logging
 import tensorflow as tf
 
 from kernels import KERNEL_ASSIGN_OPS, GaussianRFF, sample_w, \
-                    is_w, kernel_dropout
+                    is_w, kernel_dropout_w
 from variables import get_model_weights, get_trainable_params, \
                     summarize_gradients, get_kernel_vars, get_variable_name
-from layout.base import get_layer_id
 
 logger = logging.getLogger(__name__)
 
@@ -191,16 +190,24 @@ def get_kernel_assign_ops(layers, kernel_dropout_rate, **params):
         if not is_w(var.name):
             continue
 
-        w_sample = sample_w(GaussianRFF, var, **params)
+        # CNN layers and FC layers have different kernel feature number
+        sample_size = params['cnn_kernel_size'] if 'cnn' in var.name \
+            else params['kernel_size']
+        sample_params = {
+            "kernel_size": sample_size,
+            "kernel_std": params['kernel_std'],
+        }
+
+        w_sample = sample_w(GaussianRFF, var, **sample_params)
 
         # Construct a new matrix with some rows updated (new RFF features)
-        new_w = kernel_dropout(var, w_sample, kernel_dropout_rate)
+        new_w = kernel_dropout_w(var, w_sample, kernel_dropout_rate)
 
         # Append assign operation for current layer kernel matrix
         var_name = var.name.split('/')[1]
         var_id = str(get_variable_name(var_name))
-        assign_w_op = tf.assign(var, new_w, name='assign_%s' % var_id)
-        ops.append(assign_w_op)
+        assign_b_op = tf.assign(var, new_w, name='assign_%s' % var_id)
+        ops.append(assign_b_op)
 
     return ops
 

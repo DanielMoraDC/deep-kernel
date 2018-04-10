@@ -163,7 +163,7 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
     )
 
     kernel = GaussianRFF(
-        name=LAYER_NAME.format(layer_id=idx, layer_type='kernel'),
+        name=LAYER_NAME.format(layer_id=idx, layer_type='cnn_kernel'),
         input_dims=map_size,
         kernel_std=kernel_std,
         kernel_size=cnn_kernel_size,
