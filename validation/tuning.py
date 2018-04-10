@@ -253,11 +253,11 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
     dataset_location = get_data_location(dataset, folded=True)
     n_folds = settings_fn(dataset_location).get_fold_num()
     folds_set = range(n_folds)
+    folder = tempfile.mkdtemp() if 'tune_folder' not in params \
+        else os.path.join(params.get('tune_folder'), str(_get_millis_time()))
 
     prev_err, prev_folder = float('inf'), None
     epochs, best = [], None
-
-    tmp_folder = tempfile.mkdtemp()
 
     for layer in range(1, params.get('max_layers')+1):
 
@@ -265,7 +265,7 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
             '[%d] Starting layerwise incremental training' % layer
         )
 
-        current_folder = os.path.join(tmp_folder, 'layer_%d' % layer)
+        current_folder = os.path.join(folder, 'layer_%d' % layer)
 
         model = DeepNetworkValidation(
             settings_fn,
@@ -311,7 +311,8 @@ def _incremental_validation(dataset, settings_fn, val_fold, **params):
     del best['epoch']
     best.update({'train_epochs': epochs})
 
-    shutil.rmtree(tmp_folder)
+    if params.get('tune_folder', None) is None:
+        shutil.rmtree(folder)
 
     return best
 
