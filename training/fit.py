@@ -130,7 +130,10 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
 
                     if epoch % summary_epochs == 0:
                         # Store histogram
-                        sum_str = sess.run(context.summary_op)
+                        sum_str = sess.run(
+                            context.summary_op,
+                            feed_dict={context.is_training_op: True}
+                        )
                         writer.add_summary(sum_str, epoch)
 
                         # Store stats from current epoch

@@ -27,8 +27,12 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
         reader = DataReader(dataset)
 
         test_context = build_run_context(
-            dataset=dataset, reader=reader, tag=DataMode.TEST,
-            folds=None, step=step, is_training=False, **params
+            dataset=dataset,
+            reader=reader,
+            tag=DataMode.TEST,
+            folds=None,
+            step=step,
+            **params
         )
 
         if store_summaries:
@@ -68,7 +72,10 @@ def predict_fn(data_settings_fn, data_location, folder, **params):
                     status.update(loss, acc, l2)
 
                     if store_summaries:
-                        summary = sess.run(test_context.summary_op)
+                        summary = sess.run(
+                            test_context.summary_op,
+                            feed_dict={test_context.is_training_op: False}
+                        )
                         writer.add_summary(summary)
 
                 except tf.errors.OutOfRangeError:
