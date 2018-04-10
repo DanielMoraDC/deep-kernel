@@ -56,7 +56,7 @@ class RunStatus(object):
 def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
     status = RunStatus()
 
-    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+    logger.debug('Running training epoch on {} layer'.format(layer_idx))
 
     weight_ops = []
     for i in range(1, num_layers + 1):
@@ -101,7 +101,7 @@ def run_training_epoch_debug_weights(sess, context, layer_idx, num_layers):
 def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
     status = RunStatus()
 
-    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+    logger.debug('Running training epoch on {} layer'.format(layer_idx))
 
     l2_ops = [context.l2_ops[i] for i in range(0, num_layers+1)]
 
@@ -144,7 +144,7 @@ def run_training_epoch_debug_l2(sess, context, layer_idx, num_layers):
 def run_training_epoch(sess, context, layer_idx):
     status = RunStatus()
 
-    logger.debug('Running training epoch on {} variables'.format(layer_idx))
+    logger.debug('Running training epoch on {} layer'.format(layer_idx))
 
     for i in range(context.steps_per_epoch):
         _, loss, acc, l2 = sess.run(
@@ -157,8 +157,9 @@ def run_training_epoch(sess, context, layer_idx):
         )
         status.update(loss, acc, l2)
 
-        if context.kernel_assign_ops is not None:
-            sess.run(context.kernel_assign_ops[layer_idx])
+    if context.kernel_assign_ops is not None:
+        logger.info("Kernel dropout in %d layer" % layer_idx)
+        sess.run(context.kernel_assign_ops[layer_idx])
 
     # Update epoch
     epoch = sess.run(context.step_op)
