@@ -113,6 +113,14 @@ def sample_w(kernel_fn, var, **params):
     return kernel.draw_w()
 
 
+def sample_b(kernel_fn, var, **params):
+    input_dims = 128  # This is arbitrary
+    kernel = kernel_fn(
+        '', input_dims=input_dims, **params
+    )
+    return kernel.draw_b()
+
+
 def _generate_w_mask(x, keep_ratio=0.50):
     """
     Returns two masks:
@@ -128,13 +136,29 @@ def _generate_w_mask(x, keep_ratio=0.50):
     to_keep = tf.cast(to_keep, tf.int32)
 
     # Get mask so we can use it to replace only the selected rows
-    lengths = to_keep * height
+    lengths = to_keep * width
     mask = tf.sequence_mask(lengths, width, dtype=tf.float32)
 
     return mask, tf.subtract(1.0, mask)
 
 
-def kernel_dropout(var, new_sample, keep_ratio):
+def _generate_b_mask(x, keep_ratio=0.50):
+    """
+    Returns two masks:
+        - A binary mask indicating the values to keep from the input vector
+        - Inverse of the previous mask
+    """
+    length = x.get_shape().as_list()[0]
+
+    # Draw numbers in [0,1] and check if x < keep_ratio
+    rands = tf.random_uniform(shape=[length], dtype=tf.float32)
+    to_keep = tf.less(rands, tf.ones(tf.shape(rands)) * keep_ratio)
+    mask = tf.cast(to_keep, tf.float32)
+
+    return mask, tf.subtract(1.0, mask)
+
+
+def kernel_dropout_w(var, new_sample, keep_ratio):
     """
     Returns the matrix resulting from replacing some rows from the
     new sample according to the given probability ratio
@@ -143,3 +167,15 @@ def kernel_dropout(var, new_sample, keep_ratio):
     kept = tf.multiply(mask, var)
     sampled = tf.multiply(mask_inv, new_sample)
     return tf.add(kept, sampled)
+
+
+def kernel_dropout_b(var, new_sample, keep_ratio):
+    """
+    Returns the vector resulting from replacing some elements
+    from the new sample according to the given probability ratio
+    """
+    mask, mask_inv = _generate_b_mask(var, keep_ratio)
+    kept = tf.multiply(mask, var)
+    sampled = tf.multiply(mask_inv, new_sample)
+    return tf.add(kept, sampled)
+
