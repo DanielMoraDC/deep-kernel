@@ -47,7 +47,6 @@ def cnn_example_layout_fn(x,
         _map_classes_to_output(dataset.get_num_classes()),
         'output',
         tag,
-        is_training,
         activation_fn=None
     )
 
@@ -90,7 +89,6 @@ def cnn_kernel_example_layout_fn(x,
         _map_classes_to_output(dataset.get_num_classes()),
         'output',
         tag,
-        is_training,
         activation_fn=None
     )
 

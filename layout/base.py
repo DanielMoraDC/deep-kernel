@@ -19,7 +19,6 @@ def _fully_connected(x,
                      outputs,
                      idx,
                      tag,
-                     is_training,
                      activation_fn=tf.nn.relu):
 
     name = LAYER_NAME.format(layer_id=idx, layer_type='fc')
@@ -42,7 +41,6 @@ def fc_block(x, idx, tag, is_training, batch_norm=False, **params):
         outputs=hidden_units,
         idx=idx,
         tag=tag,
-        is_training=is_training,
         activation_fn=None
     )
 
@@ -82,7 +80,6 @@ def kernel_block(x, idx, tag, is_training, batch_norm=False, **params):
         outputs=hidden_units,
         idx=idx,
         tag=tag,
-        is_training=is_training,
         activation_fn=None
     )
 

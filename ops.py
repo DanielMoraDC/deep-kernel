@@ -3,7 +3,7 @@ import logging
 
 import tensorflow as tf
 
-from kernels import KERNEL_ASSIGN_OPS, GaussianRFF, sample_w, \
+from kernels import KERNEL_ASSIGN_OPS, GaussianRFF, \
                     is_w, kernel_dropout_w, sample_w
 from variables import get_model_weights, get_trainable_params, \
                     summarize_gradients, get_kernel_vars, get_variable_name

@@ -26,7 +26,6 @@ def example_layout_fn(x, dataset, tag, is_training, num_layers=1, **params):
         _map_classes_to_output(dataset.get_num_classes()),
         'output',
         tag,
-        is_training,
         activation_fn=None
     )
 
@@ -58,7 +57,6 @@ def kernel_example_layout_fn(x,
         _map_classes_to_output(dataset.get_num_classes()),
         'output',
         tag,
-        is_training=is_training,
         activation_fn=None
     )
 

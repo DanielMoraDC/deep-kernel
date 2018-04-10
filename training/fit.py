@@ -41,7 +41,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
         else:
             self._layer_idx = params.get('train_only', 0)
 
-    def _init_session(self, sess, saver, **params):
+    def _init_session(self, sess, **params):
         init_kernel_ops(sess)
 
         # If folder provided, restore variables
@@ -110,7 +110,7 @@ class DeepNetworkTraining(BaseEstimator, ClassifierMixin):
                     save_summaries_steps=None,
                     save_summaries_secs=None) as sess:
 
-                self._init_session(sess, saver, **params)
+                self._init_session(sess, **params)
 
                 # Define coordinator to handle all threads
                 coord = tf.train.Coordinator()
