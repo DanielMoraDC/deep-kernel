@@ -58,7 +58,20 @@ def fc_block(x, idx, tag, is_training, batch_norm=False, **params):
             scope=LAYER_NAME.format(layer_id=idx, layer_type='bn')
         )
 
-    return params.get('activation_fn', tf.nn.relu)(hidden)
+    activated = params.get('activation_fn', tf.nn.relu)(hidden)
+
+    if params.get('fc_dropout_keep_prob', None) is not None:
+        logger.debug(
+            "Enabled dropout (keep rate(%f)) on fc %s" %
+            (params.get('fc_dropout_keep_prob'), idx)
+        )
+        activated = tf.contrib.layers.dropout(
+            hidden,
+            keep_prob=params.get('fc_dropout_keep_prob'),
+            is_training=is_training
+        )
+
+    return activated
 
 
 def _map_classes_to_output(outputs):
@@ -104,4 +117,18 @@ def kernel_block(x, idx, tag, is_training, batch_norm=False, **params):
         kernel_std=kernel_std,
         kernel_size=kernel_size,
     )
-    return kernel.apply_kernel(hidden, tag)
+
+    mapped = kernel.apply_kernel(hidden, tag)
+
+    if params.get('fc_dropout_keep_prob', None) is not None:
+        logger.debug(
+            "Enabled dropout (keep rate(%f)) on kernel_fc %s" %
+            (params.get('fc_dropout_keep_prob'), idx)
+        )
+        mapped = tf.contrib.layers.dropout(
+            hidden,
+            keep_prob=params.get('fc_dropout_keep_prob'),
+            is_training=is_training
+        )
+
+    return mapped

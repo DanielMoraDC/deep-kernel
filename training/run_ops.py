@@ -19,7 +19,7 @@ RunContext = collections.namedtuple(
     [
         'logits_op', 'train_ops', 'loss_ops', 'acc_op',
         'steps_per_epoch', 'l2_ops', 'lr_op', 'summary_op', 'step_op',
-        'kernel_assign_ops'
+        'kernel_assign_ops', 'is_training_op'
     ]
 )
 
@@ -153,7 +153,8 @@ def run_training_epoch(sess, context, layer_idx):
                 context.loss_ops[layer_idx],
                 context.acc_op,
                 context.l2_ops[layer_idx]
-            ]
+            ],
+            feed_dict={context.is_training_op: True}
         )
         status.update(loss, acc, l2)
 
@@ -177,7 +178,8 @@ def eval_epoch(sess, context, layer_idx):
                 context.loss_ops[layer_idx],
                 context.acc_op,
                 context.l2_ops[layer_idx]
-            ]
+            ],
+            feed_dict={context.is_training_op: False}
         )
 
         status.update(loss, acc, l2)
@@ -186,11 +188,14 @@ def eval_epoch(sess, context, layer_idx):
 
 
 def test_step(sess, test_context):
-    return sess.run([
-        test_context.loss_ops[0],
-        test_context.acc_op,
-        test_context.l2_ops[0]
-    ])
+    return sess.run(
+        [
+            test_context.loss_ops[0],
+            test_context.acc_op,
+            test_context.l2_ops[0]
+        ],
+        feed_dict={test_context.is_training_op: False}
+    )
 
 
 def build_run_context(dataset,
@@ -199,7 +204,6 @@ def build_run_context(dataset,
                       folds,
                       step,
                       reuse=False,
-                      is_training=True,
                       **params):
     lr = params.get('lr')
     lr_decay = params.get('lr_decay')
@@ -217,23 +221,26 @@ def build_run_context(dataset,
         steps_per_epoch = None
 
     data_subset = DataMode.TRAINING if tag == DataMode.VALIDATION else tag
+    run_until_error = tag in [DataMode.TRAINING, DataMode.VALIDATION]
     features, labels = reader.read_folded_batch(
         batch_size=batch_size,
         data_mode=data_subset,
         folds=folds,
         memory_factor=memory_factor,
         reader_threads=n_threads,
-        train_mode=is_training,
+        train_mode=run_until_error,
         shuffle=True
     )
 
     scope_params = {'reuse': reuse}
     with tf.variable_scope("network", **scope_params):
 
+        is_training_pl = tf.placeholder(shape=(), dtype=tf.bool)
+
         logits = network_fn(features,
                             dataset,
                             tag=tag,
-                            is_training=is_training,
+                            is_training=is_training_pl,
                             **params)
 
         loss_ops = loss_ops_list(
@@ -244,7 +251,8 @@ def build_run_context(dataset,
             **params
         )
 
-        if is_training:
+        # Avoid creating training ops for non-training modes
+        if tag == DataMode.TRAINING:
 
             # Increase training epoch
             step_op = tf.assign(step, step + 1)
@@ -286,7 +294,8 @@ def build_run_context(dataset,
         summary_op=summary_op,
         l2_ops=get_l2_ops_list(**params),
         step_op=step_op,
-        kernel_assign_ops=kernel_assign_ops
+        kernel_assign_ops=kernel_assign_ops,
+        is_training_op=is_training_pl
     )
 
 
