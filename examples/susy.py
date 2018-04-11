@@ -22,14 +22,14 @@ logging.basicConfig(
 if __name__ == '__main__':
 
     search_space = {
-        'batch_size': 2 ** (7 + hp.uniform('batch_size_log2', 2)),
+        'batch_size': 2 ** (6 + hp.randint('batch_size_log2', 2)),
         'l2_ratio': 10 ** hp.uniform('l2_log10', -5, -2),
         'lr': 10 ** hp.uniform('lr_log10', -5, -3),
         'kernel_size': 2 ** (8 + hp.randint('kernel_size_log2', 3)),
         'kernel_std': hp.uniform('kernel_std_log10', 1e-2, 1.0),
         'hidden_units': 2 ** (9 + hp.randint('hidden_units_log2', 3)),
         'lr_decay': hp.uniform('lr_decay', 0.1, 1.0),
-        'lr_decay_epochs': hp.uniform('lr_decay_epochs', 100, 1000),
+        'lr_decay_epochs': hp.uniform('lr_decay_epochs', 20, 40),
         # Comment next lines for non-layerwise training
         'policy': hp.choice('policy', [
             {
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         layerwise=False,
         folder='susy',
         runs=SIM_RUNS,
-        test_batch_size=1
+        test_batch_size=128
     )
 
     metrics = stats[0].keys()
