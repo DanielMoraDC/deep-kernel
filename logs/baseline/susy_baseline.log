@@ -1,0 +1,48 @@
+INFO:validation.tuning:Finished evaluation on {'hidden_units': 1024, 'lr': 5.8691256974875594e-05, 'n_threads': 4, 'strip_length': 5, 'network_fn': <function kernel_example_layout_fn at 0x7fb4e5889158>, 'lr_decay_epochs': 24.9187644796132, 'l2_ratio': 1.964030804506409e-05, 'num_layers': 1, 'batch_size': 64, 'kernel_size': 1024, 'max_epochs': 10000, 'kernel_std': 0.8930475709101456, 'lr_decay': 0.5499343282594509, 'progress_thresh': 0.1, 'memory_factor': 2}
+INFO:validation.tuning:Obtained results {'val_error': 0.322487473487854, 'epoch': 30, 'val_loss': 0.61972016, 'train_loss': 0.61767679, 'train_error': 0.32174497842788696}
+INFO:validation.tuning:Finished evaluation on {'hidden_units': 512, 'lr': 0.0005926809008565625, 'n_threads': 4, 'strip_length': 5, 'network_fn': <function kernel_example_layout_fn at 0x7fb4e5889158>, 'lr_decay_epochs': 28.756509917309607, 'l2_ratio': 8.201637615226317e-05, 'num_layers': 1, 'batch_size': 64, 'kernel_size': 1024, 'max_epochs': 10000, 'kernel_std': 0.7083916653103158, 'lr_decay': 0.851515519291016, 'progress_thresh': 0.1, 'memory_factor': 2}
+INFO:validation.tuning:Obtained results {'val_error': 0.19887250661849976, 'epoch': 30, 'val_loss': 0.43693304, 'train_loss': 0.43831688, 'train_error': 0.19948500394821167}
+INFO:validation.tuning:Finished evaluation on {'hidden_units': 2048, 'lr': 1.410221827812198e-05, 'n_threads': 4, 'strip_length': 5, 'network_fn': <function kernel_example_layout_fn at 0x7fb4e5889158>, 'lr_decay_epochs': 34.69104158784134, 'l2_ratio': 0.003621097492003981, 'num_layers': 1, 'batch_size': 128, 'kernel_size': 1024, 'max_epochs': 10000, 'kernel_std': 0.036341349097933864, 'lr_decay': 0.6376830759449496, 'progress_thresh': 0.1, 'memory_factor': 2}
+INFO:validation.tuning:Obtained results {'val_error': 0.22032499313354492, 'epoch': 30, 'val_loss': 0.52923554, 'train_loss': 0.53014839, 'train_error': 0.2214544415473938}
+INFO:validation.tuning:Finished evaluation on {'hidden_units': 2048, 'lr': 0.0004029316242576957, 'n_threads': 4, 'strip_length': 5, 'network_fn': <function kernel_example_layout_fn at 0x7fb4e5889158>, 'lr_decay_epochs': 30.81743983964869, 'l2_ratio': 0.0016131908649499162, 'num_layers': 1, 'batch_size': 64, 'kernel_size': 256, 'max_epochs': 10000, 'kernel_std': 0.4649309049625177, 'lr_decay': 0.5707669341388615, 'progress_thresh': 0.1, 'memory_factor': 2}
+INFO:validation.tuning:Obtained results {'val_error': 0.20489251613616943, 'epoch': 5, 'val_loss': 0.47307265, 'train_loss': 0.47446525, 'train_error': 0.20731222629547119}
+INFO:validation.tuning:Finished evaluation on {'hidden_units': 1024, 'lr': 0.0001530147100283765, 'n_threads': 4, 'strip_length': 5, 'network_fn': <function kernel_example_layout_fn at 0x7fb4e5889158>, 'lr_decay_epochs': 29.828365019434408, 'l2_ratio': 0.00019620348367227906, 'num_layers': 1, 'batch_size': 128, 'kernel_size': 256, 'max_epochs': 10000, 'kernel_std': 0.47307874654591325, 'lr_decay': 0.913850559937229, 'progress_thresh': 0.1, 'memory_factor': 2}
+INFO:validation.tuning:Obtained results {'val_error': 0.19822001457214355, 'epoch': 35, 'val_loss': 0.4352136, 'train_loss': 0.43345013, 'train_error': 0.19730108976364136}
+INFO:validation.tuning:Using model {'kernel_std': 0.47307874654591325, 'kernel_size': 256, 'lr': 0.0001530147100283765, 'n_threads': 4, 'strip_length': 5, 'network_fn': <function kernel_example_layout_fn at 0x7fb4e5889158>, 'l2_ratio': 0.00019620348367227906, 'memory_factor': 2, 'batch_size': 128, 'progress_thresh': 0.1, 'lr_decay': 0.913850559937229, 'max_epochs': 35, 'hidden_units': 1024, 'num_layers': 1, 'lr_decay_epochs': 29.828365019434408} for training with results {'val_error': 0.19822001457214355, 'epoch': 35, 'val_loss': 0.4352136, 'train_loss': 0.43345013, 'train_error': 0.19730108976364136}
+INFO:validation.tuning:Running training [0] in susy/1523535673815
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [0] got results {'train_l2': 0.0050680344, 'error': 0.19779664278030396, 'time(s)': 3638.941366672516, 'train_loss': 0.43398097, 'loss': 0.43475482, 'l2': 0.0050241495, 'train_error': 0.19765174388885498}
+INFO:validation.tuning:Running training [1] in susy/1523539363221
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [1] got results {'train_l2': 0.0049639405, 'error': 0.19749265909194946, 'time(s)': 3647.8952140808105, 'train_loss': 0.43354151, 'loss': 0.4339034, 'l2': 0.0049417568, 'train_error': 0.19755375385284424}
+INFO:validation.tuning:Running training [2] in susy/1523543061495
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [2] got results {'train_l2': 0.0052446048, 'error': 0.19651055335998535, 'time(s)': 3644.795681476593, 'train_loss': 0.43385488, 'loss': 0.43311098, 'l2': 0.0052393014, 'train_error': 0.19738399982452393}
+INFO:validation.tuning:Running training [3] in susy/1523546757041
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [3] got results {'train_l2': 0.0051284027, 'error': 0.19749265909194946, 'time(s)': 3687.158058643341, 'train_loss': 0.4336693, 'loss': 0.4338682, 'l2': 0.0051322123, 'train_error': 0.19734299182891846}
+INFO:validation.tuning:Running training [4] in susy/1523550494671
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [4] got results {'train_l2': 0.0052234405, 'error': 0.19775468111038208, 'time(s)': 3672.383754968643, 'train_loss': 0.43401068, 'loss': 0.43457606, 'l2': 0.0052004685, 'train_error': 0.1974560022354126}
+INFO:validation.tuning:Running training [5] in susy/1523554217283
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [5] got results {'train_l2': 0.0053913807, 'error': 0.19750261306762695, 'time(s)': 3644.2200388908386, 'train_loss': 0.4341715, 'loss': 0.4340232, 'l2': 0.0053365878, 'train_error': 0.19738924503326416}
+INFO:validation.tuning:Running training [6] in susy/1523557911856
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [6] got results {'train_l2': 0.004950549, 'error': 0.19693058729171753, 'time(s)': 3674.6613035202026, 'train_loss': 0.43368399, 'loss': 0.4329693, 'l2': 0.0049542347, 'train_error': 0.19750922918319702}
+INFO:validation.tuning:Running training [7] in susy/1523561636884
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [7] got results {'train_l2': 0.0051007755, 'error': 0.19767063856124878, 'time(s)': 3659.746183156967, 'train_loss': 0.4337042, 'loss': 0.43361124, 'l2': 0.0050910776, 'train_error': 0.19735151529312134}
+INFO:validation.tuning:Running training [8] in susy/1523565346983
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [8] got results {'train_l2': 0.0049641235, 'error': 0.19701462984085083, 'time(s)': 3881.18106842041, 'train_loss': 0.43354511, 'loss': 0.43245712, 'l2': 0.004970036, 'train_error': 0.19742298126220703}
+INFO:validation.tuning:Running training [9] in susy/1523569278784
+INFO:training.predict:Queue exhausted. Read all instances
+INFO:validation.tuning:Training [9] got results {'train_l2': 0.0050443509, 'error': 0.1979866623878479, 'time(s)': 3801.3028326034546, 'train_loss': 0.43368953, 'loss': 0.43435368, 'l2': 0.0050615524, 'train_error': 0.19745999574661255}
+INFO:__main__:train_l2: 0.005108 +- 0.000136
+INFO:__main__:error: 0.197415 +- 0.000434
+INFO:__main__:time(s): 3695.228550 +- 76.585347
+INFO:__main__:train_loss: 0.433785 +- 0.000200
+INFO:__main__:loss: 0.433763 +- 0.000698
+INFO:__main__:l2: 0.005095 +- 0.000125
+INFO:__main__:train_error: 0.197452 +- 0.000092
