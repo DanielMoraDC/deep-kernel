@@ -103,7 +103,6 @@ def cnn_block(x, idx, is_training, **params):
         variables_collections=[tf.GraphKeys.WEIGHTS],
         stride=params.get('stride', 2),
         padding=params.get('padding', 'VALID'),
-        trainable=is_training,
         scope=LAYER_NAME.format(layer_type='cnn', layer_id=str(idx))
     )
 
@@ -155,7 +154,6 @@ def cnn_kernel_block(x, idx, tag, is_training, **params):
         stride=params.get('stride', 2),
         padding=params.get('padding', 'VALID'),
         variables_collections=[tf.GraphKeys.WEIGHTS],
-        trainable=is_training,
         biases_initializer=False,
         scope=LAYER_NAME.format(layer_type='cnn', layer_id=str(idx))
     )
