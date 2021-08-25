@@ -52,7 +52,7 @@ scikit-learn==0.19.0
 scipy==0.19.1
 simplegeneric==0.8.1
 six==1.11.0
-tensorflow-gpu==1.4.0
+tensorflow-gpu==2.5.1
 tensorflow-tensorboard==0.4.0rc3
 terminado==0.6
 testpath==0.3.1
