@@ -60,5 +60,5 @@ tornado==4.5.2
 tqdm==4.19.5
 traitlets==4.3.2
 wcwidth==0.1.7
-Werkzeug==0.12.2
+Werkzeug==0.15.5
 widgetsnbextension==3.0.3
